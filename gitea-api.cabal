@@ -1,5 +1,5 @@
 name:           gitea-api
-version:        1.1.1.0
+version:        1.11.6.0
 synopsis:       Auto-generated gitea-api API Client
 description:    .
                 Client library for calling the Gitea API. API based on http-client.
@@ -8,11 +8,9 @@ description:    .
                 .
                 base path: http://localhost/api/v1
                 .
-                Gitea API. API version: 1.1.1
+                Gitea API. API version: 1.11.6
                 .
                 OpenAPI version: 3.0.1
-                .
-                Generated using Gitea 1.11.6
                 .
 category:       Web
 homepage:       https://openapi-generator.tech
