@@ -57,6 +57,30 @@ import qualified Prelude as P
 
 -- ** Miscellaneous
 
+-- *** getSigningKey
+
+-- | @GET \/signing-key.gpg@
+-- 
+-- Get default signing-key.gpg
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+getSigningKey 
+  :: GiteaRequest GetSigningKey MimeNoContent Text MimePlainText
+getSigningKey =
+  _mkRequest "GET" ["/signing-key.gpg"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data GetSigningKey  
+-- | @text/plain@
+instance Produces GetSigningKey MimePlainText
+
+
 -- *** getVersion
 
 -- | @GET \/version@

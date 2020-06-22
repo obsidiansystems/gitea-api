@@ -92,6 +92,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: User
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         403:
           content: {}
           description: APIForbiddenError is a forbidden error response
@@ -361,6 +371,19 @@ paths:
         403:
           content: {}
           description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+        409:
+          content: {}
+          description: APIError is error format response
           headers:
             message:
               schema:
@@ -793,6 +816,9 @@ paths:
         204:
           content: {}
           description: user is a member
+        302:
+          content: {}
+          description: redirection to /orgs/{org}/public_members/{username}
         404:
           content: {}
           description: user is not a member
@@ -841,6 +867,16 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Conceal a user's membership
       tags:
       - organization
@@ -888,6 +924,16 @@ paths:
         204:
           content: {}
           description: membership publicized
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Publicize a user's membership
       tags:
       - organization
@@ -957,10 +1003,110 @@ paths:
               schema:
                 $ref: '#/components/schemas/Team'
           description: Team
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a team
       tags:
       - organization
       x-codegen-request-body-name: body
+  /orgs/{org}/teams/search:
+    get:
+      operationId: teamSearch
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: keywords to search
+        in: query
+        name: q
+        schema:
+          type: string
+      - description: include search within team description (defaults to true)
+        in: query
+        name: include_desc
+        schema:
+          type: boolean
+      - description: limit size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+          description: SearchResults of a successful search
+      summary: Search for teams within an organization
+      tags:
+      - organization
+  /repos/issues/search:
+    get:
+      operationId: issueSearchIssues
+      parameters:
+      - description: whether issue is open or closed
+        in: query
+        name: state
+        schema:
+          type: string
+      - description: comma separated list of labels. Fetch only issues that have any
+          of this labels. Non existent labels are discarded
+        in: query
+        name: labels
+        schema:
+          type: string
+      - description: page number of requested issues
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: search string
+        in: query
+        name: q
+        schema:
+          type: string
+      - description: repository to prioritize in the results
+        in: query
+        name: priority_repo_id
+        schema:
+          format: int64
+          type: integer
+      - description: filter by type (issues / pulls) if set
+        in: query
+        name: type
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Issue'
+                type: array
+          description: IssueList
+      summary: Search for issues across the repositories that the user has access
+        to
+      tags:
+      - issue
   /repos/migrate:
     post:
       operationId: repoMigrate
@@ -977,6 +1123,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/Repository'
           description: Repository
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Migrate a remote git repository
       tags:
       - repository
@@ -990,10 +1157,26 @@ paths:
         name: q
         schema:
           type: string
+      - description: Limit search to repositories with keyword as topic
+        in: query
+        name: topic
+        schema:
+          type: boolean
+      - description: include search of keyword within repository description
+        in: query
+        name: includeDesc
+        schema:
+          type: boolean
       - description: search only for repos that the user with the given id owns or
           contributes to
         in: query
         name: uid
+        schema:
+          format: int64
+          type: integer
+      - description: repo owner to prioritize in the results
+        in: query
+        name: priority_owner_id
         schema:
           format: int64
           type: integer
@@ -1007,6 +1190,12 @@ paths:
           to true)
         in: query
         name: private
+        schema:
+          type: boolean
+      - description: include template repositories this user has access to (defaults
+          to true)
+        in: query
+        name: template
         schema:
           type: boolean
       - description: page number of results to return (1-based)
@@ -1204,6 +1393,9 @@ paths:
         200:
           content: {}
           description: success
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: Get an archive of a repository
       tags:
       - repository
@@ -1264,7 +1456,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/Branch'
           description: Branch
-      summary: Retrieve a specific branch from a repository
+      summary: Retrieve a specific branch from a repository, including its effective
+        branch protection
       tags:
       - repository
   /repos/{owner}/{repo}/collaborators:
@@ -1321,6 +1514,17 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a collaborator from a repository
       tags:
       - repository
@@ -1351,7 +1555,18 @@ paths:
           description: APIEmpty is an empty response
         404:
           content: {}
-          description: APIEmpty is an empty response
+          description: APINotFound is a not found empty response
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Check if a user is a collaborator of a repository
       tags:
       - repository
@@ -1389,10 +1604,93 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Add a collaborator to a repository
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/commits:
+    get:
+      operationId: repoGetAllCommits
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: SHA or branch to start listing commits from (usually 'master')
+        in: query
+        name: sha
+        schema:
+          type: string
+      - description: page number of requested commits
+        in: query
+        name: page
+        schema:
+          type: integer
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Commit'
+                type: array
+          description: CommitList
+          headers:
+            X-HasMore:
+              description: True if there is another page
+              schema:
+                type: boolean
+            X-PageCount:
+              description: Total number of pages
+              schema:
+                format: int64
+                type: integer
+            X-PerPage:
+              description: Commits per page
+              schema:
+                format: int64
+                type: integer
+            X-Total:
+              description: Total commit count
+              schema:
+                format: int64
+                type: integer
+            X-Page:
+              description: The current page
+              schema:
+                format: int64
+                type: integer
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+        409:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIError'
+          description: EmptyRepository
+      summary: Get a list of all commits from a repository
+      tags:
+      - repository
   /repos/{owner}/{repo}/commits/{ref}/statuses:
     get:
       operationId: repoGetCombinedStatusByRef
@@ -1415,6 +1713,11 @@ paths:
         required: true
         schema:
           type: string
+      - description: page number of results
+        in: query
+        name: page
+        schema:
+          type: integer
       responses:
         200:
           content:
@@ -1422,6 +1725,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Status'
           description: Status
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Get a commit's combined status, by branch/tag/commit reference
       tags:
       - repository
@@ -1638,6 +1951,9 @@ paths:
         200:
           content: {}
           description: success
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: Get the EditorConfig definitions of a file in a repository
       tags:
       - repository
@@ -1700,6 +2016,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/Repository'
           description: Repository
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Fork a repository
       tags:
       - repository
@@ -1733,6 +2070,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/GitBlobResponse'
           description: GitBlobResponse
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Gets the blob of a repository.
       tags:
       - repository
@@ -1855,7 +2202,8 @@ paths:
         required: true
         schema:
           type: string
-      - description: sha of the tag
+      - description: sha of the tag. The Git tags API only supports annotated tag
+          objects, not lightweight tags.
         in: path
         name: sha
         required: true
@@ -1868,7 +2216,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/AnnotatedTag'
           description: AnnotatedTag
-      summary: Gets the tag of a repository.
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Gets the tag object of an annotated tag (not lightweight tags)
       tags:
       - repository
   /repos/{owner}/{repo}/git/trees/{sha}:
@@ -1917,6 +2275,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/GitTreeResponse'
           description: GitTreeResponse
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Gets the tree of a repository.
       tags:
       - repository
@@ -2180,6 +2548,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Hook'
           description: Hook
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: Get a hook
       tags:
       - repository
@@ -2292,6 +2663,11 @@ paths:
         name: q
         schema:
           type: string
+      - description: filter by type (issues / pulls) if set
+        in: query
+        name: type
+        schema:
+          type: string
       responses:
         200:
           content:
@@ -2332,6 +2708,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Issue'
           description: Issue
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        412:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create an issue. If using deadline only the date will be taken into
         account, and time of day ignored.
       tags:
@@ -2398,6 +2805,16 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a comment
       tags:
       - issue
@@ -2440,9 +2857,9 @@ paths:
       tags:
       - issue
       x-codegen-request-body-name: body
-  /repos/{owner}/{repo}/issues/{id}/times:
-    get:
-      operationId: issueTrackedTimes
+  /repos/{owner}/{repo}/issues/comments/{id}/reactions:
+    delete:
+      operationId: issueDeleteCommentReaction
       parameters:
       - description: owner of the repo
         in: path
@@ -2456,7 +2873,53 @@ paths:
         required: true
         schema:
           type: string
-      - description: index of the issue
+      - description: id of the comment to edit
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReactionOption'
+        required: false
+      responses:
+        200:
+          content: {}
+          description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Remove a reaction from a comment of an issue
+      tags:
+      - issue
+      x-codegen-request-body-name: content
+    get:
+      operationId: issueGetCommentReactions
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: id of the comment to edit
         in: path
         name: id
         required: true
@@ -2469,14 +2932,24 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/TrackedTime'
+                  $ref: '#/components/schemas/Reaction'
                 type: array
-          description: TrackedTimeList
-      summary: List an issue's tracked times
+          description: ReactionList
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Get a list of reactions from a comment of an issue
       tags:
       - issue
     post:
-      operationId: issueAddTime
+      operationId: issuePostCommentReaction
       parameters:
       - description: owner of the repo
         in: path
@@ -2490,7 +2963,7 @@ paths:
         required: true
         schema:
           type: string
-      - description: index of the issue to add tracked time to
+      - description: id of the comment to edit
         in: path
         name: id
         required: true
@@ -2501,28 +2974,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AddTimeOption'
+              $ref: '#/components/schemas/EditReactionOption'
         required: false
       responses:
         200:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrackedTime'
-          description: TrackedTime
-        400:
-          content: {}
-          description: APIError is error format response
-          headers:
-            message:
+                $ref: '#/components/schemas/Reaction'
+          description: Reaction
+        201:
+          content:
+            application/json:
               schema:
-                type: string
-            url:
-              schema:
-                type: string
+                $ref: '#/components/schemas/Reaction'
+          description: Reaction
         403:
           content: {}
-          description: APIError is error format response
+          description: APIForbiddenError is a forbidden error response
           headers:
             message:
               schema:
@@ -2530,10 +2999,10 @@ paths:
             url:
               schema:
                 type: string
-      summary: Add a tracked time to a issue
+      summary: Add a reaction to a comment of an issue
       tags:
       - issue
-      x-codegen-request-body-name: body
+      x-codegen-request-body-name: content
   /repos/{owner}/{repo}/issues/{index}:
     get:
       operationId: issueGetIssue
@@ -2564,6 +3033,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Issue'
           description: Issue
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: Get an issue
       tags:
       - issue
@@ -2602,6 +3074,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/Issue'
           description: Issue
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+        412:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Edit an issue. If using deadline only the date will be taken into account,
         and time of day ignored.
       tags:
@@ -2683,6 +3178,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Comment'
           description: Comment
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Add a comment to an issue
       tags:
       - issue
@@ -2721,6 +3226,16 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a comment
       tags:
       - issue
@@ -2766,6 +3281,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/Comment'
           description: Comment
+        204:
+          content: {}
+          description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Edit a comment
       tags:
       - issue
@@ -2808,10 +3336,17 @@ paths:
           description: IssueDeadline
         403:
           content: {}
-          description: Not repo writer
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         404:
           content: {}
-          description: Issue not found
+          description: APINotFound is a not found empty response
       summary: Set an issue deadline. If set to null, the deadline is deleted. If
         using deadline only the date will be taken into account, and time of day ignored.
       tags:
@@ -2844,6 +3379,16 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Remove all labels from an issue
       tags:
       - issue
@@ -2921,6 +3466,16 @@ paths:
                   $ref: '#/components/schemas/Label'
                 type: array
           description: LabelList
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Add a label to an issue
       tags:
       - issue
@@ -2962,6 +3517,16 @@ paths:
                   $ref: '#/components/schemas/Label'
                 type: array
           description: LabelList
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Replace an issue's labels
       tags:
       - issue
@@ -3000,7 +3565,213 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Remove a label from an issue
+      tags:
+      - issue
+  /repos/{owner}/{repo}/issues/{index}/reactions:
+    delete:
+      operationId: issueDeleteIssueReaction
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReactionOption'
+        required: false
+      responses:
+        200:
+          content: {}
+          description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Remove a reaction from an issue
+      tags:
+      - issue
+      x-codegen-request-body-name: content
+    get:
+      operationId: issueGetIssueReactions
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Reaction'
+                type: array
+          description: ReactionList
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Get a list reactions of an issue
+      tags:
+      - issue
+    post:
+      operationId: issuePostIssueReaction
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditReactionOption'
+        required: false
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reaction'
+          description: Reaction
+        201:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reaction'
+          description: Reaction
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Add a reaction to an issue
+      tags:
+      - issue
+      x-codegen-request-body-name: content
+  /repos/{owner}/{repo}/issues/{index}/stopwatch/delete:
+    delete:
+      operationId: issueDeleteStopWatch
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue to stop the stopwatch on
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        204:
+          content: {}
+          description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: Not repo writer, user does not have rights to toggle stopwatch
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+        409:
+          content: {}
+          description: Cannot cancel a non existent stopwatch
+      summary: Delete an issue's existing stopwatch.
       tags:
       - issue
   /repos/{owner}/{repo}/issues/{index}/stopwatch/start:
@@ -3035,7 +3806,7 @@ paths:
           description: Not repo writer, user does not have rights to toggle stopwatch
         404:
           content: {}
-          description: Issue not found
+          description: APINotFound is a not found empty response
         409:
           content: {}
           description: Cannot start a stopwatch again if it already exists
@@ -3044,7 +3815,7 @@ paths:
       - issue
   /repos/{owner}/{repo}/issues/{index}/stopwatch/stop:
     post:
-      operationId: issueStopWatch
+      operationId: issueStopStopWatch
       parameters:
       - description: owner of the repo
         in: path
@@ -3074,11 +3845,335 @@ paths:
           description: Not repo writer, user does not have rights to toggle stopwatch
         404:
           content: {}
-          description: Issue not found
+          description: APINotFound is a not found empty response
         409:
           content: {}
           description: Cannot stop a non existent stopwatch
       summary: Stop an issue's existing stopwatch.
+      tags:
+      - issue
+  /repos/{owner}/{repo}/issues/{index}/subscriptions:
+    get:
+      operationId: issueSubscriptions
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/User'
+                type: array
+          description: UserList
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get users who subscribed on an issue.
+      tags:
+      - issue
+  /repos/{owner}/{repo}/issues/{index}/subscriptions/{user}:
+    delete:
+      operationId: issueDeleteSubscription
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: user witch unsubscribe
+        in: path
+        name: user
+        required: true
+        schema:
+          type: string
+      responses:
+        201:
+          content: {}
+          description: APIEmpty is an empty response
+        304:
+          content: {}
+          description: User can only subscribe itself if he is no admin
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Unsubscribe user from issue
+      tags:
+      - issue
+    put:
+      operationId: issueAddSubscription
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: user to subscribe
+        in: path
+        name: user
+        required: true
+        schema:
+          type: string
+      responses:
+        201:
+          content: {}
+          description: APIEmpty is an empty response
+        304:
+          content: {}
+          description: User can only subscribe itself if he is no admin
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Subscribe user to issue
+      tags:
+      - issue
+  /repos/{owner}/{repo}/issues/{index}/times:
+    delete:
+      operationId: issueResetTime
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue to add tracked time to
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        204:
+          content: {}
+          description: APIEmpty is an empty response
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        403:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Reset a tracked time of an issue
+      tags:
+      - issue
+    get:
+      operationId: issueTrackedTimes
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TrackedTime'
+                type: array
+          description: TrackedTimeList
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: List an issue's tracked times
+      tags:
+      - issue
+    post:
+      operationId: issueAddTime
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTimeOption'
+        required: false
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackedTime'
+          description: TrackedTime
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Add tracked time to a issue
+      tags:
+      - issue
+      x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/issues/{index}/times/{id}:
+    delete:
+      operationId: issueDeleteTime
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: id of time to delete
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        204:
+          content: {}
+          description: APIEmpty is an empty response
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        403:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Delete specific tracked time
       tags:
       - issue
   /repos/{owner}/{repo}/keys:
@@ -3147,6 +4242,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeployKey'
           description: DeployKey
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Add a key to a repository
       tags:
       - repository
@@ -3178,6 +4284,16 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a key from a repository
       tags:
       - repository
@@ -3561,6 +4677,16 @@ paths:
         200:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Sync a mirrored repository
       tags:
       - repository
@@ -3662,6 +4788,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/PullRequest'
           description: PullRequest
+        409:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a pull request
       tags:
       - repository
@@ -3734,7 +4881,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/PullRequest'
           description: PullRequest
-      summary: Update a pull request
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        412:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Update a pull request. If using deadline only the date will be taken
+        into account, and time of day ignored.
       tags:
       - repository
       x-codegen-request-body-name: body
@@ -3809,6 +4988,16 @@ paths:
         405:
           content: {}
           description: APIEmpty is an empty response
+        409:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Merge a pull request
       tags:
       - repository
@@ -3839,6 +5028,9 @@ paths:
         200:
           content: {}
           description: success
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: Get a file from a repository
       tags:
       - repository
@@ -3908,6 +5100,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Release'
           description: Release
+        409:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a release
       tags:
       - repository
@@ -4094,6 +5296,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Attachment'
           description: Attachment
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a release attachment
       tags:
       - repository
@@ -4219,6 +5431,32 @@ paths:
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/signing-key.gpg:
+    get:
+      operationId: repoSigningKey
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: GPG armored public key
+      summary: Get signing-key.gpg for given repository
+      tags:
+      - repository
   /repos/{owner}/{repo}/stargazers:
     get:
       operationId: repoListStargazers
@@ -4269,6 +5507,33 @@ paths:
         required: true
         schema:
           type: string
+      - description: page number of results
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: type of sort
+        in: query
+        name: sort
+        schema:
+          enum:
+          - oldest
+          - recentupdate
+          - leastupdate
+          - leastindex
+          - highestindex
+          type: string
+      - description: type of state
+        in: query
+        name: state
+        schema:
+          enum:
+          - pending
+          - success
+          - error
+          - failure
+          - warning
+          type: string
       responses:
         200:
           content:
@@ -4278,6 +5543,16 @@ paths:
                   $ref: '#/components/schemas/Status'
                 type: array
           description: StatusList
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Get a commit's statuses
       tags:
       - repository
@@ -4312,14 +5587,22 @@ paths:
               $ref: '#/components/schemas/CreateStatusOption'
         required: false
       responses:
-        200:
+        201:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/Status'
-                type: array
-          description: StatusList
+                $ref: '#/components/schemas/Status'
+          description: Status
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a commit status
       tags:
       - repository
@@ -4484,6 +5767,16 @@ paths:
                   $ref: '#/components/schemas/TrackedTime'
                 type: array
           description: TrackedTimeList
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: List a repo's tracked times
       tags:
       - repository
@@ -4518,9 +5811,170 @@ paths:
                   $ref: '#/components/schemas/TrackedTime'
                 type: array
           description: TrackedTimeList
+        400:
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: List a user's tracked times in a repo
       tags:
       - user
+  /repos/{owner}/{repo}/topics:
+    get:
+      operationId: repoListTopics
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopicName'
+          description: TopicNames
+      summary: Get list of topics that a repository has
+      tags:
+      - repository
+    put:
+      operationId: repoUpdateTopics
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepoTopicOptions'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/RepoTopicOptions'
+        required: false
+      responses:
+        204:
+          content: {}
+          description: APIEmpty is an empty response
+        422:
+          content: {}
+          description: APIInvalidTopicsError is error format response to invalid topics
+          headers:
+            invalidTopics:
+              schema:
+                items:
+                  type: string
+                type: array
+            message:
+              schema:
+                type: string
+      summary: Replace list of topics for a repository
+      tags:
+      - repository
+      x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/topics/{topic}:
+    delete:
+      operationId: repoDeleteTopic
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: name of the topic to delete
+        in: path
+        name: topic
+        required: true
+        schema:
+          type: string
+      responses:
+        204:
+          content: {}
+          description: APIEmpty is an empty response
+        422:
+          content: {}
+          description: APIInvalidTopicsError is error format response to invalid topics
+          headers:
+            invalidTopics:
+              schema:
+                items:
+                  type: string
+                type: array
+            message:
+              schema:
+                type: string
+      summary: Delete a topic from a repository
+      tags:
+      - repository
+    put:
+      operationId: repoAddTopíc
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: name of the topic to add
+        in: path
+        name: topic
+        required: true
+        schema:
+          type: string
+      responses:
+        204:
+          content: {}
+          description: APIEmpty is an empty response
+        422:
+          content: {}
+          description: APIInvalidTopicsError is error format response to invalid topics
+          headers:
+            invalidTopics:
+              schema:
+                items:
+                  type: string
+                type: array
+            message:
+              schema:
+                type: string
+      summary: Add a topic to a repository
+      tags:
+      - repository
   /repositories/{id}:
     get:
       operationId: repoGetByID
@@ -4542,6 +5996,19 @@ paths:
       summary: Get a repository by id
       tags:
       - repository
+  /signing-key.gpg:
+    get:
+      operationId: getSigningKey
+      responses:
+        200:
+          content:
+            text/plain:
+              schema:
+                type: string
+          description: GPG armored public key
+      summary: Get default signing-key.gpg
+      tags:
+      - miscellaneous
   /teams/{id}:
     delete:
       operationId: orgDeleteTeam
@@ -4650,6 +6117,9 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: Remove a team member
       tags:
       - organization
@@ -4676,6 +6146,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: User
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: List a particular member of team
       tags:
       - organization
@@ -4699,6 +6172,9 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        404:
+          content: {}
+          description: APINotFound is a not found empty response
       summary: Add a team member
       tags:
       - organization
@@ -4754,6 +6230,16 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Remove a repository from a team
       tags:
       - organization
@@ -4783,6 +6269,16 @@ paths:
         204:
           content: {}
           description: APIEmpty is an empty response
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Add a repository to a team
       tags:
       - organization
@@ -4801,8 +6297,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Repository'
-          description: Repository
+                items:
+                  $ref: '#/components/schemas/TopicResponse'
+                type: array
+          description: TopicListResponse
+        403:
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: search topics via keyword
       tags:
       - repository
@@ -4873,6 +6381,17 @@ paths:
                   $ref: '#/components/schemas/Email'
                 type: array
           description: EmailList
+        422:
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Add email addresses
       tags:
       - user
@@ -5309,6 +6828,21 @@ paths:
       summary: Star the given repo
       tags:
       - user
+  /user/stopwatches:
+    get:
+      operationId: userGetStopWatches
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/StopWatch'
+                type: array
+          description: StopWatchList
+      summary: Get list of all existing stopwatches
+      tags:
+      - user
   /user/subscriptions:
     get:
       operationId: userCurrentListSubscriptions
@@ -5379,7 +6913,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/inline_response_200'
+                $ref: '#/components/schemas/inline_response_200_1'
           description: SearchResults of a successful search
       summary: Search for users
       tags:
@@ -5866,6 +7400,44 @@ components:
           schema:
             $ref: '#/components/schemas/Commit'
       description: Commit
+    CommitList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/Commit'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/Commit'
+            type: array
+      description: CommitList
+      headers:
+        X-HasMore:
+          description: True if there is another page
+          schema:
+            type: boolean
+        X-PageCount:
+          description: Total number of pages
+          schema:
+            format: int64
+            type: integer
+        X-PerPage:
+          description: Commits per page
+          schema:
+            format: int64
+            type: integer
+        X-Total:
+          description: Total commit count
+          schema:
+            format: int64
+            type: integer
+        X-Page:
+          description: The current page
+          schema:
+            format: int64
+            type: integer
     ContentsListResponse:
       content:
         application/json:
@@ -5923,6 +7495,15 @@ components:
               $ref: '#/components/schemas/Email'
             type: array
       description: EmailList
+    EmptyRepository:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIError'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/APIError'
+      description: EmptyRepository
     FileDeleteResponse:
       content:
         application/json:
@@ -6175,6 +7756,28 @@ components:
               $ref: '#/components/schemas/PullRequest'
             type: array
       description: PullRequestList
+    Reaction:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Reaction'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/Reaction'
+      description: Reaction
+    ReactionList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/Reaction'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/Reaction'
+            type: array
+      description: ReactionList
     Reference:
       content:
         application/json:
@@ -6281,6 +7884,28 @@ components:
               $ref: '#/components/schemas/Status'
             type: array
       description: StatusList
+    StopWatch:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StopWatch'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/StopWatch'
+      description: StopWatch
+    StopWatchList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/StopWatch'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/StopWatch'
+            type: array
+      description: StopWatchList
     Tag:
       content:
         application/json:
@@ -6325,6 +7950,28 @@ components:
               $ref: '#/components/schemas/Team'
             type: array
       description: TeamList
+    TopicListResponse:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/TopicResponse'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/TopicResponse'
+            type: array
+      description: TopicListResponse
+    TopicNames:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TopicName'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/TopicName'
+      description: TopicNames
     TrackedTime:
       content:
         application/json:
@@ -6414,6 +8061,18 @@ components:
         url:
           schema:
             type: string
+    invalidTopicsError:
+      content: {}
+      description: APIInvalidTopicsError is error format response to invalid topics
+      headers:
+        invalidTopics:
+          schema:
+            items:
+              type: string
+            type: array
+        message:
+          schema:
+            type: string
     notFound:
       content: {}
       description: APINotFound is a not found empty response
@@ -6421,10 +8080,10 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/DeleteFileOptions'
+            $ref: '#/components/schemas/EditReactionOption'
         text/html:
           schema:
-            $ref: '#/components/schemas/DeleteFileOptions'
+            $ref: '#/components/schemas/EditReactionOption'
       description: parameterBodies
     redirect:
       content: {}
@@ -6440,6 +8099,17 @@ components:
           schema:
             type: string
   schemas:
+    APIError:
+      description: APIError is an api error with a message
+      properties:
+        message:
+          type: string
+          x-go-name: Message
+        url:
+          type: string
+          x-go-name: URL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     AccessToken:
       example:
         sha1: sha1
@@ -6477,13 +8147,23 @@ components:
     AddTimeOption:
       description: AddTimeOption options for adding time to an issue
       example:
+        created: 2000-01-23T04:56:07.000+00:00
+        user_name: user_name
         time: 0
       properties:
+        created:
+          format: date-time
+          type: string
+          x-go-name: Created
         time:
           description: time in seconds
           format: int64
           type: integer
           x-go-name: Time
+        user_name:
+          description: User who spent the time (optional)
+          type: string
+          x-go-name: User
       required:
       - time
       type: object
@@ -6504,6 +8184,10 @@ components:
           payload: payload
           signature: signature
           verified: true
+          signer:
+            name: name
+            email: email
+            username: username
         object:
           type: type
           sha: sha
@@ -6588,6 +8272,12 @@ components:
     Branch:
       description: Branch represents a repository branch
       example:
+        enable_status_check: true
+        status_check_contexts:
+        - status_check_contexts
+        - status_check_contexts
+        protected: true
+        user_can_push: true
         commit:
           committer:
             name: name
@@ -6614,14 +8304,41 @@ components:
             payload: payload
             signature: signature
             verified: true
+            signer:
+              name: name
+              email: email
+              username: username
           timestamp: 2000-01-23T04:56:07.000+00:00
         name: name
+        required_approvals: 0
+        user_can_merge: true
       properties:
         commit:
           $ref: '#/components/schemas/PayloadCommit'
+        enable_status_check:
+          type: boolean
+          x-go-name: EnableStatusCheck
         name:
           type: string
           x-go-name: Name
+        protected:
+          type: boolean
+          x-go-name: Protected
+        required_approvals:
+          format: int64
+          type: integer
+          x-go-name: RequiredApprovals
+        status_check_contexts:
+          items:
+            type: string
+          type: array
+          x-go-name: StatusCheckContexts
+        user_can_merge:
+          type: boolean
+          x-go-name: UserCanMerge
+        user_can_push:
+          type: boolean
+          x-go-name: UserCanPush
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     Comment:
@@ -6630,10 +8347,12 @@ components:
         issue_url: issue_url
         updated_at: 2000-01-23T04:56:07.000+00:00
         html_url: html_url
+        original_author_id: 6
         created_at: 2000-01-23T04:56:07.000+00:00
         id: 0
         pull_request_url: pull_request_url
         body: body
+        original_author: original_author
         user:
           is_admin: true
           full_name: full_name
@@ -6662,6 +8381,13 @@ components:
         issue_url:
           type: string
           x-go-name: IssueURL
+        original_author:
+          type: string
+          x-go-name: OriginalAuthor
+        original_author_id:
+          format: int64
+          type: integer
+          x-go-name: OriginalAuthorID
         pull_request_url:
           type: string
           x-go-name: PRURL
@@ -6739,6 +8465,22 @@ components:
           type: string
           x-go-name: URL
       title: Commit contains information generated from a Git commit.
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    CommitDateOptions:
+      description: CommitDateOptions store dates for GIT_AUTHOR_DATE and GIT_COMMITTER_DATE
+      example:
+        committer: 2000-01-23T04:56:07.000+00:00
+        author: 2000-01-23T04:56:07.000+00:00
+      properties:
+        author:
+          format: date-time
+          type: string
+          x-go-name: Author
+        committer:
+          format: date-time
+          type: string
+          x-go-name: Committer
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     CommitMeta:
@@ -6874,6 +8616,9 @@ components:
           name: name
           email: email
         new_branch: new_branch
+        dates:
+          committer: 2000-01-23T04:56:07.000+00:00
+          author: 2000-01-23T04:56:07.000+00:00
         message: message
         branch: branch
         content: content
@@ -6891,6 +8636,8 @@ components:
           description: content must be base64 encoded
           type: string
           x-go-name: Content
+        dates:
+          $ref: '#/components/schemas/CommitDateOptions'
         message:
           description: message (optional) for the commit of this file. if not supplied,
             a default message will be used
@@ -6932,8 +8679,9 @@ components:
     CreateHookOption:
       description: CreateHookOption options when create a hook
       example:
+        branch_filter: branch_filter
         active: false
-        type: gitea
+        type: dingtalk
         config:
           key: config
         events:
@@ -6944,11 +8692,17 @@ components:
           default: false
           type: boolean
           x-go-name: Active
+        branch_filter:
+          type: string
+          x-go-name: BranchFilter
         config:
           additionalProperties:
             type: string
+          description: |-
+            CreateHookOptionConfig has all config options in it
+            required are "content_type" and "url" Required
           type: object
-          x-go-name: Config
+          x-go-package: code.gitea.io/gitea/modules/structs
         events:
           items:
             type: string
@@ -6956,15 +8710,26 @@ components:
           x-go-name: Events
         type:
           enum:
+          - dingtalk
+          - discord
           - gitea
           - gogs
+          - msteams
           - slack
-          - discord
+          - telegram
           type: string
           x-go-name: Type
       required:
       - config
       - type
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    CreateHookOptionConfig:
+      additionalProperties:
+        type: string
+      description: |-
+        CreateHookOptionConfig has all config options in it
+        required are "content_type" and "url" Required
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     CreateIssueCommentOption:
@@ -7103,6 +8868,7 @@ components:
       example:
         website: website
         full_name: full_name
+        repo_admin_change_team_access: true
         visibility: public
         description: description
         location: location
@@ -7117,6 +8883,9 @@ components:
         location:
           type: string
           x-go-name: Location
+        repo_admin_change_team_access:
+          type: boolean
+          x-go-name: RepoAdminChangeTeamAccess
         username:
           type: string
           x-go-name: UserName
@@ -7224,6 +8993,7 @@ components:
       description: CreateRepoOption options when creating repository
       example:
         auto_init: true
+        issue_labels: issue_labels
         license: license
         private: true
         gitignores: gitignores
@@ -7243,6 +9013,10 @@ components:
           description: Gitignores to use
           type: string
           x-go-name: Gitignores
+        issue_labels:
+          description: Issue Label set to use
+          type: string
+          x-go-name: IssueLabels
         license:
           description: License to use
           type: string
@@ -7292,16 +9066,29 @@ components:
     CreateTeamOption:
       description: CreateTeamOption options for creating a team
       example:
+        can_create_org_repo: true
         name: name
         description: description
         permission: read
+        includes_all_repositories: true
         units:
-        - units
-        - units
+        - repo.code
+        - repo.issues
+        - repo.ext_issues
+        - repo.wiki
+        - repo.pulls
+        - repo.releases
+        - repo.ext_wiki
       properties:
+        can_create_org_repo:
+          type: boolean
+          x-go-name: CanCreateOrgRepo
         description:
           type: string
           x-go-name: Description
+        includes_all_repositories:
+          type: boolean
+          x-go-name: IncludesAllRepositories
         name:
           type: string
           x-go-name: Name
@@ -7313,6 +9100,14 @@ components:
           type: string
           x-go-name: Permission
         units:
+          example:
+          - repo.code
+          - repo.issues
+          - repo.ext_issues
+          - repo.wiki
+          - repo.pulls
+          - repo.releases
+          - repo.ext_wiki
           items:
             type: string
           type: array
@@ -7392,6 +9187,9 @@ components:
           name: name
           email: email
         new_branch: new_branch
+        dates:
+          committer: 2000-01-23T04:56:07.000+00:00
+          author: 2000-01-23T04:56:07.000+00:00
         message: message
         branch: branch
         sha: sha
@@ -7405,6 +9203,8 @@ components:
           x-go-name: BranchName
         committer:
           $ref: '#/components/schemas/Identity'
+        dates:
+          $ref: '#/components/schemas/CommitDateOptions'
         message:
           description: message (optional) for the commit of this file. if not supplied,
             a default message will be used
@@ -7433,9 +9233,11 @@ components:
         id: 0
         repository:
           ignore_whitespace_conflicts: true
+          template: true
           mirror: true
           private: true
           open_issues_count: 1
+          open_pr_counter: 5
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
           has_pull_requests: true
@@ -7448,9 +9250,14 @@ components:
             pull: true
             admin: true
             push: true
-          stars_count: 5
+          stars_count: 7
           allow_rebase_explicit: true
           id: 6
+          release_counter: 5
+          external_tracker:
+            external_tracker_style: external_tracker_style
+            external_tracker_url: external_tracker_url
+            external_tracker_format: external_tracker_format
           owner:
             is_admin: true
             full_name: full_name
@@ -7462,19 +9269,26 @@ components:
             login: login
             email: email
           allow_squash_merge: true
+          external_wiki:
+            external_wiki_url: external_wiki_url
           website: website
+          internal_tracker:
+            enable_issue_dependencies: true
+            allow_only_contributors_to_track_time: true
+            enable_time_tracker: true
           ssh_url: ssh_url
           has_issues: true
           allow_rebase: true
           fork: true
           full_name: full_name
           avatar_url: avatar_url
-          size: 5
+          size: 2
+          original_url: original_url
           clone_url: clone_url
           html_url: html_url
           name: name
           default_branch: default_branch
-          watchers_count: 2
+          watchers_count: 9
           forks_count: 0
         title: title
         key: key
@@ -7547,6 +9361,7 @@ components:
     EditHookOption:
       description: EditHookOption options when modify one hook
       example:
+        branch_filter: branch_filter
         active: true
         config:
           key: config
@@ -7557,6 +9372,9 @@ components:
         active:
           type: boolean
           x-go-name: Active
+        branch_filter:
+          type: string
+          x-go-name: BranchFilter
         config:
           additionalProperties:
             type: string
@@ -7584,6 +9402,7 @@ components:
     EditIssueOption:
       description: EditIssueOption options for editing an issue
       example:
+        unset_due_date: true
         milestone: 0
         due_date: 2000-01-23T04:56:07.000+00:00
         assignees:
@@ -7619,6 +9438,9 @@ components:
         title:
           type: string
           x-go-name: Title
+        unset_due_date:
+          type: boolean
+          x-go-name: RemoveDeadline
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     EditLabelOption:
@@ -7667,6 +9489,7 @@ components:
       example:
         website: website
         full_name: full_name
+        repo_admin_change_team_access: true
         visibility: public
         description: description
         location: location
@@ -7680,6 +9503,9 @@ components:
         location:
           type: string
           x-go-name: Location
+        repo_admin_change_team_access:
+          type: boolean
+          x-go-name: RepoAdminChangeTeamAccess
         visibility:
           description: possible values are `public`, `limited` or `private`
           enum:
@@ -7696,6 +9522,7 @@ components:
     EditPullRequestOption:
       description: EditPullRequestOption options when modify pull request
       example:
+        unset_due_date: true
         milestone: 6
         due_date: 2000-01-23T04:56:07.000+00:00
         assignees:
@@ -7740,6 +9567,19 @@ components:
         title:
           type: string
           x-go-name: Title
+        unset_due_date:
+          type: boolean
+          x-go-name: RemoveDeadline
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    EditReactionOption:
+      description: EditReactionOption contain the reaction type
+      example:
+        content: content
+      properties:
+        content:
+          type: string
+          x-go-name: Reaction
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     EditReleaseOption:
@@ -7776,9 +9616,16 @@ components:
       description: EditRepoOption options when editing a repository's properties
       example:
         ignore_whitespace_conflicts: true
+        template: true
         allow_squash_merge: true
+        external_wiki:
+          external_wiki_url: external_wiki_url
         private: true
         website: website
+        internal_tracker:
+          enable_issue_dependencies: true
+          allow_only_contributors_to_track_time: true
+          enable_time_tracker: true
         description: description
         has_issues: true
         has_pull_requests: true
@@ -7789,6 +9636,10 @@ components:
         name: name
         default_branch: default_branch
         allow_rebase_explicit: true
+        external_tracker:
+          external_tracker_style: external_tracker_style
+          external_tracker_url: external_tracker_url
+          external_tracker_format: external_tracker_format
       properties:
         allow_merge_commits:
           description: either `true` to allow merging pull requests with a merge commit,
@@ -7824,6 +9675,10 @@ components:
           description: a short description of the repository.
           type: string
           x-go-name: Description
+        external_tracker:
+          $ref: '#/components/schemas/ExternalTracker'
+        external_wiki:
+          $ref: '#/components/schemas/ExternalWiki'
         has_issues:
           description: either `true` to enable issues for this repository or `false`
             to disable them.
@@ -7844,6 +9699,8 @@ components:
             to not ignore whitespace. `has_pull_requests` must be `true`.
           type: boolean
           x-go-name: IgnoreWhitespaceConflicts
+        internal_tracker:
+          $ref: '#/components/schemas/InternalTracker'
         name:
           description: name of the repository
           type: string
@@ -7855,6 +9712,11 @@ components:
             owners and a non-owner tries to change the value of private.
           type: boolean
           x-go-name: Private
+        template:
+          description: either `true` to make this repository a template or `false`
+            to make it a normal repository
+          type: boolean
+          x-go-name: Template
         website:
           description: a URL with more information about the repository.
           type: string
@@ -7864,16 +9726,29 @@ components:
     EditTeamOption:
       description: EditTeamOption options for editing a team
       example:
+        can_create_org_repo: true
         name: name
         description: description
         permission: read
+        includes_all_repositories: true
         units:
-        - units
-        - units
+        - repo.code
+        - repo.issues
+        - repo.ext_issues
+        - repo.wiki
+        - repo.pulls
+        - repo.releases
+        - repo.ext_wiki
       properties:
+        can_create_org_repo:
+          type: boolean
+          x-go-name: CanCreateOrgRepo
         description:
           type: string
           x-go-name: Description
+        includes_all_repositories:
+          type: boolean
+          x-go-name: IncludesAllRepositories
         name:
           type: string
           x-go-name: Name
@@ -7885,6 +9760,14 @@ components:
           type: string
           x-go-name: Permission
         units:
+          example:
+          - repo.code
+          - repo.issues
+          - repo.ext_issues
+          - repo.wiki
+          - repo.pulls
+          - repo.releases
+          - repo.ext_wiki
           items:
             type: string
           type: array
@@ -7983,6 +9866,39 @@ components:
           x-go-name: Verified
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    ExternalTracker:
+      description: ExternalTracker represents settings for external tracker
+      example:
+        external_tracker_style: external_tracker_style
+        external_tracker_url: external_tracker_url
+        external_tracker_format: external_tracker_format
+      properties:
+        external_tracker_format:
+          description: External Issue Tracker URL Format. Use the placeholders {user},
+            {repo} and {index} for the username, repository name and issue index.
+          type: string
+          x-go-name: ExternalTrackerFormat
+        external_tracker_style:
+          description: External Issue Tracker Number Format, either `numeric` or `alphanumeric`
+          type: string
+          x-go-name: ExternalTrackerStyle
+        external_tracker_url:
+          description: URL of external issue tracker.
+          type: string
+          x-go-name: ExternalTrackerURL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    ExternalWiki:
+      description: ExternalWiki represents setting for external wiki
+      example:
+        external_wiki_url: external_wiki_url
+      properties:
+        external_wiki_url:
+          description: URL of external wiki.
+          type: string
+          x-go-name: ExternalWikiURL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     FileCommitResponse:
       example:
         committer:
@@ -8064,6 +9980,10 @@ components:
           payload: payload
           signature: signature
           verified: true
+          signer:
+            name: name
+            email: email
+            username: username
       properties:
         commit:
           $ref: '#/components/schemas/FileCommitResponse'
@@ -8140,6 +10060,10 @@ components:
           payload: payload
           signature: signature
           verified: true
+          signer:
+            name: name
+            email: email
+            username: username
       properties:
         commit:
           $ref: '#/components/schemas/FileCommitResponse'
@@ -8429,6 +10353,28 @@ components:
           x-go-name: Name
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    InternalTracker:
+      description: InternalTracker represents settings for internal tracker
+      example:
+        enable_issue_dependencies: true
+        allow_only_contributors_to_track_time: true
+        enable_time_tracker: true
+      properties:
+        allow_only_contributors_to_track_time:
+          description: Let only contributors track time (Built-in issue tracker)
+          type: boolean
+          x-go-name: AllowOnlyContributorsToTrackTime
+        enable_issue_dependencies:
+          description: Enable dependencies for issues and pull requests (Built-in
+            issue tracker)
+          type: boolean
+          x-go-name: EnableIssueDependencies
+        enable_time_tracker:
+          description: Enable time tracking (Built-in issue tracker)
+          type: boolean
+          x-go-name: EnableTimeTracker
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     Issue:
       description: Issue represents an issue in a repository
       example:
@@ -8437,6 +10383,7 @@ components:
           merged: true
         closed_at: 2000-01-23T04:56:07.000+00:00
         comments: 0
+        original_author_id: 9
         due_date: 2000-01-23T04:56:07.000+00:00
         assignees:
         - is_admin: true
@@ -8459,6 +10406,10 @@ components:
           email: email
         created_at: 2000-01-23T04:56:07.000+00:00
         body: body
+        repository:
+          full_name: full_name
+          name: name
+          id: 3
         title: title
         url: url
         labels:
@@ -8483,6 +10434,7 @@ components:
           title: title
           due_on: 2000-01-23T04:56:07.000+00:00
         updated_at: 2000-01-23T04:56:07.000+00:00
+        html_url: html_url
         assignee:
           is_admin: true
           full_name: full_name
@@ -8495,6 +10447,7 @@ components:
           email: email
         id: 6
         state: state
+        original_author: original_author
         user:
           is_admin: true
           full_name: full_name
@@ -8532,6 +10485,9 @@ components:
           format: date-time
           type: string
           x-go-name: Deadline
+        html_url:
+          type: string
+          x-go-name: HTMLURL
         id:
           format: int64
           type: integer
@@ -8547,8 +10503,17 @@ components:
           format: int64
           type: integer
           x-go-name: Index
+        original_author:
+          type: string
+          x-go-name: OriginalAuthor
+        original_author_id:
+          format: int64
+          type: integer
+          x-go-name: OriginalAuthorID
         pull_request:
           $ref: '#/components/schemas/PullRequestMeta'
+        repository:
+          $ref: '#/components/schemas/RepositoryMeta'
         state:
           description: StateType issue state type
           type: string
@@ -8795,6 +10760,7 @@ components:
       example:
         website: website
         full_name: full_name
+        repo_admin_change_team_access: true
         avatar_url: avatar_url
         visibility: visibility
         description: description
@@ -8818,6 +10784,9 @@ components:
         location:
           type: string
           x-go-name: Location
+        repo_admin_change_team_access:
+          type: boolean
+          x-go-name: RepoAdminChangeTeamAccess
         username:
           type: string
           x-go-name: UserName
@@ -8836,9 +10805,11 @@ components:
         repo_id: 0
         repo:
           ignore_whitespace_conflicts: true
+          template: true
           mirror: true
           private: true
           open_issues_count: 1
+          open_pr_counter: 5
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
           has_pull_requests: true
@@ -8851,9 +10822,14 @@ components:
             pull: true
             admin: true
             push: true
-          stars_count: 5
+          stars_count: 7
           allow_rebase_explicit: true
           id: 6
+          release_counter: 5
+          external_tracker:
+            external_tracker_style: external_tracker_style
+            external_tracker_url: external_tracker_url
+            external_tracker_format: external_tracker_format
           owner:
             is_admin: true
             full_name: full_name
@@ -8865,19 +10841,26 @@ components:
             login: login
             email: email
           allow_squash_merge: true
+          external_wiki:
+            external_wiki_url: external_wiki_url
           website: website
+          internal_tracker:
+            enable_issue_dependencies: true
+            allow_only_contributors_to_track_time: true
+            enable_time_tracker: true
           ssh_url: ssh_url
           has_issues: true
           allow_rebase: true
           fork: true
           full_name: full_name
           avatar_url: avatar_url
-          size: 5
+          size: 2
+          original_url: original_url
           clone_url: clone_url
           html_url: html_url
           name: name
           default_branch: default_branch
-          watchers_count: 2
+          watchers_count: 9
           forks_count: 0
         label: label
         sha: sha
@@ -8927,6 +10910,10 @@ components:
           payload: payload
           signature: signature
           verified: true
+          signer:
+            name: name
+            email: email
+            username: username
         timestamp: 2000-01-23T04:56:07.000+00:00
       properties:
         added:
@@ -8974,6 +10961,10 @@ components:
         payload: payload
         signature: signature
         verified: true
+        signer:
+          name: name
+          email: email
+          username: username
       properties:
         payload:
           type: string
@@ -8984,6 +10975,8 @@ components:
         signature:
           type: string
           x-go-name: Signature
+        signer:
+          $ref: '#/components/schemas/PayloadUser'
         verified:
           type: boolean
           x-go-name: Verified
@@ -9120,9 +11113,11 @@ components:
           repo_id: 0
           repo:
             ignore_whitespace_conflicts: true
+            template: true
             mirror: true
             private: true
             open_issues_count: 1
+            open_pr_counter: 5
             created_at: 2000-01-23T04:56:07.000+00:00
             description: description
             has_pull_requests: true
@@ -9135,9 +11130,14 @@ components:
               pull: true
               admin: true
               push: true
-            stars_count: 5
+            stars_count: 7
             allow_rebase_explicit: true
             id: 6
+            release_counter: 5
+            external_tracker:
+              external_tracker_style: external_tracker_style
+              external_tracker_url: external_tracker_url
+              external_tracker_format: external_tracker_format
             owner:
               is_admin: true
               full_name: full_name
@@ -9149,19 +11149,26 @@ components:
               login: login
               email: email
             allow_squash_merge: true
+            external_wiki:
+              external_wiki_url: external_wiki_url
             website: website
+            internal_tracker:
+              enable_issue_dependencies: true
+              allow_only_contributors_to_track_time: true
+              enable_time_tracker: true
             ssh_url: ssh_url
             has_issues: true
             allow_rebase: true
             fork: true
             full_name: full_name
             avatar_url: avatar_url
-            size: 5
+            size: 2
+            original_url: original_url
             clone_url: clone_url
             html_url: html_url
             name: name
             default_branch: default_branch
-            watchers_count: 2
+            watchers_count: 9
             forks_count: 0
           label: label
           sha: sha
@@ -9225,9 +11232,11 @@ components:
           repo_id: 0
           repo:
             ignore_whitespace_conflicts: true
+            template: true
             mirror: true
             private: true
             open_issues_count: 1
+            open_pr_counter: 5
             created_at: 2000-01-23T04:56:07.000+00:00
             description: description
             has_pull_requests: true
@@ -9240,9 +11249,14 @@ components:
               pull: true
               admin: true
               push: true
-            stars_count: 5
+            stars_count: 7
             allow_rebase_explicit: true
             id: 6
+            release_counter: 5
+            external_tracker:
+              external_tracker_style: external_tracker_style
+              external_tracker_url: external_tracker_url
+              external_tracker_format: external_tracker_format
             owner:
               is_admin: true
               full_name: full_name
@@ -9254,19 +11268,26 @@ components:
               login: login
               email: email
             allow_squash_merge: true
+            external_wiki:
+              external_wiki_url: external_wiki_url
             website: website
+            internal_tracker:
+              enable_issue_dependencies: true
+              allow_only_contributors_to_track_time: true
+              enable_time_tracker: true
             ssh_url: ssh_url
             has_issues: true
             allow_rebase: true
             fork: true
             full_name: full_name
             avatar_url: avatar_url
-            size: 5
+            size: 2
+            original_url: original_url
             clone_url: clone_url
             html_url: html_url
             name: name
             default_branch: default_branch
-            watchers_count: 2
+            watchers_count: 9
             forks_count: 0
           label: label
           sha: sha
@@ -9374,6 +11395,33 @@ components:
           format: date-time
           type: string
           x-go-name: Merged
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    Reaction:
+      description: Reaction contain one reaction
+      example:
+        created_at: 2000-01-23T04:56:07.000+00:00
+        user:
+          is_admin: true
+          full_name: full_name
+          avatar_url: avatar_url
+          created: 2000-01-23T04:56:07.000+00:00
+          last_login: 2000-01-23T04:56:07.000+00:00
+          language: language
+          id: 0
+          login: login
+          email: email
+        content: content
+      properties:
+        content:
+          type: string
+          x-go-name: Reaction
+        created_at:
+          format: date-time
+          type: string
+          x-go-name: Created
+        user:
+          $ref: '#/components/schemas/User'
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     Reference:
@@ -9516,13 +11564,30 @@ components:
       title: RepoCommit contains information of a commit in the context of a repository.
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    RepoTopicOptions:
+      description: RepoTopicOptions a collection of repo topic names
+      example:
+        topics:
+        - topics
+        - topics
+      properties:
+        topics:
+          description: list of topic names
+          items:
+            type: string
+          type: array
+          x-go-name: Topics
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     Repository:
       description: Repository represents a repository
       example:
         ignore_whitespace_conflicts: true
+        template: true
         mirror: true
         private: true
         open_issues_count: 1
+        open_pr_counter: 5
         created_at: 2000-01-23T04:56:07.000+00:00
         description: description
         has_pull_requests: true
@@ -9535,9 +11600,14 @@ components:
           pull: true
           admin: true
           push: true
-        stars_count: 5
+        stars_count: 7
         allow_rebase_explicit: true
         id: 6
+        release_counter: 5
+        external_tracker:
+          external_tracker_style: external_tracker_style
+          external_tracker_url: external_tracker_url
+          external_tracker_format: external_tracker_format
         owner:
           is_admin: true
           full_name: full_name
@@ -9549,19 +11619,26 @@ components:
           login: login
           email: email
         allow_squash_merge: true
+        external_wiki:
+          external_wiki_url: external_wiki_url
         website: website
+        internal_tracker:
+          enable_issue_dependencies: true
+          allow_only_contributors_to_track_time: true
+          enable_time_tracker: true
         ssh_url: ssh_url
         has_issues: true
         allow_rebase: true
         fork: true
         full_name: full_name
         avatar_url: avatar_url
-        size: 5
+        size: 2
+        original_url: original_url
         clone_url: clone_url
         html_url: html_url
         name: name
         default_branch: default_branch
-        watchers_count: 2
+        watchers_count: 9
         forks_count: 0
       properties:
         allow_merge_commits:
@@ -9598,6 +11675,10 @@ components:
         empty:
           type: boolean
           x-go-name: Empty
+        external_tracker:
+          $ref: '#/components/schemas/ExternalTracker'
+        external_wiki:
+          $ref: '#/components/schemas/ExternalWiki'
         fork:
           type: boolean
           x-go-name: Fork
@@ -9627,6 +11708,8 @@ components:
         ignore_whitespace_conflicts:
           type: boolean
           x-go-name: IgnoreWhitespaceConflicts
+        internal_tracker:
+          $ref: '#/components/schemas/InternalTracker'
         mirror:
           type: boolean
           x-go-name: Mirror
@@ -9637,6 +11720,13 @@ components:
           format: int64
           type: integer
           x-go-name: OpenIssues
+        open_pr_counter:
+          format: int64
+          type: integer
+          x-go-name: OpenPulls
+        original_url:
+          type: string
+          x-go-name: OriginalURL
         owner:
           $ref: '#/components/schemas/User'
         parent:
@@ -9646,6 +11736,10 @@ components:
         private:
           type: boolean
           x-go-name: Private
+        release_counter:
+          format: int64
+          type: integer
+          x-go-name: Releases
         size:
           format: int64
           type: integer
@@ -9657,6 +11751,9 @@ components:
           format: int64
           type: integer
           x-go-name: Stars
+        template:
+          type: boolean
+          x-go-name: Template
         updated_at:
           format: date-time
           type: string
@@ -9670,14 +11767,35 @@ components:
           x-go-name: Website
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    RepositoryMeta:
+      description: RepositoryMeta basic repository information
+      example:
+        full_name: full_name
+        name: name
+        id: 3
+      properties:
+        full_name:
+          type: string
+          x-go-name: FullName
+        id:
+          format: int64
+          type: integer
+          x-go-name: ID
+        name:
+          type: string
+          x-go-name: Name
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     SearchResults:
       description: SearchResults results of a successful search
       example:
         data:
         - ignore_whitespace_conflicts: true
+          template: true
           mirror: true
           private: true
           open_issues_count: 1
+          open_pr_counter: 5
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
           has_pull_requests: true
@@ -9690,9 +11808,14 @@ components:
             pull: true
             admin: true
             push: true
-          stars_count: 5
+          stars_count: 7
           allow_rebase_explicit: true
           id: 6
+          release_counter: 5
+          external_tracker:
+            external_tracker_style: external_tracker_style
+            external_tracker_url: external_tracker_url
+            external_tracker_format: external_tracker_format
           owner:
             is_admin: true
             full_name: full_name
@@ -9704,24 +11827,33 @@ components:
             login: login
             email: email
           allow_squash_merge: true
+          external_wiki:
+            external_wiki_url: external_wiki_url
           website: website
+          internal_tracker:
+            enable_issue_dependencies: true
+            allow_only_contributors_to_track_time: true
+            enable_time_tracker: true
           ssh_url: ssh_url
           has_issues: true
           allow_rebase: true
           fork: true
           full_name: full_name
           avatar_url: avatar_url
-          size: 5
+          size: 2
+          original_url: original_url
           clone_url: clone_url
           html_url: html_url
           name: name
           default_branch: default_branch
-          watchers_count: 2
+          watchers_count: 9
           forks_count: 0
         - ignore_whitespace_conflicts: true
+          template: true
           mirror: true
           private: true
           open_issues_count: 1
+          open_pr_counter: 5
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
           has_pull_requests: true
@@ -9734,9 +11866,14 @@ components:
             pull: true
             admin: true
             push: true
-          stars_count: 5
+          stars_count: 7
           allow_rebase_explicit: true
           id: 6
+          release_counter: 5
+          external_tracker:
+            external_tracker_style: external_tracker_style
+            external_tracker_url: external_tracker_url
+            external_tracker_format: external_tracker_format
           owner:
             is_admin: true
             full_name: full_name
@@ -9748,19 +11885,26 @@ components:
             login: login
             email: email
           allow_squash_merge: true
+          external_wiki:
+            external_wiki_url: external_wiki_url
           website: website
+          internal_tracker:
+            enable_issue_dependencies: true
+            allow_only_contributors_to_track_time: true
+            enable_time_tracker: true
           ssh_url: ssh_url
           has_issues: true
           allow_rebase: true
           fork: true
           full_name: full_name
           avatar_url: avatar_url
-          size: 5
+          size: 2
+          original_url: original_url
           clone_url: clone_url
           html_url: html_url
           name: name
           default_branch: default_branch
-          watchers_count: 2
+          watchers_count: 9
           forks_count: 0
         ok: true
       properties:
@@ -9850,6 +11994,22 @@ components:
         It can be "pending", "success", "error", "failure", and "warning"
       type: string
       x-go-package: code.gitea.io/gitea/modules/structs
+    StopWatch:
+      description: StopWatch represent a running stopwatch
+      example:
+        issue_index: 0
+        created: 2000-01-23T04:56:07.000+00:00
+      properties:
+        created:
+          format: date-time
+          type: string
+          x-go-name: Created
+        issue_index:
+          format: int64
+          type: integer
+          x-go-name: IssueIndex
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     Tag:
       description: Tag represents a repository tag
       example:
@@ -9880,9 +12040,11 @@ components:
     Team:
       description: Team represents a team in an organization
       example:
+        can_create_org_repo: true
         organization:
           website: website
           full_name: full_name
+          repo_admin_change_team_access: true
           avatar_url: avatar_url
           visibility: visibility
           description: description
@@ -9893,10 +12055,19 @@ components:
         description: description
         permission: none
         id: 0
+        includes_all_repositories: true
         units:
-        - units
-        - units
+        - repo.code
+        - repo.issues
+        - repo.ext_issues
+        - repo.wiki
+        - repo.pulls
+        - repo.releases
+        - repo.ext_wiki
       properties:
+        can_create_org_repo:
+          type: boolean
+          x-go-name: CanCreateOrgRepo
         description:
           type: string
           x-go-name: Description
@@ -9904,6 +12075,9 @@ components:
           format: int64
           type: integer
           x-go-name: ID
+        includes_all_repositories:
+          type: boolean
+          x-go-name: IncludesAllRepositories
         name:
           type: string
           x-go-name: Name
@@ -9919,6 +12093,14 @@ components:
           type: string
           x-go-name: Permission
         units:
+          example:
+          - repo.code
+          - repo.issues
+          - repo.ext_issues
+          - repo.wiki
+          - repo.pulls
+          - repo.releases
+          - repo.ext_wiki
           items:
             type: string
           type: array
@@ -9929,13 +12111,139 @@ components:
       description: TimeStamp defines a timestamp
       format: int64
       type: integer
-      x-go-package: code.gitea.io/gitea/modules/util
+      x-go-package: code.gitea.io/gitea/modules/timeutil
+    TopicName:
+      description: TopicName a list of repo topic names
+      example:
+        topics:
+        - topics
+        - topics
+      properties:
+        topics:
+          items:
+            type: string
+          type: array
+          x-go-name: TopicNames
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    TopicResponse:
+      description: TopicResponse for returning topics
+      example:
+        created: 2000-01-23T04:56:07.000+00:00
+        topic_name: topic_name
+        id: 0
+        repo_count: 6
+        updated: 2000-01-23T04:56:07.000+00:00
+      properties:
+        created:
+          format: date-time
+          type: string
+          x-go-name: Created
+        id:
+          format: int64
+          type: integer
+          x-go-name: ID
+        repo_count:
+          format: int64
+          type: integer
+          x-go-name: RepoCount
+        topic_name:
+          type: string
+          x-go-name: Name
+        updated:
+          format: date-time
+          type: string
+          x-go-name: Updated
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     TrackedTime:
       description: TrackedTime worked time for an issue / pr
       example:
+        issue:
+          pull_request:
+            merged_at: 2000-01-23T04:56:07.000+00:00
+            merged: true
+          closed_at: 2000-01-23T04:56:07.000+00:00
+          comments: 0
+          original_author_id: 9
+          due_date: 2000-01-23T04:56:07.000+00:00
+          assignees:
+          - is_admin: true
+            full_name: full_name
+            avatar_url: avatar_url
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            language: language
+            id: 0
+            login: login
+            email: email
+          - is_admin: true
+            full_name: full_name
+            avatar_url: avatar_url
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            language: language
+            id: 0
+            login: login
+            email: email
+          created_at: 2000-01-23T04:56:07.000+00:00
+          body: body
+          repository:
+            full_name: full_name
+            name: name
+            id: 3
+          title: title
+          url: url
+          labels:
+          - color: 00aabb
+            name: name
+            description: description
+            id: 1
+            url: url
+          - color: 00aabb
+            name: name
+            description: description
+            id: 1
+            url: url
+          number: 7
+          milestone:
+            closed_at: 2000-01-23T04:56:07.000+00:00
+            description: description
+            id: 5
+            state: state
+            closed_issues: 5
+            open_issues: 2
+            title: title
+            due_on: 2000-01-23T04:56:07.000+00:00
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          html_url: html_url
+          assignee:
+            is_admin: true
+            full_name: full_name
+            avatar_url: avatar_url
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            language: language
+            id: 0
+            login: login
+            email: email
+          id: 6
+          state: state
+          original_author: original_author
+          user:
+            is_admin: true
+            full_name: full_name
+            avatar_url: avatar_url
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            language: language
+            id: 0
+            login: login
+            email: email
         issue_id: 6
         user_id: 5
         created: 2000-01-23T04:56:07.000+00:00
+        user_name: user_name
         id: 0
         time: 1
       properties:
@@ -9947,7 +12255,10 @@ components:
           format: int64
           type: integer
           x-go-name: ID
+        issue:
+          $ref: '#/components/schemas/Issue'
         issue_id:
+          description: deprecated (only for backwards compatibility)
           format: int64
           type: integer
           x-go-name: IssueID
@@ -9957,9 +12268,13 @@ components:
           type: integer
           x-go-name: Time
         user_id:
+          description: deprecated (only for backwards compatibility)
           format: int64
           type: integer
           x-go-name: UserID
+        user_name:
+          type: string
+          x-go-name: UserName
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     UpdateFileOptions:
@@ -9975,6 +12290,9 @@ components:
           email: email
         from_path: from_path
         new_branch: new_branch
+        dates:
+          committer: 2000-01-23T04:56:07.000+00:00
+          author: 2000-01-23T04:56:07.000+00:00
         message: message
         branch: branch
         sha: sha
@@ -9993,6 +12311,8 @@ components:
           description: content must be base64 encoded
           type: string
           x-go-name: Content
+        dates:
+          $ref: '#/components/schemas/CommitDateOptions'
         from_path:
           description: from_path (optional) is the path of the original file which
             will be moved/renamed to the path in the URL
@@ -10083,7 +12403,7 @@ components:
           description: TimeStamp defines a timestamp
           format: int64
           type: integer
-          x-go-package: code.gitea.io/gitea/modules/util
+          x-go-package: code.gitea.io/gitea/modules/timeutil
       type: object
       x-go-package: code.gitea.io/gitea/models
     WatchInfo:
@@ -10119,6 +12439,65 @@ components:
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     inline_response_200:
+      example:
+        data:
+        - can_create_org_repo: true
+          organization:
+            website: website
+            full_name: full_name
+            repo_admin_change_team_access: true
+            avatar_url: avatar_url
+            visibility: visibility
+            description: description
+            location: location
+            id: 0
+            username: username
+          name: name
+          description: description
+          permission: none
+          id: 0
+          includes_all_repositories: true
+          units:
+          - repo.code
+          - repo.issues
+          - repo.ext_issues
+          - repo.wiki
+          - repo.pulls
+          - repo.releases
+          - repo.ext_wiki
+        - can_create_org_repo: true
+          organization:
+            website: website
+            full_name: full_name
+            repo_admin_change_team_access: true
+            avatar_url: avatar_url
+            visibility: visibility
+            description: description
+            location: location
+            id: 0
+            username: username
+          name: name
+          description: description
+          permission: none
+          id: 0
+          includes_all_repositories: true
+          units:
+          - repo.code
+          - repo.issues
+          - repo.ext_issues
+          - repo.wiki
+          - repo.pulls
+          - repo.releases
+          - repo.ext_wiki
+        ok: true
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Team'
+          type: array
+        ok:
+          type: boolean
+    inline_response_200_1:
       example:
         data:
         - is_admin: true
@@ -10160,6 +12539,7 @@ components:
       name: access_token
       type: apiKey
     AuthorizationHeaderToken:
+      description: API tokens must be prepended with "token" followed by a space.
       in: header
       name: Authorization
       type: apiKey

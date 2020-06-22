@@ -90,11 +90,38 @@ instance Consumes IssueAddLabel MimeJSON
 instance Produces IssueAddLabel MimeJSON
 
 
+-- *** issueAddSubscription
+
+-- | @PUT \/repos\/{owner}\/{repo}\/issues\/{index}\/subscriptions\/{user}@
+-- 
+-- Subscribe user to issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueAddSubscription 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue
+  -> User2 -- ^ "user" -  user to subscribe
+  -> GiteaRequest IssueAddSubscription MimeNoContent NoContent MimeNoContent
+issueAddSubscription (Owner owner) (Repo repo) (Index index) (User2 user) =
+  _mkRequest "PUT" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/subscriptions/",toPath user]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueAddSubscription  
+instance Produces IssueAddSubscription MimeNoContent
+
+
 -- *** issueAddTime
 
--- | @POST \/repos\/{owner}\/{repo}\/issues\/{id}\/times@
+-- | @POST \/repos\/{owner}\/{repo}\/issues\/{index}\/times@
 -- 
--- Add a tracked time to a issue
+-- Add tracked time to a issue
 -- 
 -- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
@@ -102,10 +129,10 @@ issueAddTime
   :: (Consumes IssueAddTime MimeJSON)
   => Owner -- ^ "owner" -  owner of the repo
   -> Repo -- ^ "repo" -  name of the repo
-  -> Id -- ^ "id" -  index of the issue to add tracked time to
+  -> Index -- ^ "index" -  index of the issue
   -> GiteaRequest IssueAddTime MimeJSON TrackedTime MimeJSON
-issueAddTime (Owner owner) (Repo repo) (Id id) =
-  _mkRequest "POST" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath id,"/times"]
+issueAddTime (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "POST" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/times"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
@@ -333,6 +360,70 @@ data IssueDeleteCommentDeprecated
 instance Produces IssueDeleteCommentDeprecated MimeNoContent
 
 
+-- *** issueDeleteCommentReaction
+
+-- | @DELETE \/repos\/{owner}\/{repo}\/issues\/comments\/{id}\/reactions@
+-- 
+-- Remove a reaction from a comment of an issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueDeleteCommentReaction 
+  :: (Consumes IssueDeleteCommentReaction MimeJSON)
+  => Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Id -- ^ "id" -  id of the comment to edit
+  -> GiteaRequest IssueDeleteCommentReaction MimeJSON NoContent MimeNoContent
+issueDeleteCommentReaction (Owner owner) (Repo repo) (Id id) =
+  _mkRequest "DELETE" ["/repos/",toPath owner,"/",toPath repo,"/issues/comments/",toPath id,"/reactions"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueDeleteCommentReaction 
+instance HasBodyParam IssueDeleteCommentReaction EditReactionOption 
+
+-- | @application/json@
+instance Consumes IssueDeleteCommentReaction MimeJSON
+
+instance Produces IssueDeleteCommentReaction MimeNoContent
+
+
+-- *** issueDeleteIssueReaction
+
+-- | @DELETE \/repos\/{owner}\/{repo}\/issues\/{index}\/reactions@
+-- 
+-- Remove a reaction from an issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueDeleteIssueReaction 
+  :: (Consumes IssueDeleteIssueReaction MimeJSON)
+  => Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue
+  -> GiteaRequest IssueDeleteIssueReaction MimeJSON NoContent MimeNoContent
+issueDeleteIssueReaction (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "DELETE" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/reactions"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueDeleteIssueReaction 
+instance HasBodyParam IssueDeleteIssueReaction EditReactionOption 
+
+-- | @application/json@
+instance Consumes IssueDeleteIssueReaction MimeJSON
+
+instance Produces IssueDeleteIssueReaction MimeNoContent
+
+
 -- *** issueDeleteLabel
 
 -- | @DELETE \/repos\/{owner}\/{repo}\/labels\/{id}@
@@ -383,6 +474,86 @@ issueDeleteMilestone (Owner owner) (Repo repo) (Id id) =
 
 data IssueDeleteMilestone  
 instance Produces IssueDeleteMilestone MimeNoContent
+
+
+-- *** issueDeleteStopWatch
+
+-- | @DELETE \/repos\/{owner}\/{repo}\/issues\/{index}\/stopwatch\/delete@
+-- 
+-- Delete an issue's existing stopwatch.
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueDeleteStopWatch 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue to stop the stopwatch on
+  -> GiteaRequest IssueDeleteStopWatch MimeNoContent NoContent MimeNoContent
+issueDeleteStopWatch (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "DELETE" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/stopwatch/delete"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueDeleteStopWatch  
+instance Produces IssueDeleteStopWatch MimeNoContent
+
+
+-- *** issueDeleteSubscription
+
+-- | @DELETE \/repos\/{owner}\/{repo}\/issues\/{index}\/subscriptions\/{user}@
+-- 
+-- Unsubscribe user from issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueDeleteSubscription 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue
+  -> User2 -- ^ "user" -  user witch unsubscribe
+  -> GiteaRequest IssueDeleteSubscription MimeNoContent NoContent MimeNoContent
+issueDeleteSubscription (Owner owner) (Repo repo) (Index index) (User2 user) =
+  _mkRequest "DELETE" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/subscriptions/",toPath user]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueDeleteSubscription  
+instance Produces IssueDeleteSubscription MimeNoContent
+
+
+-- *** issueDeleteTime
+
+-- | @DELETE \/repos\/{owner}\/{repo}\/issues\/{index}\/times\/{id}@
+-- 
+-- Delete specific tracked time
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueDeleteTime 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue
+  -> Id -- ^ "id" -  id of time to delete
+  -> GiteaRequest IssueDeleteTime MimeNoContent NoContent MimeNoContent
+issueDeleteTime (Owner owner) (Repo repo) (Index index) (Id id) =
+  _mkRequest "DELETE" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/times/",toPath id]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueDeleteTime  
+instance Produces IssueDeleteTime MimeNoContent
 
 
 -- *** issueEditComment
@@ -586,6 +757,33 @@ instance Consumes IssueEditMilestone MimeJSON
 instance Produces IssueEditMilestone MimeJSON
 
 
+-- *** issueGetCommentReactions
+
+-- | @GET \/repos\/{owner}\/{repo}\/issues\/comments\/{id}\/reactions@
+-- 
+-- Get a list of reactions from a comment of an issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueGetCommentReactions 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Id -- ^ "id" -  id of the comment to edit
+  -> GiteaRequest IssueGetCommentReactions MimeNoContent [Reaction] MimeJSON
+issueGetCommentReactions (Owner owner) (Repo repo) (Id id) =
+  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/issues/comments/",toPath id,"/reactions"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueGetCommentReactions  
+-- | @application/json@
+instance Produces IssueGetCommentReactions MimeJSON
+
+
 -- *** issueGetComments
 
 -- | @GET \/repos\/{owner}\/{repo}\/issues\/{index}\/comments@
@@ -643,6 +841,33 @@ issueGetIssue (Owner owner) (Repo repo) (Index index) =
 data IssueGetIssue  
 -- | @application/json@
 instance Produces IssueGetIssue MimeJSON
+
+
+-- *** issueGetIssueReactions
+
+-- | @GET \/repos\/{owner}\/{repo}\/issues\/{index}\/reactions@
+-- 
+-- Get a list reactions of an issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueGetIssueReactions 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue
+  -> GiteaRequest IssueGetIssueReactions MimeNoContent [Reaction] MimeJSON
+issueGetIssueReactions (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/reactions"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueGetIssueReactions  
+-- | @application/json@
+instance Produces IssueGetIssueReactions MimeJSON
 
 
 -- *** issueGetLabel
@@ -830,6 +1055,11 @@ instance HasOptionalParam IssueListIssues Page where
 instance HasOptionalParam IssueListIssues Q where
   applyOptionalParam req (Q xs) =
     req `setQuery` toQuery ("q", Just xs)
+
+-- | /Optional Param/ "type" - filter by type (issues / pulls) if set
+instance HasOptionalParam IssueListIssues ParamType where
+  applyOptionalParam req (ParamType xs) =
+    req `setQuery` toQuery ("type", Just xs)
 -- | @application/json@
 instance Produces IssueListIssues MimeJSON
 
@@ -858,6 +1088,72 @@ issueListLabels (Owner owner) (Repo repo) =
 data IssueListLabels  
 -- | @application/json@
 instance Produces IssueListLabels MimeJSON
+
+
+-- *** issuePostCommentReaction
+
+-- | @POST \/repos\/{owner}\/{repo}\/issues\/comments\/{id}\/reactions@
+-- 
+-- Add a reaction to a comment of an issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issuePostCommentReaction 
+  :: (Consumes IssuePostCommentReaction MimeJSON)
+  => Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Id -- ^ "id" -  id of the comment to edit
+  -> GiteaRequest IssuePostCommentReaction MimeJSON Reaction MimeJSON
+issuePostCommentReaction (Owner owner) (Repo repo) (Id id) =
+  _mkRequest "POST" ["/repos/",toPath owner,"/",toPath repo,"/issues/comments/",toPath id,"/reactions"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssuePostCommentReaction 
+instance HasBodyParam IssuePostCommentReaction EditReactionOption 
+
+-- | @application/json@
+instance Consumes IssuePostCommentReaction MimeJSON
+
+-- | @application/json@
+instance Produces IssuePostCommentReaction MimeJSON
+
+
+-- *** issuePostIssueReaction
+
+-- | @POST \/repos\/{owner}\/{repo}\/issues\/{index}\/reactions@
+-- 
+-- Add a reaction to an issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issuePostIssueReaction 
+  :: (Consumes IssuePostIssueReaction MimeJSON)
+  => Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue
+  -> GiteaRequest IssuePostIssueReaction MimeJSON Reaction MimeJSON
+issuePostIssueReaction (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "POST" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/reactions"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssuePostIssueReaction 
+instance HasBodyParam IssuePostIssueReaction EditReactionOption 
+
+-- | @application/json@
+instance Consumes IssuePostIssueReaction MimeJSON
+
+-- | @application/json@
+instance Produces IssuePostIssueReaction MimeJSON
 
 
 -- *** issueRemoveLabel
@@ -920,6 +1216,86 @@ instance Consumes IssueReplaceLabels MimeJSON
 instance Produces IssueReplaceLabels MimeJSON
 
 
+-- *** issueResetTime
+
+-- | @DELETE \/repos\/{owner}\/{repo}\/issues\/{index}\/times@
+-- 
+-- Reset a tracked time of an issue
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueResetTime 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue to add tracked time to
+  -> GiteaRequest IssueResetTime MimeNoContent NoContent MimeNoContent
+issueResetTime (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "DELETE" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/times"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueResetTime  
+instance Produces IssueResetTime MimeNoContent
+
+
+-- *** issueSearchIssues
+
+-- | @GET \/repos\/issues\/search@
+-- 
+-- Search for issues across the repositories that the user has access to
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueSearchIssues 
+  :: GiteaRequest IssueSearchIssues MimeNoContent [Issue] MimeJSON
+issueSearchIssues =
+  _mkRequest "GET" ["/repos/issues/search"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueSearchIssues  
+
+-- | /Optional Param/ "state" - whether issue is open or closed
+instance HasOptionalParam IssueSearchIssues State where
+  applyOptionalParam req (State xs) =
+    req `setQuery` toQuery ("state", Just xs)
+
+-- | /Optional Param/ "labels" - comma separated list of labels. Fetch only issues that have any of this labels. Non existent labels are discarded
+instance HasOptionalParam IssueSearchIssues Labels where
+  applyOptionalParam req (Labels xs) =
+    req `setQuery` toQuery ("labels", Just xs)
+
+-- | /Optional Param/ "page" - page number of requested issues
+instance HasOptionalParam IssueSearchIssues Page where
+  applyOptionalParam req (Page xs) =
+    req `setQuery` toQuery ("page", Just xs)
+
+-- | /Optional Param/ "q" - search string
+instance HasOptionalParam IssueSearchIssues Q where
+  applyOptionalParam req (Q xs) =
+    req `setQuery` toQuery ("q", Just xs)
+
+-- | /Optional Param/ "priority_repo_id" - repository to prioritize in the results
+instance HasOptionalParam IssueSearchIssues PriorityRepoId where
+  applyOptionalParam req (PriorityRepoId xs) =
+    req `setQuery` toQuery ("priority_repo_id", Just xs)
+
+-- | /Optional Param/ "type" - filter by type (issues / pulls) if set
+instance HasOptionalParam IssueSearchIssues ParamType where
+  applyOptionalParam req (ParamType xs) =
+    req `setQuery` toQuery ("type", Just xs)
+-- | @application/json@
+instance Produces IssueSearchIssues MimeJSON
+
+
 -- *** issueStartStopWatch
 
 -- | @POST \/repos\/{owner}\/{repo}\/issues\/{index}\/stopwatch\/start@
@@ -946,7 +1322,7 @@ data IssueStartStopWatch
 instance Produces IssueStartStopWatch MimeNoContent
 
 
--- *** issueStopWatch
+-- *** issueStopStopWatch
 
 -- | @POST \/repos\/{owner}\/{repo}\/issues\/{index}\/stopwatch\/stop@
 -- 
@@ -954,12 +1330,12 @@ instance Produces IssueStartStopWatch MimeNoContent
 -- 
 -- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-issueStopWatch 
+issueStopStopWatch 
   :: Owner -- ^ "owner" -  owner of the repo
   -> Repo -- ^ "repo" -  name of the repo
   -> Index -- ^ "index" -  index of the issue to stop the stopwatch on
-  -> GiteaRequest IssueStopWatch MimeNoContent NoContent MimeNoContent
-issueStopWatch (Owner owner) (Repo repo) (Index index) =
+  -> GiteaRequest IssueStopStopWatch MimeNoContent NoContent MimeNoContent
+issueStopStopWatch (Owner owner) (Repo repo) (Index index) =
   _mkRequest "POST" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/stopwatch/stop"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
@@ -968,13 +1344,40 @@ issueStopWatch (Owner owner) (Repo repo) (Index index) =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
-data IssueStopWatch  
-instance Produces IssueStopWatch MimeNoContent
+data IssueStopStopWatch  
+instance Produces IssueStopStopWatch MimeNoContent
+
+
+-- *** issueSubscriptions
+
+-- | @GET \/repos\/{owner}\/{repo}\/issues\/{index}\/subscriptions@
+-- 
+-- Get users who subscribed on an issue.
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+issueSubscriptions 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> Index -- ^ "index" -  index of the issue
+  -> GiteaRequest IssueSubscriptions MimeNoContent [User] MimeJSON
+issueSubscriptions (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/subscriptions"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data IssueSubscriptions  
+-- | @application/json@
+instance Produces IssueSubscriptions MimeJSON
 
 
 -- *** issueTrackedTimes
 
--- | @GET \/repos\/{owner}\/{repo}\/issues\/{id}\/times@
+-- | @GET \/repos\/{owner}\/{repo}\/issues\/{index}\/times@
 -- 
 -- List an issue's tracked times
 -- 
@@ -983,10 +1386,10 @@ instance Produces IssueStopWatch MimeNoContent
 issueTrackedTimes 
   :: Owner -- ^ "owner" -  owner of the repo
   -> Repo -- ^ "repo" -  name of the repo
-  -> Id -- ^ "id" -  index of the issue
+  -> Index -- ^ "index" -  index of the issue
   -> GiteaRequest IssueTrackedTimes MimeNoContent [TrackedTime] MimeJSON
-issueTrackedTimes (Owner owner) (Repo repo) (Id id) =
-  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath id,"/times"]
+issueTrackedTimes (Owner owner) (Repo repo) (Index index) =
+  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/issues/",toPath index,"/times"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)

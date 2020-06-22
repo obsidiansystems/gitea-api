@@ -108,6 +108,9 @@ newtype IdInt = IdInt { unIdInt :: Int } deriving (P.Eq, P.Show)
 -- ** IdText
 newtype IdText = IdText { unIdText :: Text } deriving (P.Eq, P.Show)
 
+-- ** IncludeDesc
+newtype IncludeDesc = IncludeDesc { unIncludeDesc :: Bool } deriving (P.Eq, P.Show)
+
 -- ** Index
 newtype Index = Index { unIndex :: Integer } deriving (P.Eq, P.Show)
 
@@ -147,8 +150,17 @@ newtype Owner = Owner { unOwner :: Text } deriving (P.Eq, P.Show)
 -- ** Page
 newtype Page = Page { unPage :: Int } deriving (P.Eq, P.Show)
 
+-- ** ParamType
+newtype ParamType = ParamType { unParamType :: Text } deriving (P.Eq, P.Show)
+
 -- ** PerPage
 newtype PerPage = PerPage { unPerPage :: Int } deriving (P.Eq, P.Show)
+
+-- ** PriorityOwnerId
+newtype PriorityOwnerId = PriorityOwnerId { unPriorityOwnerId :: Integer } deriving (P.Eq, P.Show)
+
+-- ** PriorityRepoId
+newtype PriorityRepoId = PriorityRepoId { unPriorityRepoId :: Integer } deriving (P.Eq, P.Show)
 
 -- ** Private
 newtype Private = Private { unPrivate :: Bool } deriving (P.Eq, P.Show)
@@ -177,6 +189,9 @@ newtype Sort = Sort { unSort :: Text } deriving (P.Eq, P.Show)
 -- ** Sort2
 newtype Sort2 = Sort2 { unSort2 :: E'Sort } deriving (P.Eq, P.Show)
 
+-- ** Sort3
+newtype Sort3 = Sort3 { unSort3 :: E'Sort2 } deriving (P.Eq, P.Show)
+
 -- ** StarredBy
 newtype StarredBy = StarredBy { unStarredBy :: Integer } deriving (P.Eq, P.Show)
 
@@ -186,8 +201,20 @@ newtype State = State { unState :: Text } deriving (P.Eq, P.Show)
 -- ** State2
 newtype State2 = State2 { unState2 :: E'State } deriving (P.Eq, P.Show)
 
+-- ** State3
+newtype State3 = State3 { unState3 :: E'State2 } deriving (P.Eq, P.Show)
+
+-- ** Template
+newtype Template = Template { unTemplate :: Bool } deriving (P.Eq, P.Show)
+
 -- ** Token
 newtype Token = Token { unToken :: Integer } deriving (P.Eq, P.Show)
+
+-- ** Topic
+newtype Topic = Topic { unTopic :: Bool } deriving (P.Eq, P.Show)
+
+-- ** TopicText
+newtype TopicText = TopicText { unTopicText :: Text } deriving (P.Eq, P.Show)
 
 -- ** Uid
 newtype Uid = Uid { unUid :: Integer } deriving (P.Eq, P.Show)
@@ -200,6 +227,39 @@ newtype Username = Username { unUsername :: Text } deriving (P.Eq, P.Show)
 
 -- * Models
 
+
+-- ** APIError
+-- | APIError
+-- APIError is an api error with a message
+data APIError = APIError
+  { aPIErrorMessage :: !(Maybe Text) -- ^ "message"
+  , aPIErrorUrl :: !(Maybe Text) -- ^ "url"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON APIError
+instance A.FromJSON APIError where
+  parseJSON = A.withObject "APIError" $ \o ->
+    APIError
+      <$> (o .:? "message")
+      <*> (o .:? "url")
+
+-- | ToJSON APIError
+instance A.ToJSON APIError where
+  toJSON APIError {..} =
+   _omitNulls
+      [ "message" .= aPIErrorMessage
+      , "url" .= aPIErrorUrl
+      ]
+
+
+-- | Construct a value of type 'APIError' (by applying it's required fields, if any)
+mkAPIError
+  :: APIError
+mkAPIError =
+  APIError
+  { aPIErrorMessage = Nothing
+  , aPIErrorUrl = Nothing
+  }
 
 -- ** AccessToken
 -- | AccessToken
@@ -276,20 +336,26 @@ mkAddCollaboratorOption =
 -- | AddTimeOption
 -- AddTimeOption options for adding time to an issue
 data AddTimeOption = AddTimeOption
-  { addTimeOptionTime :: !(Integer) -- ^ /Required/ "time" - time in seconds
+  { addTimeOptionCreated :: !(Maybe DateTime) -- ^ "created"
+  , addTimeOptionTime :: !(Integer) -- ^ /Required/ "time" - time in seconds
+  , addTimeOptionUserName :: !(Maybe Text) -- ^ "user_name" - User who spent the time (optional)
   } deriving (P.Show, P.Eq, P.Typeable)
 
 -- | FromJSON AddTimeOption
 instance A.FromJSON AddTimeOption where
   parseJSON = A.withObject "AddTimeOption" $ \o ->
     AddTimeOption
-      <$> (o .:  "time")
+      <$> (o .:? "created")
+      <*> (o .:  "time")
+      <*> (o .:? "user_name")
 
 -- | ToJSON AddTimeOption
 instance A.ToJSON AddTimeOption where
   toJSON AddTimeOption {..} =
    _omitNulls
-      [ "time" .= addTimeOptionTime
+      [ "created" .= addTimeOptionCreated
+      , "time" .= addTimeOptionTime
+      , "user_name" .= addTimeOptionUserName
       ]
 
 
@@ -299,7 +365,9 @@ mkAddTimeOption
   -> AddTimeOption
 mkAddTimeOption addTimeOptionTime =
   AddTimeOption
-  { addTimeOptionTime
+  { addTimeOptionCreated = Nothing
+  , addTimeOptionTime
+  , addTimeOptionUserName = Nothing
   }
 
 -- ** AnnotatedTag
@@ -450,7 +518,13 @@ mkAttachment =
 -- Branch represents a repository branch
 data Branch = Branch
   { branchCommit :: !(Maybe PayloadCommit) -- ^ "commit"
+  , branchEnableStatusCheck :: !(Maybe Bool) -- ^ "enable_status_check"
   , branchName :: !(Maybe Text) -- ^ "name"
+  , branchProtected :: !(Maybe Bool) -- ^ "protected"
+  , branchRequiredApprovals :: !(Maybe Integer) -- ^ "required_approvals"
+  , branchStatusCheckContexts :: !(Maybe [Text]) -- ^ "status_check_contexts"
+  , branchUserCanMerge :: !(Maybe Bool) -- ^ "user_can_merge"
+  , branchUserCanPush :: !(Maybe Bool) -- ^ "user_can_push"
   } deriving (P.Show, P.Eq, P.Typeable)
 
 -- | FromJSON Branch
@@ -458,14 +532,26 @@ instance A.FromJSON Branch where
   parseJSON = A.withObject "Branch" $ \o ->
     Branch
       <$> (o .:? "commit")
+      <*> (o .:? "enable_status_check")
       <*> (o .:? "name")
+      <*> (o .:? "protected")
+      <*> (o .:? "required_approvals")
+      <*> (o .:? "status_check_contexts")
+      <*> (o .:? "user_can_merge")
+      <*> (o .:? "user_can_push")
 
 -- | ToJSON Branch
 instance A.ToJSON Branch where
   toJSON Branch {..} =
    _omitNulls
       [ "commit" .= branchCommit
+      , "enable_status_check" .= branchEnableStatusCheck
       , "name" .= branchName
+      , "protected" .= branchProtected
+      , "required_approvals" .= branchRequiredApprovals
+      , "status_check_contexts" .= branchStatusCheckContexts
+      , "user_can_merge" .= branchUserCanMerge
+      , "user_can_push" .= branchUserCanPush
       ]
 
 
@@ -475,7 +561,13 @@ mkBranch
 mkBranch =
   Branch
   { branchCommit = Nothing
+  , branchEnableStatusCheck = Nothing
   , branchName = Nothing
+  , branchProtected = Nothing
+  , branchRequiredApprovals = Nothing
+  , branchStatusCheckContexts = Nothing
+  , branchUserCanMerge = Nothing
+  , branchUserCanPush = Nothing
   }
 
 -- ** Comment
@@ -487,6 +579,8 @@ data Comment = Comment
   , commentHtmlUrl :: !(Maybe Text) -- ^ "html_url"
   , commentId :: !(Maybe Integer) -- ^ "id"
   , commentIssueUrl :: !(Maybe Text) -- ^ "issue_url"
+  , commentOriginalAuthor :: !(Maybe Text) -- ^ "original_author"
+  , commentOriginalAuthorId :: !(Maybe Integer) -- ^ "original_author_id"
   , commentPullRequestUrl :: !(Maybe Text) -- ^ "pull_request_url"
   , commentUpdatedAt :: !(Maybe DateTime) -- ^ "updated_at"
   , commentUser :: !(Maybe User) -- ^ "user"
@@ -501,6 +595,8 @@ instance A.FromJSON Comment where
       <*> (o .:? "html_url")
       <*> (o .:? "id")
       <*> (o .:? "issue_url")
+      <*> (o .:? "original_author")
+      <*> (o .:? "original_author_id")
       <*> (o .:? "pull_request_url")
       <*> (o .:? "updated_at")
       <*> (o .:? "user")
@@ -514,6 +610,8 @@ instance A.ToJSON Comment where
       , "html_url" .= commentHtmlUrl
       , "id" .= commentId
       , "issue_url" .= commentIssueUrl
+      , "original_author" .= commentOriginalAuthor
+      , "original_author_id" .= commentOriginalAuthorId
       , "pull_request_url" .= commentPullRequestUrl
       , "updated_at" .= commentUpdatedAt
       , "user" .= commentUser
@@ -530,6 +628,8 @@ mkComment =
   , commentHtmlUrl = Nothing
   , commentId = Nothing
   , commentIssueUrl = Nothing
+  , commentOriginalAuthor = Nothing
+  , commentOriginalAuthorId = Nothing
   , commentPullRequestUrl = Nothing
   , commentUpdatedAt = Nothing
   , commentUser = Nothing
@@ -587,6 +687,39 @@ mkCommit =
   , commitParents = Nothing
   , commitSha = Nothing
   , commitUrl = Nothing
+  }
+
+-- ** CommitDateOptions
+-- | CommitDateOptions
+-- CommitDateOptions store dates for GIT_AUTHOR_DATE and GIT_COMMITTER_DATE
+data CommitDateOptions = CommitDateOptions
+  { commitDateOptionsAuthor :: !(Maybe DateTime) -- ^ "author"
+  , commitDateOptionsCommitter :: !(Maybe DateTime) -- ^ "committer"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON CommitDateOptions
+instance A.FromJSON CommitDateOptions where
+  parseJSON = A.withObject "CommitDateOptions" $ \o ->
+    CommitDateOptions
+      <$> (o .:? "author")
+      <*> (o .:? "committer")
+
+-- | ToJSON CommitDateOptions
+instance A.ToJSON CommitDateOptions where
+  toJSON CommitDateOptions {..} =
+   _omitNulls
+      [ "author" .= commitDateOptionsAuthor
+      , "committer" .= commitDateOptionsCommitter
+      ]
+
+
+-- | Construct a value of type 'CommitDateOptions' (by applying it's required fields, if any)
+mkCommitDateOptions
+  :: CommitDateOptions
+mkCommitDateOptions =
+  CommitDateOptions
+  { commitDateOptionsAuthor = Nothing
+  , commitDateOptionsCommitter = Nothing
   }
 
 -- ** CommitMeta
@@ -779,6 +912,7 @@ data CreateFileOptions = CreateFileOptions
   , createFileOptionsBranch :: !(Maybe Text) -- ^ "branch" - branch (optional) to base this file from. if not given, the default branch is used
   , createFileOptionsCommitter :: !(Maybe Identity) -- ^ "committer"
   , createFileOptionsContent :: !(Text) -- ^ /Required/ "content" - content must be base64 encoded
+  , createFileOptionsDates :: !(Maybe CommitDateOptions) -- ^ "dates"
   , createFileOptionsMessage :: !(Maybe Text) -- ^ "message" - message (optional) for the commit of this file. if not supplied, a default message will be used
   , createFileOptionsNewBranch :: !(Maybe Text) -- ^ "new_branch" - new_branch (optional) will make a new branch from &#x60;branch&#x60; before creating the file
   } deriving (P.Show, P.Eq, P.Typeable)
@@ -791,6 +925,7 @@ instance A.FromJSON CreateFileOptions where
       <*> (o .:? "branch")
       <*> (o .:? "committer")
       <*> (o .:  "content")
+      <*> (o .:? "dates")
       <*> (o .:? "message")
       <*> (o .:? "new_branch")
 
@@ -802,6 +937,7 @@ instance A.ToJSON CreateFileOptions where
       , "branch" .= createFileOptionsBranch
       , "committer" .= createFileOptionsCommitter
       , "content" .= createFileOptionsContent
+      , "dates" .= createFileOptionsDates
       , "message" .= createFileOptionsMessage
       , "new_branch" .= createFileOptionsNewBranch
       ]
@@ -817,6 +953,7 @@ mkCreateFileOptions createFileOptionsContent =
   , createFileOptionsBranch = Nothing
   , createFileOptionsCommitter = Nothing
   , createFileOptionsContent
+  , createFileOptionsDates = Nothing
   , createFileOptionsMessage = Nothing
   , createFileOptionsNewBranch = Nothing
   }
@@ -885,7 +1022,8 @@ mkCreateGPGKeyOption createGPGKeyOptionArmoredPublicKey =
 -- CreateHookOption options when create a hook
 data CreateHookOption = CreateHookOption
   { createHookOptionActive :: !(Maybe Bool) -- ^ "active"
-  , createHookOptionConfig :: !((Map.Map String Text)) -- ^ /Required/ "config"
+  , createHookOptionBranchFilter :: !(Maybe Text) -- ^ "branch_filter"
+  , createHookOptionConfig :: !((Map.Map String Text)) -- ^ /Required/ "config" - CreateHookOptionConfig has all config options in it required are \&quot;content_type\&quot; and \&quot;url\&quot; Required
   , createHookOptionEvents :: !(Maybe [Text]) -- ^ "events"
   , createHookOptionType :: !(E'Type) -- ^ /Required/ "type"
   } deriving (P.Show, P.Eq, P.Typeable)
@@ -895,6 +1033,7 @@ instance A.FromJSON CreateHookOption where
   parseJSON = A.withObject "CreateHookOption" $ \o ->
     CreateHookOption
       <$> (o .:? "active")
+      <*> (o .:? "branch_filter")
       <*> (o .:  "config")
       <*> (o .:? "events")
       <*> (o .:  "type")
@@ -904,6 +1043,7 @@ instance A.ToJSON CreateHookOption where
   toJSON CreateHookOption {..} =
    _omitNulls
       [ "active" .= createHookOptionActive
+      , "branch_filter" .= createHookOptionBranchFilter
       , "config" .= createHookOptionConfig
       , "events" .= createHookOptionEvents
       , "type" .= createHookOptionType
@@ -912,12 +1052,13 @@ instance A.ToJSON CreateHookOption where
 
 -- | Construct a value of type 'CreateHookOption' (by applying it's required fields, if any)
 mkCreateHookOption
-  :: (Map.Map String Text) -- ^ 'createHookOptionConfig' 
+  :: (Map.Map String Text) -- ^ 'createHookOptionConfig': CreateHookOptionConfig has all config options in it required are \"content_type\" and \"url\" Required
   -> E'Type -- ^ 'createHookOptionType' 
   -> CreateHookOption
 mkCreateHookOption createHookOptionConfig createHookOptionType =
   CreateHookOption
   { createHookOptionActive = Nothing
+  , createHookOptionBranchFilter = Nothing
   , createHookOptionConfig
   , createHookOptionEvents = Nothing
   , createHookOptionType
@@ -1133,6 +1274,7 @@ data CreateOrgOption = CreateOrgOption
   { createOrgOptionDescription :: !(Maybe Text) -- ^ "description"
   , createOrgOptionFullName :: !(Maybe Text) -- ^ "full_name"
   , createOrgOptionLocation :: !(Maybe Text) -- ^ "location"
+  , createOrgOptionRepoAdminChangeTeamAccess :: !(Maybe Bool) -- ^ "repo_admin_change_team_access"
   , createOrgOptionUsername :: !(Text) -- ^ /Required/ "username"
   , createOrgOptionVisibility :: !(Maybe E'Visibility) -- ^ "visibility" - possible values are &#x60;public&#x60; (default), &#x60;limited&#x60; or &#x60;private&#x60;
   , createOrgOptionWebsite :: !(Maybe Text) -- ^ "website"
@@ -1145,6 +1287,7 @@ instance A.FromJSON CreateOrgOption where
       <$> (o .:? "description")
       <*> (o .:? "full_name")
       <*> (o .:? "location")
+      <*> (o .:? "repo_admin_change_team_access")
       <*> (o .:  "username")
       <*> (o .:? "visibility")
       <*> (o .:? "website")
@@ -1156,6 +1299,7 @@ instance A.ToJSON CreateOrgOption where
       [ "description" .= createOrgOptionDescription
       , "full_name" .= createOrgOptionFullName
       , "location" .= createOrgOptionLocation
+      , "repo_admin_change_team_access" .= createOrgOptionRepoAdminChangeTeamAccess
       , "username" .= createOrgOptionUsername
       , "visibility" .= createOrgOptionVisibility
       , "website" .= createOrgOptionWebsite
@@ -1171,6 +1315,7 @@ mkCreateOrgOption createOrgOptionUsername =
   { createOrgOptionDescription = Nothing
   , createOrgOptionFullName = Nothing
   , createOrgOptionLocation = Nothing
+  , createOrgOptionRepoAdminChangeTeamAccess = Nothing
   , createOrgOptionUsername
   , createOrgOptionVisibility = Nothing
   , createOrgOptionWebsite = Nothing
@@ -1294,6 +1439,7 @@ data CreateRepoOption = CreateRepoOption
   { createRepoOptionAutoInit :: !(Maybe Bool) -- ^ "auto_init" - Whether the repository should be auto-intialized?
   , createRepoOptionDescription :: !(Maybe Text) -- ^ "description" - Description of the repository to create
   , createRepoOptionGitignores :: !(Maybe Text) -- ^ "gitignores" - Gitignores to use
+  , createRepoOptionIssueLabels :: !(Maybe Text) -- ^ "issue_labels" - Issue Label set to use
   , createRepoOptionLicense :: !(Maybe Text) -- ^ "license" - License to use
   , createRepoOptionName :: !(Text) -- ^ /Required/ "name" - Name of the repository to create
   , createRepoOptionPrivate :: !(Maybe Bool) -- ^ "private" - Whether the repository is private
@@ -1307,6 +1453,7 @@ instance A.FromJSON CreateRepoOption where
       <$> (o .:? "auto_init")
       <*> (o .:? "description")
       <*> (o .:? "gitignores")
+      <*> (o .:? "issue_labels")
       <*> (o .:? "license")
       <*> (o .:  "name")
       <*> (o .:? "private")
@@ -1319,6 +1466,7 @@ instance A.ToJSON CreateRepoOption where
       [ "auto_init" .= createRepoOptionAutoInit
       , "description" .= createRepoOptionDescription
       , "gitignores" .= createRepoOptionGitignores
+      , "issue_labels" .= createRepoOptionIssueLabels
       , "license" .= createRepoOptionLicense
       , "name" .= createRepoOptionName
       , "private" .= createRepoOptionPrivate
@@ -1335,6 +1483,7 @@ mkCreateRepoOption createRepoOptionName =
   { createRepoOptionAutoInit = Nothing
   , createRepoOptionDescription = Nothing
   , createRepoOptionGitignores = Nothing
+  , createRepoOptionIssueLabels = Nothing
   , createRepoOptionLicense = Nothing
   , createRepoOptionName
   , createRepoOptionPrivate = Nothing
@@ -1386,7 +1535,9 @@ mkCreateStatusOption =
 -- | CreateTeamOption
 -- CreateTeamOption options for creating a team
 data CreateTeamOption = CreateTeamOption
-  { createTeamOptionDescription :: !(Maybe Text) -- ^ "description"
+  { createTeamOptionCanCreateOrgRepo :: !(Maybe Bool) -- ^ "can_create_org_repo"
+  , createTeamOptionDescription :: !(Maybe Text) -- ^ "description"
+  , createTeamOptionIncludesAllRepositories :: !(Maybe Bool) -- ^ "includes_all_repositories"
   , createTeamOptionName :: !(Text) -- ^ /Required/ "name"
   , createTeamOptionPermission :: !(Maybe E'Permission) -- ^ "permission"
   , createTeamOptionUnits :: !(Maybe [Text]) -- ^ "units"
@@ -1396,7 +1547,9 @@ data CreateTeamOption = CreateTeamOption
 instance A.FromJSON CreateTeamOption where
   parseJSON = A.withObject "CreateTeamOption" $ \o ->
     CreateTeamOption
-      <$> (o .:? "description")
+      <$> (o .:? "can_create_org_repo")
+      <*> (o .:? "description")
+      <*> (o .:? "includes_all_repositories")
       <*> (o .:  "name")
       <*> (o .:? "permission")
       <*> (o .:? "units")
@@ -1405,7 +1558,9 @@ instance A.FromJSON CreateTeamOption where
 instance A.ToJSON CreateTeamOption where
   toJSON CreateTeamOption {..} =
    _omitNulls
-      [ "description" .= createTeamOptionDescription
+      [ "can_create_org_repo" .= createTeamOptionCanCreateOrgRepo
+      , "description" .= createTeamOptionDescription
+      , "includes_all_repositories" .= createTeamOptionIncludesAllRepositories
       , "name" .= createTeamOptionName
       , "permission" .= createTeamOptionPermission
       , "units" .= createTeamOptionUnits
@@ -1418,7 +1573,9 @@ mkCreateTeamOption
   -> CreateTeamOption
 mkCreateTeamOption createTeamOptionName =
   CreateTeamOption
-  { createTeamOptionDescription = Nothing
+  { createTeamOptionCanCreateOrgRepo = Nothing
+  , createTeamOptionDescription = Nothing
+  , createTeamOptionIncludesAllRepositories = Nothing
   , createTeamOptionName
   , createTeamOptionPermission = Nothing
   , createTeamOptionUnits = Nothing
@@ -1520,6 +1677,7 @@ data DeleteFileOptions = DeleteFileOptions
   { deleteFileOptionsAuthor :: !(Maybe Identity) -- ^ "author"
   , deleteFileOptionsBranch :: !(Maybe Text) -- ^ "branch" - branch (optional) to base this file from. if not given, the default branch is used
   , deleteFileOptionsCommitter :: !(Maybe Identity) -- ^ "committer"
+  , deleteFileOptionsDates :: !(Maybe CommitDateOptions) -- ^ "dates"
   , deleteFileOptionsMessage :: !(Maybe Text) -- ^ "message" - message (optional) for the commit of this file. if not supplied, a default message will be used
   , deleteFileOptionsNewBranch :: !(Maybe Text) -- ^ "new_branch" - new_branch (optional) will make a new branch from &#x60;branch&#x60; before creating the file
   , deleteFileOptionsSha :: !(Text) -- ^ /Required/ "sha" - sha is the SHA for the file that already exists
@@ -1532,6 +1690,7 @@ instance A.FromJSON DeleteFileOptions where
       <$> (o .:? "author")
       <*> (o .:? "branch")
       <*> (o .:? "committer")
+      <*> (o .:? "dates")
       <*> (o .:? "message")
       <*> (o .:? "new_branch")
       <*> (o .:  "sha")
@@ -1543,6 +1702,7 @@ instance A.ToJSON DeleteFileOptions where
       [ "author" .= deleteFileOptionsAuthor
       , "branch" .= deleteFileOptionsBranch
       , "committer" .= deleteFileOptionsCommitter
+      , "dates" .= deleteFileOptionsDates
       , "message" .= deleteFileOptionsMessage
       , "new_branch" .= deleteFileOptionsNewBranch
       , "sha" .= deleteFileOptionsSha
@@ -1558,6 +1718,7 @@ mkDeleteFileOptions deleteFileOptionsSha =
   { deleteFileOptionsAuthor = Nothing
   , deleteFileOptionsBranch = Nothing
   , deleteFileOptionsCommitter = Nothing
+  , deleteFileOptionsDates = Nothing
   , deleteFileOptionsMessage = Nothing
   , deleteFileOptionsNewBranch = Nothing
   , deleteFileOptionsSha
@@ -1717,6 +1878,7 @@ mkEditGitHookOption =
 -- EditHookOption options when modify one hook
 data EditHookOption = EditHookOption
   { editHookOptionActive :: !(Maybe Bool) -- ^ "active"
+  , editHookOptionBranchFilter :: !(Maybe Text) -- ^ "branch_filter"
   , editHookOptionConfig :: !(Maybe (Map.Map String Text)) -- ^ "config"
   , editHookOptionEvents :: !(Maybe [Text]) -- ^ "events"
   } deriving (P.Show, P.Eq, P.Typeable)
@@ -1726,6 +1888,7 @@ instance A.FromJSON EditHookOption where
   parseJSON = A.withObject "EditHookOption" $ \o ->
     EditHookOption
       <$> (o .:? "active")
+      <*> (o .:? "branch_filter")
       <*> (o .:? "config")
       <*> (o .:? "events")
 
@@ -1734,6 +1897,7 @@ instance A.ToJSON EditHookOption where
   toJSON EditHookOption {..} =
    _omitNulls
       [ "active" .= editHookOptionActive
+      , "branch_filter" .= editHookOptionBranchFilter
       , "config" .= editHookOptionConfig
       , "events" .= editHookOptionEvents
       ]
@@ -1745,6 +1909,7 @@ mkEditHookOption
 mkEditHookOption =
   EditHookOption
   { editHookOptionActive = Nothing
+  , editHookOptionBranchFilter = Nothing
   , editHookOptionConfig = Nothing
   , editHookOptionEvents = Nothing
   }
@@ -1790,6 +1955,7 @@ data EditIssueOption = EditIssueOption
   , editIssueOptionMilestone :: !(Maybe Integer) -- ^ "milestone"
   , editIssueOptionState :: !(Maybe Text) -- ^ "state"
   , editIssueOptionTitle :: !(Maybe Text) -- ^ "title"
+  , editIssueOptionUnsetDueDate :: !(Maybe Bool) -- ^ "unset_due_date"
   } deriving (P.Show, P.Eq, P.Typeable)
 
 -- | FromJSON EditIssueOption
@@ -1803,6 +1969,7 @@ instance A.FromJSON EditIssueOption where
       <*> (o .:? "milestone")
       <*> (o .:? "state")
       <*> (o .:? "title")
+      <*> (o .:? "unset_due_date")
 
 -- | ToJSON EditIssueOption
 instance A.ToJSON EditIssueOption where
@@ -1815,6 +1982,7 @@ instance A.ToJSON EditIssueOption where
       , "milestone" .= editIssueOptionMilestone
       , "state" .= editIssueOptionState
       , "title" .= editIssueOptionTitle
+      , "unset_due_date" .= editIssueOptionUnsetDueDate
       ]
 
 
@@ -1830,6 +1998,7 @@ mkEditIssueOption =
   , editIssueOptionMilestone = Nothing
   , editIssueOptionState = Nothing
   , editIssueOptionTitle = Nothing
+  , editIssueOptionUnsetDueDate = Nothing
   }
 
 -- ** EditLabelOption
@@ -1917,6 +2086,7 @@ data EditOrgOption = EditOrgOption
   { editOrgOptionDescription :: !(Maybe Text) -- ^ "description"
   , editOrgOptionFullName :: !(Maybe Text) -- ^ "full_name"
   , editOrgOptionLocation :: !(Maybe Text) -- ^ "location"
+  , editOrgOptionRepoAdminChangeTeamAccess :: !(Maybe Bool) -- ^ "repo_admin_change_team_access"
   , editOrgOptionVisibility :: !(Maybe E'Visibility) -- ^ "visibility" - possible values are &#x60;public&#x60;, &#x60;limited&#x60; or &#x60;private&#x60;
   , editOrgOptionWebsite :: !(Maybe Text) -- ^ "website"
   } deriving (P.Show, P.Eq, P.Typeable)
@@ -1928,6 +2098,7 @@ instance A.FromJSON EditOrgOption where
       <$> (o .:? "description")
       <*> (o .:? "full_name")
       <*> (o .:? "location")
+      <*> (o .:? "repo_admin_change_team_access")
       <*> (o .:? "visibility")
       <*> (o .:? "website")
 
@@ -1938,6 +2109,7 @@ instance A.ToJSON EditOrgOption where
       [ "description" .= editOrgOptionDescription
       , "full_name" .= editOrgOptionFullName
       , "location" .= editOrgOptionLocation
+      , "repo_admin_change_team_access" .= editOrgOptionRepoAdminChangeTeamAccess
       , "visibility" .= editOrgOptionVisibility
       , "website" .= editOrgOptionWebsite
       ]
@@ -1951,6 +2123,7 @@ mkEditOrgOption =
   { editOrgOptionDescription = Nothing
   , editOrgOptionFullName = Nothing
   , editOrgOptionLocation = Nothing
+  , editOrgOptionRepoAdminChangeTeamAccess = Nothing
   , editOrgOptionVisibility = Nothing
   , editOrgOptionWebsite = Nothing
   }
@@ -1967,6 +2140,7 @@ data EditPullRequestOption = EditPullRequestOption
   , editPullRequestOptionMilestone :: !(Maybe Integer) -- ^ "milestone"
   , editPullRequestOptionState :: !(Maybe Text) -- ^ "state"
   , editPullRequestOptionTitle :: !(Maybe Text) -- ^ "title"
+  , editPullRequestOptionUnsetDueDate :: !(Maybe Bool) -- ^ "unset_due_date"
   } deriving (P.Show, P.Eq, P.Typeable)
 
 -- | FromJSON EditPullRequestOption
@@ -1981,6 +2155,7 @@ instance A.FromJSON EditPullRequestOption where
       <*> (o .:? "milestone")
       <*> (o .:? "state")
       <*> (o .:? "title")
+      <*> (o .:? "unset_due_date")
 
 -- | ToJSON EditPullRequestOption
 instance A.ToJSON EditPullRequestOption where
@@ -1994,6 +2169,7 @@ instance A.ToJSON EditPullRequestOption where
       , "milestone" .= editPullRequestOptionMilestone
       , "state" .= editPullRequestOptionState
       , "title" .= editPullRequestOptionTitle
+      , "unset_due_date" .= editPullRequestOptionUnsetDueDate
       ]
 
 
@@ -2010,6 +2186,36 @@ mkEditPullRequestOption =
   , editPullRequestOptionMilestone = Nothing
   , editPullRequestOptionState = Nothing
   , editPullRequestOptionTitle = Nothing
+  , editPullRequestOptionUnsetDueDate = Nothing
+  }
+
+-- ** EditReactionOption
+-- | EditReactionOption
+-- EditReactionOption contain the reaction type
+data EditReactionOption = EditReactionOption
+  { editReactionOptionContent :: !(Maybe Text) -- ^ "content"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON EditReactionOption
+instance A.FromJSON EditReactionOption where
+  parseJSON = A.withObject "EditReactionOption" $ \o ->
+    EditReactionOption
+      <$> (o .:? "content")
+
+-- | ToJSON EditReactionOption
+instance A.ToJSON EditReactionOption where
+  toJSON EditReactionOption {..} =
+   _omitNulls
+      [ "content" .= editReactionOptionContent
+      ]
+
+
+-- | Construct a value of type 'EditReactionOption' (by applying it's required fields, if any)
+mkEditReactionOption
+  :: EditReactionOption
+mkEditReactionOption =
+  EditReactionOption
+  { editReactionOptionContent = Nothing
   }
 
 -- ** EditReleaseOption
@@ -2072,12 +2278,16 @@ data EditRepoOption = EditRepoOption
   , editRepoOptionArchived :: !(Maybe Bool) -- ^ "archived" - set to &#x60;true&#x60; to archive this repository.
   , editRepoOptionDefaultBranch :: !(Maybe Text) -- ^ "default_branch" - sets the default branch for this repository.
   , editRepoOptionDescription :: !(Maybe Text) -- ^ "description" - a short description of the repository.
+  , editRepoOptionExternalTracker :: !(Maybe ExternalTracker) -- ^ "external_tracker"
+  , editRepoOptionExternalWiki :: !(Maybe ExternalWiki) -- ^ "external_wiki"
   , editRepoOptionHasIssues :: !(Maybe Bool) -- ^ "has_issues" - either &#x60;true&#x60; to enable issues for this repository or &#x60;false&#x60; to disable them.
   , editRepoOptionHasPullRequests :: !(Maybe Bool) -- ^ "has_pull_requests" - either &#x60;true&#x60; to allow pull requests, or &#x60;false&#x60; to prevent pull request.
   , editRepoOptionHasWiki :: !(Maybe Bool) -- ^ "has_wiki" - either &#x60;true&#x60; to enable the wiki for this repository or &#x60;false&#x60; to disable it.
   , editRepoOptionIgnoreWhitespaceConflicts :: !(Maybe Bool) -- ^ "ignore_whitespace_conflicts" - either &#x60;true&#x60; to ignore whitespace for conflicts, or &#x60;false&#x60; to not ignore whitespace. &#x60;has_pull_requests&#x60; must be &#x60;true&#x60;.
+  , editRepoOptionInternalTracker :: !(Maybe InternalTracker) -- ^ "internal_tracker"
   , editRepoOptionName :: !(Maybe Text) -- ^ "name" - name of the repository
   , editRepoOptionPrivate :: !(Maybe Bool) -- ^ "private" - either &#x60;true&#x60; to make the repository private or &#x60;false&#x60; to make it public. Note: you will get a 422 error if the organization restricts changing repository visibility to organization owners and a non-owner tries to change the value of private.
+  , editRepoOptionTemplate :: !(Maybe Bool) -- ^ "template" - either &#x60;true&#x60; to make this repository a template or &#x60;false&#x60; to make it a normal repository
   , editRepoOptionWebsite :: !(Maybe Text) -- ^ "website" - a URL with more information about the repository.
   } deriving (P.Show, P.Eq, P.Typeable)
 
@@ -2092,12 +2302,16 @@ instance A.FromJSON EditRepoOption where
       <*> (o .:? "archived")
       <*> (o .:? "default_branch")
       <*> (o .:? "description")
+      <*> (o .:? "external_tracker")
+      <*> (o .:? "external_wiki")
       <*> (o .:? "has_issues")
       <*> (o .:? "has_pull_requests")
       <*> (o .:? "has_wiki")
       <*> (o .:? "ignore_whitespace_conflicts")
+      <*> (o .:? "internal_tracker")
       <*> (o .:? "name")
       <*> (o .:? "private")
+      <*> (o .:? "template")
       <*> (o .:? "website")
 
 -- | ToJSON EditRepoOption
@@ -2111,12 +2325,16 @@ instance A.ToJSON EditRepoOption where
       , "archived" .= editRepoOptionArchived
       , "default_branch" .= editRepoOptionDefaultBranch
       , "description" .= editRepoOptionDescription
+      , "external_tracker" .= editRepoOptionExternalTracker
+      , "external_wiki" .= editRepoOptionExternalWiki
       , "has_issues" .= editRepoOptionHasIssues
       , "has_pull_requests" .= editRepoOptionHasPullRequests
       , "has_wiki" .= editRepoOptionHasWiki
       , "ignore_whitespace_conflicts" .= editRepoOptionIgnoreWhitespaceConflicts
+      , "internal_tracker" .= editRepoOptionInternalTracker
       , "name" .= editRepoOptionName
       , "private" .= editRepoOptionPrivate
+      , "template" .= editRepoOptionTemplate
       , "website" .= editRepoOptionWebsite
       ]
 
@@ -2133,12 +2351,16 @@ mkEditRepoOption =
   , editRepoOptionArchived = Nothing
   , editRepoOptionDefaultBranch = Nothing
   , editRepoOptionDescription = Nothing
+  , editRepoOptionExternalTracker = Nothing
+  , editRepoOptionExternalWiki = Nothing
   , editRepoOptionHasIssues = Nothing
   , editRepoOptionHasPullRequests = Nothing
   , editRepoOptionHasWiki = Nothing
   , editRepoOptionIgnoreWhitespaceConflicts = Nothing
+  , editRepoOptionInternalTracker = Nothing
   , editRepoOptionName = Nothing
   , editRepoOptionPrivate = Nothing
+  , editRepoOptionTemplate = Nothing
   , editRepoOptionWebsite = Nothing
   }
 
@@ -2146,7 +2368,9 @@ mkEditRepoOption =
 -- | EditTeamOption
 -- EditTeamOption options for editing a team
 data EditTeamOption = EditTeamOption
-  { editTeamOptionDescription :: !(Maybe Text) -- ^ "description"
+  { editTeamOptionCanCreateOrgRepo :: !(Maybe Bool) -- ^ "can_create_org_repo"
+  , editTeamOptionDescription :: !(Maybe Text) -- ^ "description"
+  , editTeamOptionIncludesAllRepositories :: !(Maybe Bool) -- ^ "includes_all_repositories"
   , editTeamOptionName :: !(Text) -- ^ /Required/ "name"
   , editTeamOptionPermission :: !(Maybe E'Permission) -- ^ "permission"
   , editTeamOptionUnits :: !(Maybe [Text]) -- ^ "units"
@@ -2156,7 +2380,9 @@ data EditTeamOption = EditTeamOption
 instance A.FromJSON EditTeamOption where
   parseJSON = A.withObject "EditTeamOption" $ \o ->
     EditTeamOption
-      <$> (o .:? "description")
+      <$> (o .:? "can_create_org_repo")
+      <*> (o .:? "description")
+      <*> (o .:? "includes_all_repositories")
       <*> (o .:  "name")
       <*> (o .:? "permission")
       <*> (o .:? "units")
@@ -2165,7 +2391,9 @@ instance A.FromJSON EditTeamOption where
 instance A.ToJSON EditTeamOption where
   toJSON EditTeamOption {..} =
    _omitNulls
-      [ "description" .= editTeamOptionDescription
+      [ "can_create_org_repo" .= editTeamOptionCanCreateOrgRepo
+      , "description" .= editTeamOptionDescription
+      , "includes_all_repositories" .= editTeamOptionIncludesAllRepositories
       , "name" .= editTeamOptionName
       , "permission" .= editTeamOptionPermission
       , "units" .= editTeamOptionUnits
@@ -2178,7 +2406,9 @@ mkEditTeamOption
   -> EditTeamOption
 mkEditTeamOption editTeamOptionName =
   EditTeamOption
-  { editTeamOptionDescription = Nothing
+  { editTeamOptionCanCreateOrgRepo = Nothing
+  , editTeamOptionDescription = Nothing
+  , editTeamOptionIncludesAllRepositories = Nothing
   , editTeamOptionName
   , editTeamOptionPermission = Nothing
   , editTeamOptionUnits = Nothing
@@ -2305,6 +2535,72 @@ mkEmail =
   { emailEmail = Nothing
   , emailPrimary = Nothing
   , emailVerified = Nothing
+  }
+
+-- ** ExternalTracker
+-- | ExternalTracker
+-- ExternalTracker represents settings for external tracker
+data ExternalTracker = ExternalTracker
+  { externalTrackerExternalTrackerFormat :: !(Maybe Text) -- ^ "external_tracker_format" - External Issue Tracker URL Format. Use the placeholders {user}, {repo} and {index} for the username, repository name and issue index.
+  , externalTrackerExternalTrackerStyle :: !(Maybe Text) -- ^ "external_tracker_style" - External Issue Tracker Number Format, either &#x60;numeric&#x60; or &#x60;alphanumeric&#x60;
+  , externalTrackerExternalTrackerUrl :: !(Maybe Text) -- ^ "external_tracker_url" - URL of external issue tracker.
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON ExternalTracker
+instance A.FromJSON ExternalTracker where
+  parseJSON = A.withObject "ExternalTracker" $ \o ->
+    ExternalTracker
+      <$> (o .:? "external_tracker_format")
+      <*> (o .:? "external_tracker_style")
+      <*> (o .:? "external_tracker_url")
+
+-- | ToJSON ExternalTracker
+instance A.ToJSON ExternalTracker where
+  toJSON ExternalTracker {..} =
+   _omitNulls
+      [ "external_tracker_format" .= externalTrackerExternalTrackerFormat
+      , "external_tracker_style" .= externalTrackerExternalTrackerStyle
+      , "external_tracker_url" .= externalTrackerExternalTrackerUrl
+      ]
+
+
+-- | Construct a value of type 'ExternalTracker' (by applying it's required fields, if any)
+mkExternalTracker
+  :: ExternalTracker
+mkExternalTracker =
+  ExternalTracker
+  { externalTrackerExternalTrackerFormat = Nothing
+  , externalTrackerExternalTrackerStyle = Nothing
+  , externalTrackerExternalTrackerUrl = Nothing
+  }
+
+-- ** ExternalWiki
+-- | ExternalWiki
+-- ExternalWiki represents setting for external wiki
+data ExternalWiki = ExternalWiki
+  { externalWikiExternalWikiUrl :: !(Maybe Text) -- ^ "external_wiki_url" - URL of external wiki.
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON ExternalWiki
+instance A.FromJSON ExternalWiki where
+  parseJSON = A.withObject "ExternalWiki" $ \o ->
+    ExternalWiki
+      <$> (o .:? "external_wiki_url")
+
+-- | ToJSON ExternalWiki
+instance A.ToJSON ExternalWiki where
+  toJSON ExternalWiki {..} =
+   _omitNulls
+      [ "external_wiki_url" .= externalWikiExternalWikiUrl
+      ]
+
+
+-- | Construct a value of type 'ExternalWiki' (by applying it's required fields, if any)
+mkExternalWiki
+  :: ExternalWiki
+mkExternalWiki =
+  ExternalWiki
+  { externalWikiExternalWikiUrl = Nothing
   }
 
 -- ** FileCommitResponse
@@ -2918,7 +3214,7 @@ mkInlineObject inlineObjectName =
 -- ** InlineResponse200
 -- | InlineResponse200
 data InlineResponse200 = InlineResponse200
-  { inlineResponse200Data :: !(Maybe [User]) -- ^ "data"
+  { inlineResponse200Data :: !(Maybe [Team]) -- ^ "data"
   , inlineResponse200Ok :: !(Maybe Bool) -- ^ "ok"
   } deriving (P.Show, P.Eq, P.Typeable)
 
@@ -2947,6 +3243,75 @@ mkInlineResponse200 =
   , inlineResponse200Ok = Nothing
   }
 
+-- ** InlineResponse2001
+-- | InlineResponse2001
+data InlineResponse2001 = InlineResponse2001
+  { inlineResponse2001Data :: !(Maybe [User]) -- ^ "data"
+  , inlineResponse2001Ok :: !(Maybe Bool) -- ^ "ok"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON InlineResponse2001
+instance A.FromJSON InlineResponse2001 where
+  parseJSON = A.withObject "InlineResponse2001" $ \o ->
+    InlineResponse2001
+      <$> (o .:? "data")
+      <*> (o .:? "ok")
+
+-- | ToJSON InlineResponse2001
+instance A.ToJSON InlineResponse2001 where
+  toJSON InlineResponse2001 {..} =
+   _omitNulls
+      [ "data" .= inlineResponse2001Data
+      , "ok" .= inlineResponse2001Ok
+      ]
+
+
+-- | Construct a value of type 'InlineResponse2001' (by applying it's required fields, if any)
+mkInlineResponse2001
+  :: InlineResponse2001
+mkInlineResponse2001 =
+  InlineResponse2001
+  { inlineResponse2001Data = Nothing
+  , inlineResponse2001Ok = Nothing
+  }
+
+-- ** InternalTracker
+-- | InternalTracker
+-- InternalTracker represents settings for internal tracker
+data InternalTracker = InternalTracker
+  { internalTrackerAllowOnlyContributorsToTrackTime :: !(Maybe Bool) -- ^ "allow_only_contributors_to_track_time" - Let only contributors track time (Built-in issue tracker)
+  , internalTrackerEnableIssueDependencies :: !(Maybe Bool) -- ^ "enable_issue_dependencies" - Enable dependencies for issues and pull requests (Built-in issue tracker)
+  , internalTrackerEnableTimeTracker :: !(Maybe Bool) -- ^ "enable_time_tracker" - Enable time tracking (Built-in issue tracker)
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON InternalTracker
+instance A.FromJSON InternalTracker where
+  parseJSON = A.withObject "InternalTracker" $ \o ->
+    InternalTracker
+      <$> (o .:? "allow_only_contributors_to_track_time")
+      <*> (o .:? "enable_issue_dependencies")
+      <*> (o .:? "enable_time_tracker")
+
+-- | ToJSON InternalTracker
+instance A.ToJSON InternalTracker where
+  toJSON InternalTracker {..} =
+   _omitNulls
+      [ "allow_only_contributors_to_track_time" .= internalTrackerAllowOnlyContributorsToTrackTime
+      , "enable_issue_dependencies" .= internalTrackerEnableIssueDependencies
+      , "enable_time_tracker" .= internalTrackerEnableTimeTracker
+      ]
+
+
+-- | Construct a value of type 'InternalTracker' (by applying it's required fields, if any)
+mkInternalTracker
+  :: InternalTracker
+mkInternalTracker =
+  InternalTracker
+  { internalTrackerAllowOnlyContributorsToTrackTime = Nothing
+  , internalTrackerEnableIssueDependencies = Nothing
+  , internalTrackerEnableTimeTracker = Nothing
+  }
+
 -- ** Issue
 -- | Issue
 -- Issue represents an issue in a repository
@@ -2958,11 +3323,15 @@ data Issue = Issue
   , issueComments :: !(Maybe Integer) -- ^ "comments"
   , issueCreatedAt :: !(Maybe DateTime) -- ^ "created_at"
   , issueDueDate :: !(Maybe DateTime) -- ^ "due_date"
+  , issueHtmlUrl :: !(Maybe Text) -- ^ "html_url"
   , issueId :: !(Maybe Integer) -- ^ "id"
   , issueLabels :: !(Maybe [Label]) -- ^ "labels"
   , issueMilestone :: !(Maybe Milestone) -- ^ "milestone"
   , issueNumber :: !(Maybe Integer) -- ^ "number"
+  , issueOriginalAuthor :: !(Maybe Text) -- ^ "original_author"
+  , issueOriginalAuthorId :: !(Maybe Integer) -- ^ "original_author_id"
   , issuePullRequest :: !(Maybe PullRequestMeta) -- ^ "pull_request"
+  , issueRepository :: !(Maybe RepositoryMeta) -- ^ "repository"
   , issueState :: !(Maybe Text) -- ^ "state" - StateType issue state type
   , issueTitle :: !(Maybe Text) -- ^ "title"
   , issueUpdatedAt :: !(Maybe DateTime) -- ^ "updated_at"
@@ -2981,11 +3350,15 @@ instance A.FromJSON Issue where
       <*> (o .:? "comments")
       <*> (o .:? "created_at")
       <*> (o .:? "due_date")
+      <*> (o .:? "html_url")
       <*> (o .:? "id")
       <*> (o .:? "labels")
       <*> (o .:? "milestone")
       <*> (o .:? "number")
+      <*> (o .:? "original_author")
+      <*> (o .:? "original_author_id")
       <*> (o .:? "pull_request")
+      <*> (o .:? "repository")
       <*> (o .:? "state")
       <*> (o .:? "title")
       <*> (o .:? "updated_at")
@@ -3003,11 +3376,15 @@ instance A.ToJSON Issue where
       , "comments" .= issueComments
       , "created_at" .= issueCreatedAt
       , "due_date" .= issueDueDate
+      , "html_url" .= issueHtmlUrl
       , "id" .= issueId
       , "labels" .= issueLabels
       , "milestone" .= issueMilestone
       , "number" .= issueNumber
+      , "original_author" .= issueOriginalAuthor
+      , "original_author_id" .= issueOriginalAuthorId
       , "pull_request" .= issuePullRequest
+      , "repository" .= issueRepository
       , "state" .= issueState
       , "title" .= issueTitle
       , "updated_at" .= issueUpdatedAt
@@ -3028,11 +3405,15 @@ mkIssue =
   , issueComments = Nothing
   , issueCreatedAt = Nothing
   , issueDueDate = Nothing
+  , issueHtmlUrl = Nothing
   , issueId = Nothing
   , issueLabels = Nothing
   , issueMilestone = Nothing
   , issueNumber = Nothing
+  , issueOriginalAuthor = Nothing
+  , issueOriginalAuthorId = Nothing
   , issuePullRequest = Nothing
+  , issueRepository = Nothing
   , issueState = Nothing
   , issueTitle = Nothing
   , issueUpdatedAt = Nothing
@@ -3372,6 +3753,7 @@ data Organization = Organization
   , organizationFullName :: !(Maybe Text) -- ^ "full_name"
   , organizationId :: !(Maybe Integer) -- ^ "id"
   , organizationLocation :: !(Maybe Text) -- ^ "location"
+  , organizationRepoAdminChangeTeamAccess :: !(Maybe Bool) -- ^ "repo_admin_change_team_access"
   , organizationUsername :: !(Maybe Text) -- ^ "username"
   , organizationVisibility :: !(Maybe Text) -- ^ "visibility"
   , organizationWebsite :: !(Maybe Text) -- ^ "website"
@@ -3386,6 +3768,7 @@ instance A.FromJSON Organization where
       <*> (o .:? "full_name")
       <*> (o .:? "id")
       <*> (o .:? "location")
+      <*> (o .:? "repo_admin_change_team_access")
       <*> (o .:? "username")
       <*> (o .:? "visibility")
       <*> (o .:? "website")
@@ -3399,6 +3782,7 @@ instance A.ToJSON Organization where
       , "full_name" .= organizationFullName
       , "id" .= organizationId
       , "location" .= organizationLocation
+      , "repo_admin_change_team_access" .= organizationRepoAdminChangeTeamAccess
       , "username" .= organizationUsername
       , "visibility" .= organizationVisibility
       , "website" .= organizationWebsite
@@ -3415,6 +3799,7 @@ mkOrganization =
   , organizationFullName = Nothing
   , organizationId = Nothing
   , organizationLocation = Nothing
+  , organizationRepoAdminChangeTeamAccess = Nothing
   , organizationUsername = Nothing
   , organizationVisibility = Nothing
   , organizationWebsite = Nothing
@@ -3537,6 +3922,7 @@ data PayloadCommitVerification = PayloadCommitVerification
   { payloadCommitVerificationPayload :: !(Maybe Text) -- ^ "payload"
   , payloadCommitVerificationReason :: !(Maybe Text) -- ^ "reason"
   , payloadCommitVerificationSignature :: !(Maybe Text) -- ^ "signature"
+  , payloadCommitVerificationSigner :: !(Maybe PayloadUser) -- ^ "signer"
   , payloadCommitVerificationVerified :: !(Maybe Bool) -- ^ "verified"
   } deriving (P.Show, P.Eq, P.Typeable)
 
@@ -3547,6 +3933,7 @@ instance A.FromJSON PayloadCommitVerification where
       <$> (o .:? "payload")
       <*> (o .:? "reason")
       <*> (o .:? "signature")
+      <*> (o .:? "signer")
       <*> (o .:? "verified")
 
 -- | ToJSON PayloadCommitVerification
@@ -3556,6 +3943,7 @@ instance A.ToJSON PayloadCommitVerification where
       [ "payload" .= payloadCommitVerificationPayload
       , "reason" .= payloadCommitVerificationReason
       , "signature" .= payloadCommitVerificationSignature
+      , "signer" .= payloadCommitVerificationSigner
       , "verified" .= payloadCommitVerificationVerified
       ]
 
@@ -3568,6 +3956,7 @@ mkPayloadCommitVerification =
   { payloadCommitVerificationPayload = Nothing
   , payloadCommitVerificationReason = Nothing
   , payloadCommitVerificationSignature = Nothing
+  , payloadCommitVerificationSigner = Nothing
   , payloadCommitVerificationVerified = Nothing
   }
 
@@ -3872,6 +4261,43 @@ mkPullRequestMeta =
   , pullRequestMetaMergedAt = Nothing
   }
 
+-- ** Reaction
+-- | Reaction
+-- Reaction contain one reaction
+data Reaction = Reaction
+  { reactionContent :: !(Maybe Text) -- ^ "content"
+  , reactionCreatedAt :: !(Maybe DateTime) -- ^ "created_at"
+  , reactionUser :: !(Maybe User) -- ^ "user"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON Reaction
+instance A.FromJSON Reaction where
+  parseJSON = A.withObject "Reaction" $ \o ->
+    Reaction
+      <$> (o .:? "content")
+      <*> (o .:? "created_at")
+      <*> (o .:? "user")
+
+-- | ToJSON Reaction
+instance A.ToJSON Reaction where
+  toJSON Reaction {..} =
+   _omitNulls
+      [ "content" .= reactionContent
+      , "created_at" .= reactionCreatedAt
+      , "user" .= reactionUser
+      ]
+
+
+-- | Construct a value of type 'Reaction' (by applying it's required fields, if any)
+mkReaction
+  :: Reaction
+mkReaction =
+  Reaction
+  { reactionContent = Nothing
+  , reactionCreatedAt = Nothing
+  , reactionUser = Nothing
+  }
+
 -- ** Reference
 -- | Reference
 -- Reference represents a Git reference.
@@ -4037,6 +4463,35 @@ mkRepoCommit =
   , repoCommitUrl = Nothing
   }
 
+-- ** RepoTopicOptions
+-- | RepoTopicOptions
+-- RepoTopicOptions a collection of repo topic names
+data RepoTopicOptions = RepoTopicOptions
+  { repoTopicOptionsTopics :: !(Maybe [Text]) -- ^ "topics" - list of topic names
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON RepoTopicOptions
+instance A.FromJSON RepoTopicOptions where
+  parseJSON = A.withObject "RepoTopicOptions" $ \o ->
+    RepoTopicOptions
+      <$> (o .:? "topics")
+
+-- | ToJSON RepoTopicOptions
+instance A.ToJSON RepoTopicOptions where
+  toJSON RepoTopicOptions {..} =
+   _omitNulls
+      [ "topics" .= repoTopicOptionsTopics
+      ]
+
+
+-- | Construct a value of type 'RepoTopicOptions' (by applying it's required fields, if any)
+mkRepoTopicOptions
+  :: RepoTopicOptions
+mkRepoTopicOptions =
+  RepoTopicOptions
+  { repoTopicOptionsTopics = Nothing
+  }
+
 -- ** Repository
 -- | Repository
 -- Repository represents a repository
@@ -4052,6 +4507,8 @@ data Repository = Repository
   , repositoryDefaultBranch :: !(Maybe Text) -- ^ "default_branch"
   , repositoryDescription :: !(Maybe Text) -- ^ "description"
   , repositoryEmpty :: !(Maybe Bool) -- ^ "empty"
+  , repositoryExternalTracker :: !(Maybe ExternalTracker) -- ^ "external_tracker"
+  , repositoryExternalWiki :: !(Maybe ExternalWiki) -- ^ "external_wiki"
   , repositoryFork :: !(Maybe Bool) -- ^ "fork"
   , repositoryForksCount :: !(Maybe Integer) -- ^ "forks_count"
   , repositoryFullName :: !(Maybe Text) -- ^ "full_name"
@@ -4061,16 +4518,21 @@ data Repository = Repository
   , repositoryHtmlUrl :: !(Maybe Text) -- ^ "html_url"
   , repositoryId :: !(Maybe Integer) -- ^ "id"
   , repositoryIgnoreWhitespaceConflicts :: !(Maybe Bool) -- ^ "ignore_whitespace_conflicts"
+  , repositoryInternalTracker :: !(Maybe InternalTracker) -- ^ "internal_tracker"
   , repositoryMirror :: !(Maybe Bool) -- ^ "mirror"
   , repositoryName :: !(Maybe Text) -- ^ "name"
   , repositoryOpenIssuesCount :: !(Maybe Integer) -- ^ "open_issues_count"
+  , repositoryOpenPrCounter :: !(Maybe Integer) -- ^ "open_pr_counter"
+  , repositoryOriginalUrl :: !(Maybe Text) -- ^ "original_url"
   , repositoryOwner :: !(Maybe User) -- ^ "owner"
   , repositoryParent :: !(Maybe Repository) -- ^ "parent"
   , repositoryPermissions :: !(Maybe Permission) -- ^ "permissions"
   , repositoryPrivate :: !(Maybe Bool) -- ^ "private"
+  , repositoryReleaseCounter :: !(Maybe Integer) -- ^ "release_counter"
   , repositorySize :: !(Maybe Integer) -- ^ "size"
   , repositorySshUrl :: !(Maybe Text) -- ^ "ssh_url"
   , repositoryStarsCount :: !(Maybe Integer) -- ^ "stars_count"
+  , repositoryTemplate :: !(Maybe Bool) -- ^ "template"
   , repositoryUpdatedAt :: !(Maybe DateTime) -- ^ "updated_at"
   , repositoryWatchersCount :: !(Maybe Integer) -- ^ "watchers_count"
   , repositoryWebsite :: !(Maybe Text) -- ^ "website"
@@ -4091,6 +4553,8 @@ instance A.FromJSON Repository where
       <*> (o .:? "default_branch")
       <*> (o .:? "description")
       <*> (o .:? "empty")
+      <*> (o .:? "external_tracker")
+      <*> (o .:? "external_wiki")
       <*> (o .:? "fork")
       <*> (o .:? "forks_count")
       <*> (o .:? "full_name")
@@ -4100,16 +4564,21 @@ instance A.FromJSON Repository where
       <*> (o .:? "html_url")
       <*> (o .:? "id")
       <*> (o .:? "ignore_whitespace_conflicts")
+      <*> (o .:? "internal_tracker")
       <*> (o .:? "mirror")
       <*> (o .:? "name")
       <*> (o .:? "open_issues_count")
+      <*> (o .:? "open_pr_counter")
+      <*> (o .:? "original_url")
       <*> (o .:? "owner")
       <*> (o .:? "parent")
       <*> (o .:? "permissions")
       <*> (o .:? "private")
+      <*> (o .:? "release_counter")
       <*> (o .:? "size")
       <*> (o .:? "ssh_url")
       <*> (o .:? "stars_count")
+      <*> (o .:? "template")
       <*> (o .:? "updated_at")
       <*> (o .:? "watchers_count")
       <*> (o .:? "website")
@@ -4129,6 +4598,8 @@ instance A.ToJSON Repository where
       , "default_branch" .= repositoryDefaultBranch
       , "description" .= repositoryDescription
       , "empty" .= repositoryEmpty
+      , "external_tracker" .= repositoryExternalTracker
+      , "external_wiki" .= repositoryExternalWiki
       , "fork" .= repositoryFork
       , "forks_count" .= repositoryForksCount
       , "full_name" .= repositoryFullName
@@ -4138,16 +4609,21 @@ instance A.ToJSON Repository where
       , "html_url" .= repositoryHtmlUrl
       , "id" .= repositoryId
       , "ignore_whitespace_conflicts" .= repositoryIgnoreWhitespaceConflicts
+      , "internal_tracker" .= repositoryInternalTracker
       , "mirror" .= repositoryMirror
       , "name" .= repositoryName
       , "open_issues_count" .= repositoryOpenIssuesCount
+      , "open_pr_counter" .= repositoryOpenPrCounter
+      , "original_url" .= repositoryOriginalUrl
       , "owner" .= repositoryOwner
       , "parent" .= repositoryParent
       , "permissions" .= repositoryPermissions
       , "private" .= repositoryPrivate
+      , "release_counter" .= repositoryReleaseCounter
       , "size" .= repositorySize
       , "ssh_url" .= repositorySshUrl
       , "stars_count" .= repositoryStarsCount
+      , "template" .= repositoryTemplate
       , "updated_at" .= repositoryUpdatedAt
       , "watchers_count" .= repositoryWatchersCount
       , "website" .= repositoryWebsite
@@ -4170,6 +4646,8 @@ mkRepository =
   , repositoryDefaultBranch = Nothing
   , repositoryDescription = Nothing
   , repositoryEmpty = Nothing
+  , repositoryExternalTracker = Nothing
+  , repositoryExternalWiki = Nothing
   , repositoryFork = Nothing
   , repositoryForksCount = Nothing
   , repositoryFullName = Nothing
@@ -4179,19 +4657,61 @@ mkRepository =
   , repositoryHtmlUrl = Nothing
   , repositoryId = Nothing
   , repositoryIgnoreWhitespaceConflicts = Nothing
+  , repositoryInternalTracker = Nothing
   , repositoryMirror = Nothing
   , repositoryName = Nothing
   , repositoryOpenIssuesCount = Nothing
+  , repositoryOpenPrCounter = Nothing
+  , repositoryOriginalUrl = Nothing
   , repositoryOwner = Nothing
   , repositoryParent = Nothing
   , repositoryPermissions = Nothing
   , repositoryPrivate = Nothing
+  , repositoryReleaseCounter = Nothing
   , repositorySize = Nothing
   , repositorySshUrl = Nothing
   , repositoryStarsCount = Nothing
+  , repositoryTemplate = Nothing
   , repositoryUpdatedAt = Nothing
   , repositoryWatchersCount = Nothing
   , repositoryWebsite = Nothing
+  }
+
+-- ** RepositoryMeta
+-- | RepositoryMeta
+-- RepositoryMeta basic repository information
+data RepositoryMeta = RepositoryMeta
+  { repositoryMetaFullName :: !(Maybe Text) -- ^ "full_name"
+  , repositoryMetaId :: !(Maybe Integer) -- ^ "id"
+  , repositoryMetaName :: !(Maybe Text) -- ^ "name"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON RepositoryMeta
+instance A.FromJSON RepositoryMeta where
+  parseJSON = A.withObject "RepositoryMeta" $ \o ->
+    RepositoryMeta
+      <$> (o .:? "full_name")
+      <*> (o .:? "id")
+      <*> (o .:? "name")
+
+-- | ToJSON RepositoryMeta
+instance A.ToJSON RepositoryMeta where
+  toJSON RepositoryMeta {..} =
+   _omitNulls
+      [ "full_name" .= repositoryMetaFullName
+      , "id" .= repositoryMetaId
+      , "name" .= repositoryMetaName
+      ]
+
+
+-- | Construct a value of type 'RepositoryMeta' (by applying it's required fields, if any)
+mkRepositoryMeta
+  :: RepositoryMeta
+mkRepositoryMeta =
+  RepositoryMeta
+  { repositoryMetaFullName = Nothing
+  , repositoryMetaId = Nothing
+  , repositoryMetaName = Nothing
   }
 
 -- ** SearchResults
@@ -4317,6 +4837,39 @@ mkStatus =
   , statusUrl = Nothing
   }
 
+-- ** StopWatch
+-- | StopWatch
+-- StopWatch represent a running stopwatch
+data StopWatch = StopWatch
+  { stopWatchCreated :: !(Maybe DateTime) -- ^ "created"
+  , stopWatchIssueIndex :: !(Maybe Integer) -- ^ "issue_index"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON StopWatch
+instance A.FromJSON StopWatch where
+  parseJSON = A.withObject "StopWatch" $ \o ->
+    StopWatch
+      <$> (o .:? "created")
+      <*> (o .:? "issue_index")
+
+-- | ToJSON StopWatch
+instance A.ToJSON StopWatch where
+  toJSON StopWatch {..} =
+   _omitNulls
+      [ "created" .= stopWatchCreated
+      , "issue_index" .= stopWatchIssueIndex
+      ]
+
+
+-- | Construct a value of type 'StopWatch' (by applying it's required fields, if any)
+mkStopWatch
+  :: StopWatch
+mkStopWatch =
+  StopWatch
+  { stopWatchCreated = Nothing
+  , stopWatchIssueIndex = Nothing
+  }
+
 -- ** Tag
 -- | Tag
 -- Tag represents a repository tag
@@ -4366,8 +4919,10 @@ mkTag =
 -- | Team
 -- Team represents a team in an organization
 data Team = Team
-  { teamDescription :: !(Maybe Text) -- ^ "description"
+  { teamCanCreateOrgRepo :: !(Maybe Bool) -- ^ "can_create_org_repo"
+  , teamDescription :: !(Maybe Text) -- ^ "description"
   , teamId :: !(Maybe Integer) -- ^ "id"
+  , teamIncludesAllRepositories :: !(Maybe Bool) -- ^ "includes_all_repositories"
   , teamName :: !(Maybe Text) -- ^ "name"
   , teamOrganization :: !(Maybe Organization) -- ^ "organization"
   , teamPermission :: !(Maybe E'Permission2) -- ^ "permission"
@@ -4378,8 +4933,10 @@ data Team = Team
 instance A.FromJSON Team where
   parseJSON = A.withObject "Team" $ \o ->
     Team
-      <$> (o .:? "description")
+      <$> (o .:? "can_create_org_repo")
+      <*> (o .:? "description")
       <*> (o .:? "id")
+      <*> (o .:? "includes_all_repositories")
       <*> (o .:? "name")
       <*> (o .:? "organization")
       <*> (o .:? "permission")
@@ -4389,8 +4946,10 @@ instance A.FromJSON Team where
 instance A.ToJSON Team where
   toJSON Team {..} =
    _omitNulls
-      [ "description" .= teamDescription
+      [ "can_create_org_repo" .= teamCanCreateOrgRepo
+      , "description" .= teamDescription
       , "id" .= teamId
+      , "includes_all_repositories" .= teamIncludesAllRepositories
       , "name" .= teamName
       , "organization" .= teamOrganization
       , "permission" .= teamPermission
@@ -4403,12 +4962,88 @@ mkTeam
   :: Team
 mkTeam =
   Team
-  { teamDescription = Nothing
+  { teamCanCreateOrgRepo = Nothing
+  , teamDescription = Nothing
   , teamId = Nothing
+  , teamIncludesAllRepositories = Nothing
   , teamName = Nothing
   , teamOrganization = Nothing
   , teamPermission = Nothing
   , teamUnits = Nothing
+  }
+
+-- ** TopicName
+-- | TopicName
+-- TopicName a list of repo topic names
+data TopicName = TopicName
+  { topicNameTopics :: !(Maybe [Text]) -- ^ "topics"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON TopicName
+instance A.FromJSON TopicName where
+  parseJSON = A.withObject "TopicName" $ \o ->
+    TopicName
+      <$> (o .:? "topics")
+
+-- | ToJSON TopicName
+instance A.ToJSON TopicName where
+  toJSON TopicName {..} =
+   _omitNulls
+      [ "topics" .= topicNameTopics
+      ]
+
+
+-- | Construct a value of type 'TopicName' (by applying it's required fields, if any)
+mkTopicName
+  :: TopicName
+mkTopicName =
+  TopicName
+  { topicNameTopics = Nothing
+  }
+
+-- ** TopicResponse
+-- | TopicResponse
+-- TopicResponse for returning topics
+data TopicResponse = TopicResponse
+  { topicResponseCreated :: !(Maybe DateTime) -- ^ "created"
+  , topicResponseId :: !(Maybe Integer) -- ^ "id"
+  , topicResponseRepoCount :: !(Maybe Integer) -- ^ "repo_count"
+  , topicResponseTopicName :: !(Maybe Text) -- ^ "topic_name"
+  , topicResponseUpdated :: !(Maybe DateTime) -- ^ "updated"
+  } deriving (P.Show, P.Eq, P.Typeable)
+
+-- | FromJSON TopicResponse
+instance A.FromJSON TopicResponse where
+  parseJSON = A.withObject "TopicResponse" $ \o ->
+    TopicResponse
+      <$> (o .:? "created")
+      <*> (o .:? "id")
+      <*> (o .:? "repo_count")
+      <*> (o .:? "topic_name")
+      <*> (o .:? "updated")
+
+-- | ToJSON TopicResponse
+instance A.ToJSON TopicResponse where
+  toJSON TopicResponse {..} =
+   _omitNulls
+      [ "created" .= topicResponseCreated
+      , "id" .= topicResponseId
+      , "repo_count" .= topicResponseRepoCount
+      , "topic_name" .= topicResponseTopicName
+      , "updated" .= topicResponseUpdated
+      ]
+
+
+-- | Construct a value of type 'TopicResponse' (by applying it's required fields, if any)
+mkTopicResponse
+  :: TopicResponse
+mkTopicResponse =
+  TopicResponse
+  { topicResponseCreated = Nothing
+  , topicResponseId = Nothing
+  , topicResponseRepoCount = Nothing
+  , topicResponseTopicName = Nothing
+  , topicResponseUpdated = Nothing
   }
 
 -- ** TrackedTime
@@ -4417,9 +5052,11 @@ mkTeam =
 data TrackedTime = TrackedTime
   { trackedTimeCreated :: !(Maybe DateTime) -- ^ "created"
   , trackedTimeId :: !(Maybe Integer) -- ^ "id"
-  , trackedTimeIssueId :: !(Maybe Integer) -- ^ "issue_id"
+  , trackedTimeIssue :: !(Maybe Issue) -- ^ "issue"
+  , trackedTimeIssueId :: !(Maybe Integer) -- ^ "issue_id" - deprecated (only for backwards compatibility)
   , trackedTimeTime :: !(Maybe Integer) -- ^ "time" - Time in seconds
-  , trackedTimeUserId :: !(Maybe Integer) -- ^ "user_id"
+  , trackedTimeUserId :: !(Maybe Integer) -- ^ "user_id" - deprecated (only for backwards compatibility)
+  , trackedTimeUserName :: !(Maybe Text) -- ^ "user_name"
   } deriving (P.Show, P.Eq, P.Typeable)
 
 -- | FromJSON TrackedTime
@@ -4428,9 +5065,11 @@ instance A.FromJSON TrackedTime where
     TrackedTime
       <$> (o .:? "created")
       <*> (o .:? "id")
+      <*> (o .:? "issue")
       <*> (o .:? "issue_id")
       <*> (o .:? "time")
       <*> (o .:? "user_id")
+      <*> (o .:? "user_name")
 
 -- | ToJSON TrackedTime
 instance A.ToJSON TrackedTime where
@@ -4438,9 +5077,11 @@ instance A.ToJSON TrackedTime where
    _omitNulls
       [ "created" .= trackedTimeCreated
       , "id" .= trackedTimeId
+      , "issue" .= trackedTimeIssue
       , "issue_id" .= trackedTimeIssueId
       , "time" .= trackedTimeTime
       , "user_id" .= trackedTimeUserId
+      , "user_name" .= trackedTimeUserName
       ]
 
 
@@ -4451,9 +5092,11 @@ mkTrackedTime =
   TrackedTime
   { trackedTimeCreated = Nothing
   , trackedTimeId = Nothing
+  , trackedTimeIssue = Nothing
   , trackedTimeIssueId = Nothing
   , trackedTimeTime = Nothing
   , trackedTimeUserId = Nothing
+  , trackedTimeUserName = Nothing
   }
 
 -- ** UpdateFileOptions
@@ -4464,6 +5107,7 @@ data UpdateFileOptions = UpdateFileOptions
   , updateFileOptionsBranch :: !(Maybe Text) -- ^ "branch" - branch (optional) to base this file from. if not given, the default branch is used
   , updateFileOptionsCommitter :: !(Maybe Identity) -- ^ "committer"
   , updateFileOptionsContent :: !(Text) -- ^ /Required/ "content" - content must be base64 encoded
+  , updateFileOptionsDates :: !(Maybe CommitDateOptions) -- ^ "dates"
   , updateFileOptionsFromPath :: !(Maybe Text) -- ^ "from_path" - from_path (optional) is the path of the original file which will be moved/renamed to the path in the URL
   , updateFileOptionsMessage :: !(Maybe Text) -- ^ "message" - message (optional) for the commit of this file. if not supplied, a default message will be used
   , updateFileOptionsNewBranch :: !(Maybe Text) -- ^ "new_branch" - new_branch (optional) will make a new branch from &#x60;branch&#x60; before creating the file
@@ -4478,6 +5122,7 @@ instance A.FromJSON UpdateFileOptions where
       <*> (o .:? "branch")
       <*> (o .:? "committer")
       <*> (o .:  "content")
+      <*> (o .:? "dates")
       <*> (o .:? "from_path")
       <*> (o .:? "message")
       <*> (o .:? "new_branch")
@@ -4491,6 +5136,7 @@ instance A.ToJSON UpdateFileOptions where
       , "branch" .= updateFileOptionsBranch
       , "committer" .= updateFileOptionsCommitter
       , "content" .= updateFileOptionsContent
+      , "dates" .= updateFileOptionsDates
       , "from_path" .= updateFileOptionsFromPath
       , "message" .= updateFileOptionsMessage
       , "new_branch" .= updateFileOptionsNewBranch
@@ -4509,6 +5155,7 @@ mkUpdateFileOptions updateFileOptionsContent updateFileOptionsSha =
   , updateFileOptionsBranch = Nothing
   , updateFileOptionsCommitter = Nothing
   , updateFileOptionsContent
+  , updateFileOptionsDates = Nothing
   , updateFileOptionsFromPath = Nothing
   , updateFileOptionsMessage = Nothing
   , updateFileOptionsNewBranch = Nothing
@@ -4804,6 +5451,43 @@ toE'Sort = \case
   s -> P.Left $ "toE'Sort: enum parse failure: " P.++ P.show s
 
 
+-- ** E'Sort2
+
+-- | Enum of 'Text'
+data E'Sort2
+  = E'Sort2'Oldest -- ^ @"oldest"@
+  | E'Sort2'Recentupdate -- ^ @"recentupdate"@
+  | E'Sort2'Leastupdate -- ^ @"leastupdate"@
+  | E'Sort2'Leastindex -- ^ @"leastindex"@
+  | E'Sort2'Highestindex -- ^ @"highestindex"@
+  deriving (P.Show, P.Eq, P.Typeable, P.Ord, P.Bounded, P.Enum)
+
+instance A.ToJSON E'Sort2 where toJSON = A.toJSON . fromE'Sort2
+instance A.FromJSON E'Sort2 where parseJSON o = P.either P.fail (pure . P.id) . toE'Sort2 =<< A.parseJSON o
+instance WH.ToHttpApiData E'Sort2 where toQueryParam = WH.toQueryParam . fromE'Sort2
+instance WH.FromHttpApiData E'Sort2 where parseQueryParam o = WH.parseQueryParam o >>= P.left T.pack . toE'Sort2
+instance MimeRender MimeMultipartFormData E'Sort2 where mimeRender _ = mimeRenderDefaultMultipartFormData
+
+-- | unwrap 'E'Sort2' enum
+fromE'Sort2 :: E'Sort2 -> Text
+fromE'Sort2 = \case
+  E'Sort2'Oldest -> "oldest"
+  E'Sort2'Recentupdate -> "recentupdate"
+  E'Sort2'Leastupdate -> "leastupdate"
+  E'Sort2'Leastindex -> "leastindex"
+  E'Sort2'Highestindex -> "highestindex"
+
+-- | parse 'E'Sort2' enum
+toE'Sort2 :: Text -> P.Either String E'Sort2
+toE'Sort2 = \case
+  "oldest" -> P.Right E'Sort2'Oldest
+  "recentupdate" -> P.Right E'Sort2'Recentupdate
+  "leastupdate" -> P.Right E'Sort2'Leastupdate
+  "leastindex" -> P.Right E'Sort2'Leastindex
+  "highestindex" -> P.Right E'Sort2'Highestindex
+  s -> P.Left $ "toE'Sort2: enum parse failure: " P.++ P.show s
+
+
 -- ** E'State
 
 -- | Enum of 'Text'
@@ -4835,14 +5519,54 @@ toE'State = \case
   s -> P.Left $ "toE'State: enum parse failure: " P.++ P.show s
 
 
+-- ** E'State2
+
+-- | Enum of 'Text'
+data E'State2
+  = E'State2'Pending -- ^ @"pending"@
+  | E'State2'Success -- ^ @"success"@
+  | E'State2'Error -- ^ @"error"@
+  | E'State2'Failure -- ^ @"failure"@
+  | E'State2'Warning -- ^ @"warning"@
+  deriving (P.Show, P.Eq, P.Typeable, P.Ord, P.Bounded, P.Enum)
+
+instance A.ToJSON E'State2 where toJSON = A.toJSON . fromE'State2
+instance A.FromJSON E'State2 where parseJSON o = P.either P.fail (pure . P.id) . toE'State2 =<< A.parseJSON o
+instance WH.ToHttpApiData E'State2 where toQueryParam = WH.toQueryParam . fromE'State2
+instance WH.FromHttpApiData E'State2 where parseQueryParam o = WH.parseQueryParam o >>= P.left T.pack . toE'State2
+instance MimeRender MimeMultipartFormData E'State2 where mimeRender _ = mimeRenderDefaultMultipartFormData
+
+-- | unwrap 'E'State2' enum
+fromE'State2 :: E'State2 -> Text
+fromE'State2 = \case
+  E'State2'Pending -> "pending"
+  E'State2'Success -> "success"
+  E'State2'Error -> "error"
+  E'State2'Failure -> "failure"
+  E'State2'Warning -> "warning"
+
+-- | parse 'E'State2' enum
+toE'State2 :: Text -> P.Either String E'State2
+toE'State2 = \case
+  "pending" -> P.Right E'State2'Pending
+  "success" -> P.Right E'State2'Success
+  "error" -> P.Right E'State2'Error
+  "failure" -> P.Right E'State2'Failure
+  "warning" -> P.Right E'State2'Warning
+  s -> P.Left $ "toE'State2: enum parse failure: " P.++ P.show s
+
+
 -- ** E'Type
 
 -- | Enum of 'Text'
 data E'Type
-  = E'Type'Gitea -- ^ @"gitea"@
-  | E'Type'Gogs -- ^ @"gogs"@
-  | E'Type'Slack -- ^ @"slack"@
+  = E'Type'Dingtalk -- ^ @"dingtalk"@
   | E'Type'Discord -- ^ @"discord"@
+  | E'Type'Gitea -- ^ @"gitea"@
+  | E'Type'Gogs -- ^ @"gogs"@
+  | E'Type'Msteams -- ^ @"msteams"@
+  | E'Type'Slack -- ^ @"slack"@
+  | E'Type'Telegram -- ^ @"telegram"@
   deriving (P.Show, P.Eq, P.Typeable, P.Ord, P.Bounded, P.Enum)
 
 instance A.ToJSON E'Type where toJSON = A.toJSON . fromE'Type
@@ -4854,18 +5578,24 @@ instance MimeRender MimeMultipartFormData E'Type where mimeRender _ = mimeRender
 -- | unwrap 'E'Type' enum
 fromE'Type :: E'Type -> Text
 fromE'Type = \case
+  E'Type'Dingtalk -> "dingtalk"
+  E'Type'Discord -> "discord"
   E'Type'Gitea -> "gitea"
   E'Type'Gogs -> "gogs"
+  E'Type'Msteams -> "msteams"
   E'Type'Slack -> "slack"
-  E'Type'Discord -> "discord"
+  E'Type'Telegram -> "telegram"
 
 -- | parse 'E'Type' enum
 toE'Type :: Text -> P.Either String E'Type
 toE'Type = \case
+  "dingtalk" -> P.Right E'Type'Dingtalk
+  "discord" -> P.Right E'Type'Discord
   "gitea" -> P.Right E'Type'Gitea
   "gogs" -> P.Right E'Type'Gogs
+  "msteams" -> P.Right E'Type'Msteams
   "slack" -> P.Right E'Type'Slack
-  "discord" -> P.Right E'Type'Discord
+  "telegram" -> P.Right E'Type'Telegram
   s -> P.Left $ "toE'Type: enum parse failure: " P.++ P.show s
 
 

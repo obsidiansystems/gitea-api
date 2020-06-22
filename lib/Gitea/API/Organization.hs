@@ -907,3 +907,48 @@ orgRemoveTeamRepository (Id id) (Org org) (Repo repo) =
 data OrgRemoveTeamRepository  
 instance Produces OrgRemoveTeamRepository MimeNoContent
 
+
+-- *** teamSearch
+
+-- | @GET \/orgs\/{org}\/teams\/search@
+-- 
+-- Search for teams within an organization
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+teamSearch 
+  :: Org -- ^ "org" -  name of the organization
+  -> GiteaRequest TeamSearch MimeNoContent InlineResponse200 MimeJSON
+teamSearch (Org org) =
+  _mkRequest "GET" ["/orgs/",toPath org,"/teams/search"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data TeamSearch  
+
+-- | /Optional Param/ "q" - keywords to search
+instance HasOptionalParam TeamSearch Q where
+  applyOptionalParam req (Q xs) =
+    req `setQuery` toQuery ("q", Just xs)
+
+-- | /Optional Param/ "include_desc" - include search within team description (defaults to true)
+instance HasOptionalParam TeamSearch IncludeDesc where
+  applyOptionalParam req (IncludeDesc xs) =
+    req `setQuery` toQuery ("include_desc", Just xs)
+
+-- | /Optional Param/ "limit" - limit size of results
+instance HasOptionalParam TeamSearch Limit where
+  applyOptionalParam req (Limit xs) =
+    req `setQuery` toQuery ("limit", Just xs)
+
+-- | /Optional Param/ "page" - page number of results to return (1-based)
+instance HasOptionalParam TeamSearch Page where
+  applyOptionalParam req (Page xs) =
+    req `setQuery` toQuery ("page", Just xs)
+-- | @application/json@
+instance Produces TeamSearch MimeJSON
+

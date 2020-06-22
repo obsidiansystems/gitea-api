@@ -808,6 +808,30 @@ data UserGetHeatmapData
 instance Produces UserGetHeatmapData MimeJSON
 
 
+-- *** userGetStopWatches
+
+-- | @GET \/user\/stopwatches@
+-- 
+-- Get list of all existing stopwatches
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+userGetStopWatches 
+  :: GiteaRequest UserGetStopWatches MimeNoContent [StopWatch] MimeJSON
+userGetStopWatches =
+  _mkRequest "GET" ["/user/stopwatches"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data UserGetStopWatches  
+-- | @application/json@
+instance Produces UserGetStopWatches MimeJSON
+
+
 -- *** userGetTokens
 
 -- | @GET \/users\/{username}\/tokens@
@@ -1070,7 +1094,7 @@ instance Produces UserListTeams MimeJSON
 -- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
 userSearch 
-  :: GiteaRequest UserSearch MimeNoContent InlineResponse200 MimeJSON
+  :: GiteaRequest UserSearch MimeNoContent InlineResponse2001 MimeJSON
 userSearch =
   _mkRequest "GET" ["/users/search"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)

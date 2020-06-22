@@ -36,6 +36,20 @@ import Gitea.Model
 import Gitea.Core
 
 
+-- * APIError
+
+-- | 'aPIErrorMessage' Lens
+aPIErrorMessageL :: Lens_' APIError (Maybe Text)
+aPIErrorMessageL f APIError{..} = (\aPIErrorMessage -> APIError { aPIErrorMessage, ..} ) <$> f aPIErrorMessage
+{-# INLINE aPIErrorMessageL #-}
+
+-- | 'aPIErrorUrl' Lens
+aPIErrorUrlL :: Lens_' APIError (Maybe Text)
+aPIErrorUrlL f APIError{..} = (\aPIErrorUrl -> APIError { aPIErrorUrl, ..} ) <$> f aPIErrorUrl
+{-# INLINE aPIErrorUrlL #-}
+
+
+
 -- * AccessToken
 
 -- | 'accessTokenId' Lens
@@ -71,10 +85,20 @@ addCollaboratorOptionPermissionL f AddCollaboratorOption{..} = (\addCollaborator
 
 -- * AddTimeOption
 
+-- | 'addTimeOptionCreated' Lens
+addTimeOptionCreatedL :: Lens_' AddTimeOption (Maybe DateTime)
+addTimeOptionCreatedL f AddTimeOption{..} = (\addTimeOptionCreated -> AddTimeOption { addTimeOptionCreated, ..} ) <$> f addTimeOptionCreated
+{-# INLINE addTimeOptionCreatedL #-}
+
 -- | 'addTimeOptionTime' Lens
 addTimeOptionTimeL :: Lens_' AddTimeOption (Integer)
 addTimeOptionTimeL f AddTimeOption{..} = (\addTimeOptionTime -> AddTimeOption { addTimeOptionTime, ..} ) <$> f addTimeOptionTime
 {-# INLINE addTimeOptionTimeL #-}
+
+-- | 'addTimeOptionUserName' Lens
+addTimeOptionUserNameL :: Lens_' AddTimeOption (Maybe Text)
+addTimeOptionUserNameL f AddTimeOption{..} = (\addTimeOptionUserName -> AddTimeOption { addTimeOptionUserName, ..} ) <$> f addTimeOptionUserName
+{-# INLINE addTimeOptionUserNameL #-}
 
 
 
@@ -182,10 +206,40 @@ branchCommitL :: Lens_' Branch (Maybe PayloadCommit)
 branchCommitL f Branch{..} = (\branchCommit -> Branch { branchCommit, ..} ) <$> f branchCommit
 {-# INLINE branchCommitL #-}
 
+-- | 'branchEnableStatusCheck' Lens
+branchEnableStatusCheckL :: Lens_' Branch (Maybe Bool)
+branchEnableStatusCheckL f Branch{..} = (\branchEnableStatusCheck -> Branch { branchEnableStatusCheck, ..} ) <$> f branchEnableStatusCheck
+{-# INLINE branchEnableStatusCheckL #-}
+
 -- | 'branchName' Lens
 branchNameL :: Lens_' Branch (Maybe Text)
 branchNameL f Branch{..} = (\branchName -> Branch { branchName, ..} ) <$> f branchName
 {-# INLINE branchNameL #-}
+
+-- | 'branchProtected' Lens
+branchProtectedL :: Lens_' Branch (Maybe Bool)
+branchProtectedL f Branch{..} = (\branchProtected -> Branch { branchProtected, ..} ) <$> f branchProtected
+{-# INLINE branchProtectedL #-}
+
+-- | 'branchRequiredApprovals' Lens
+branchRequiredApprovalsL :: Lens_' Branch (Maybe Integer)
+branchRequiredApprovalsL f Branch{..} = (\branchRequiredApprovals -> Branch { branchRequiredApprovals, ..} ) <$> f branchRequiredApprovals
+{-# INLINE branchRequiredApprovalsL #-}
+
+-- | 'branchStatusCheckContexts' Lens
+branchStatusCheckContextsL :: Lens_' Branch (Maybe [Text])
+branchStatusCheckContextsL f Branch{..} = (\branchStatusCheckContexts -> Branch { branchStatusCheckContexts, ..} ) <$> f branchStatusCheckContexts
+{-# INLINE branchStatusCheckContextsL #-}
+
+-- | 'branchUserCanMerge' Lens
+branchUserCanMergeL :: Lens_' Branch (Maybe Bool)
+branchUserCanMergeL f Branch{..} = (\branchUserCanMerge -> Branch { branchUserCanMerge, ..} ) <$> f branchUserCanMerge
+{-# INLINE branchUserCanMergeL #-}
+
+-- | 'branchUserCanPush' Lens
+branchUserCanPushL :: Lens_' Branch (Maybe Bool)
+branchUserCanPushL f Branch{..} = (\branchUserCanPush -> Branch { branchUserCanPush, ..} ) <$> f branchUserCanPush
+{-# INLINE branchUserCanPushL #-}
 
 
 
@@ -215,6 +269,16 @@ commentIdL f Comment{..} = (\commentId -> Comment { commentId, ..} ) <$> f comme
 commentIssueUrlL :: Lens_' Comment (Maybe Text)
 commentIssueUrlL f Comment{..} = (\commentIssueUrl -> Comment { commentIssueUrl, ..} ) <$> f commentIssueUrl
 {-# INLINE commentIssueUrlL #-}
+
+-- | 'commentOriginalAuthor' Lens
+commentOriginalAuthorL :: Lens_' Comment (Maybe Text)
+commentOriginalAuthorL f Comment{..} = (\commentOriginalAuthor -> Comment { commentOriginalAuthor, ..} ) <$> f commentOriginalAuthor
+{-# INLINE commentOriginalAuthorL #-}
+
+-- | 'commentOriginalAuthorId' Lens
+commentOriginalAuthorIdL :: Lens_' Comment (Maybe Integer)
+commentOriginalAuthorIdL f Comment{..} = (\commentOriginalAuthorId -> Comment { commentOriginalAuthorId, ..} ) <$> f commentOriginalAuthorId
+{-# INLINE commentOriginalAuthorIdL #-}
 
 -- | 'commentPullRequestUrl' Lens
 commentPullRequestUrlL :: Lens_' Comment (Maybe Text)
@@ -269,6 +333,20 @@ commitShaL f Commit{..} = (\commitSha -> Commit { commitSha, ..} ) <$> f commitS
 commitUrlL :: Lens_' Commit (Maybe Text)
 commitUrlL f Commit{..} = (\commitUrl -> Commit { commitUrl, ..} ) <$> f commitUrl
 {-# INLINE commitUrlL #-}
+
+
+
+-- * CommitDateOptions
+
+-- | 'commitDateOptionsAuthor' Lens
+commitDateOptionsAuthorL :: Lens_' CommitDateOptions (Maybe DateTime)
+commitDateOptionsAuthorL f CommitDateOptions{..} = (\commitDateOptionsAuthor -> CommitDateOptions { commitDateOptionsAuthor, ..} ) <$> f commitDateOptionsAuthor
+{-# INLINE commitDateOptionsAuthorL #-}
+
+-- | 'commitDateOptionsCommitter' Lens
+commitDateOptionsCommitterL :: Lens_' CommitDateOptions (Maybe DateTime)
+commitDateOptionsCommitterL f CommitDateOptions{..} = (\commitDateOptionsCommitter -> CommitDateOptions { commitDateOptionsCommitter, ..} ) <$> f commitDateOptionsCommitter
+{-# INLINE commitDateOptionsCommitterL #-}
 
 
 
@@ -410,6 +488,11 @@ createFileOptionsContentL :: Lens_' CreateFileOptions (Text)
 createFileOptionsContentL f CreateFileOptions{..} = (\createFileOptionsContent -> CreateFileOptions { createFileOptionsContent, ..} ) <$> f createFileOptionsContent
 {-# INLINE createFileOptionsContentL #-}
 
+-- | 'createFileOptionsDates' Lens
+createFileOptionsDatesL :: Lens_' CreateFileOptions (Maybe CommitDateOptions)
+createFileOptionsDatesL f CreateFileOptions{..} = (\createFileOptionsDates -> CreateFileOptions { createFileOptionsDates, ..} ) <$> f createFileOptionsDates
+{-# INLINE createFileOptionsDatesL #-}
+
 -- | 'createFileOptionsMessage' Lens
 createFileOptionsMessageL :: Lens_' CreateFileOptions (Maybe Text)
 createFileOptionsMessageL f CreateFileOptions{..} = (\createFileOptionsMessage -> CreateFileOptions { createFileOptionsMessage, ..} ) <$> f createFileOptionsMessage
@@ -446,6 +529,11 @@ createGPGKeyOptionArmoredPublicKeyL f CreateGPGKeyOption{..} = (\createGPGKeyOpt
 createHookOptionActiveL :: Lens_' CreateHookOption (Maybe Bool)
 createHookOptionActiveL f CreateHookOption{..} = (\createHookOptionActive -> CreateHookOption { createHookOptionActive, ..} ) <$> f createHookOptionActive
 {-# INLINE createHookOptionActiveL #-}
+
+-- | 'createHookOptionBranchFilter' Lens
+createHookOptionBranchFilterL :: Lens_' CreateHookOption (Maybe Text)
+createHookOptionBranchFilterL f CreateHookOption{..} = (\createHookOptionBranchFilter -> CreateHookOption { createHookOptionBranchFilter, ..} ) <$> f createHookOptionBranchFilter
+{-# INLINE createHookOptionBranchFilterL #-}
 
 -- | 'createHookOptionConfig' Lens
 createHookOptionConfigL :: Lens_' CreateHookOption ((Map.Map String Text))
@@ -591,6 +679,11 @@ createOrgOptionLocationL :: Lens_' CreateOrgOption (Maybe Text)
 createOrgOptionLocationL f CreateOrgOption{..} = (\createOrgOptionLocation -> CreateOrgOption { createOrgOptionLocation, ..} ) <$> f createOrgOptionLocation
 {-# INLINE createOrgOptionLocationL #-}
 
+-- | 'createOrgOptionRepoAdminChangeTeamAccess' Lens
+createOrgOptionRepoAdminChangeTeamAccessL :: Lens_' CreateOrgOption (Maybe Bool)
+createOrgOptionRepoAdminChangeTeamAccessL f CreateOrgOption{..} = (\createOrgOptionRepoAdminChangeTeamAccess -> CreateOrgOption { createOrgOptionRepoAdminChangeTeamAccess, ..} ) <$> f createOrgOptionRepoAdminChangeTeamAccess
+{-# INLINE createOrgOptionRepoAdminChangeTeamAccessL #-}
+
 -- | 'createOrgOptionUsername' Lens
 createOrgOptionUsernameL :: Lens_' CreateOrgOption (Text)
 createOrgOptionUsernameL f CreateOrgOption{..} = (\createOrgOptionUsername -> CreateOrgOption { createOrgOptionUsername, ..} ) <$> f createOrgOptionUsername
@@ -708,6 +801,11 @@ createRepoOptionGitignoresL :: Lens_' CreateRepoOption (Maybe Text)
 createRepoOptionGitignoresL f CreateRepoOption{..} = (\createRepoOptionGitignores -> CreateRepoOption { createRepoOptionGitignores, ..} ) <$> f createRepoOptionGitignores
 {-# INLINE createRepoOptionGitignoresL #-}
 
+-- | 'createRepoOptionIssueLabels' Lens
+createRepoOptionIssueLabelsL :: Lens_' CreateRepoOption (Maybe Text)
+createRepoOptionIssueLabelsL f CreateRepoOption{..} = (\createRepoOptionIssueLabels -> CreateRepoOption { createRepoOptionIssueLabels, ..} ) <$> f createRepoOptionIssueLabels
+{-# INLINE createRepoOptionIssueLabelsL #-}
+
 -- | 'createRepoOptionLicense' Lens
 createRepoOptionLicenseL :: Lens_' CreateRepoOption (Maybe Text)
 createRepoOptionLicenseL f CreateRepoOption{..} = (\createRepoOptionLicense -> CreateRepoOption { createRepoOptionLicense, ..} ) <$> f createRepoOptionLicense
@@ -756,10 +854,20 @@ createStatusOptionTargetUrlL f CreateStatusOption{..} = (\createStatusOptionTarg
 
 -- * CreateTeamOption
 
+-- | 'createTeamOptionCanCreateOrgRepo' Lens
+createTeamOptionCanCreateOrgRepoL :: Lens_' CreateTeamOption (Maybe Bool)
+createTeamOptionCanCreateOrgRepoL f CreateTeamOption{..} = (\createTeamOptionCanCreateOrgRepo -> CreateTeamOption { createTeamOptionCanCreateOrgRepo, ..} ) <$> f createTeamOptionCanCreateOrgRepo
+{-# INLINE createTeamOptionCanCreateOrgRepoL #-}
+
 -- | 'createTeamOptionDescription' Lens
 createTeamOptionDescriptionL :: Lens_' CreateTeamOption (Maybe Text)
 createTeamOptionDescriptionL f CreateTeamOption{..} = (\createTeamOptionDescription -> CreateTeamOption { createTeamOptionDescription, ..} ) <$> f createTeamOptionDescription
 {-# INLINE createTeamOptionDescriptionL #-}
+
+-- | 'createTeamOptionIncludesAllRepositories' Lens
+createTeamOptionIncludesAllRepositoriesL :: Lens_' CreateTeamOption (Maybe Bool)
+createTeamOptionIncludesAllRepositoriesL f CreateTeamOption{..} = (\createTeamOptionIncludesAllRepositories -> CreateTeamOption { createTeamOptionIncludesAllRepositories, ..} ) <$> f createTeamOptionIncludesAllRepositories
+{-# INLINE createTeamOptionIncludesAllRepositoriesL #-}
 
 -- | 'createTeamOptionName' Lens
 createTeamOptionNameL :: Lens_' CreateTeamOption (Text)
@@ -847,6 +955,11 @@ deleteFileOptionsBranchL f DeleteFileOptions{..} = (\deleteFileOptionsBranch -> 
 deleteFileOptionsCommitterL :: Lens_' DeleteFileOptions (Maybe Identity)
 deleteFileOptionsCommitterL f DeleteFileOptions{..} = (\deleteFileOptionsCommitter -> DeleteFileOptions { deleteFileOptionsCommitter, ..} ) <$> f deleteFileOptionsCommitter
 {-# INLINE deleteFileOptionsCommitterL #-}
+
+-- | 'deleteFileOptionsDates' Lens
+deleteFileOptionsDatesL :: Lens_' DeleteFileOptions (Maybe CommitDateOptions)
+deleteFileOptionsDatesL f DeleteFileOptions{..} = (\deleteFileOptionsDates -> DeleteFileOptions { deleteFileOptionsDates, ..} ) <$> f deleteFileOptionsDates
+{-# INLINE deleteFileOptionsDatesL #-}
 
 -- | 'deleteFileOptionsMessage' Lens
 deleteFileOptionsMessageL :: Lens_' DeleteFileOptions (Maybe Text)
@@ -948,6 +1061,11 @@ editHookOptionActiveL :: Lens_' EditHookOption (Maybe Bool)
 editHookOptionActiveL f EditHookOption{..} = (\editHookOptionActive -> EditHookOption { editHookOptionActive, ..} ) <$> f editHookOptionActive
 {-# INLINE editHookOptionActiveL #-}
 
+-- | 'editHookOptionBranchFilter' Lens
+editHookOptionBranchFilterL :: Lens_' EditHookOption (Maybe Text)
+editHookOptionBranchFilterL f EditHookOption{..} = (\editHookOptionBranchFilter -> EditHookOption { editHookOptionBranchFilter, ..} ) <$> f editHookOptionBranchFilter
+{-# INLINE editHookOptionBranchFilterL #-}
+
 -- | 'editHookOptionConfig' Lens
 editHookOptionConfigL :: Lens_' EditHookOption (Maybe (Map.Map String Text))
 editHookOptionConfigL f EditHookOption{..} = (\editHookOptionConfig -> EditHookOption { editHookOptionConfig, ..} ) <$> f editHookOptionConfig
@@ -1005,6 +1123,11 @@ editIssueOptionStateL f EditIssueOption{..} = (\editIssueOptionState -> EditIssu
 editIssueOptionTitleL :: Lens_' EditIssueOption (Maybe Text)
 editIssueOptionTitleL f EditIssueOption{..} = (\editIssueOptionTitle -> EditIssueOption { editIssueOptionTitle, ..} ) <$> f editIssueOptionTitle
 {-# INLINE editIssueOptionTitleL #-}
+
+-- | 'editIssueOptionUnsetDueDate' Lens
+editIssueOptionUnsetDueDateL :: Lens_' EditIssueOption (Maybe Bool)
+editIssueOptionUnsetDueDateL f EditIssueOption{..} = (\editIssueOptionUnsetDueDate -> EditIssueOption { editIssueOptionUnsetDueDate, ..} ) <$> f editIssueOptionUnsetDueDate
+{-# INLINE editIssueOptionUnsetDueDateL #-}
 
 
 
@@ -1068,6 +1191,11 @@ editOrgOptionLocationL :: Lens_' EditOrgOption (Maybe Text)
 editOrgOptionLocationL f EditOrgOption{..} = (\editOrgOptionLocation -> EditOrgOption { editOrgOptionLocation, ..} ) <$> f editOrgOptionLocation
 {-# INLINE editOrgOptionLocationL #-}
 
+-- | 'editOrgOptionRepoAdminChangeTeamAccess' Lens
+editOrgOptionRepoAdminChangeTeamAccessL :: Lens_' EditOrgOption (Maybe Bool)
+editOrgOptionRepoAdminChangeTeamAccessL f EditOrgOption{..} = (\editOrgOptionRepoAdminChangeTeamAccess -> EditOrgOption { editOrgOptionRepoAdminChangeTeamAccess, ..} ) <$> f editOrgOptionRepoAdminChangeTeamAccess
+{-# INLINE editOrgOptionRepoAdminChangeTeamAccessL #-}
+
 -- | 'editOrgOptionVisibility' Lens
 editOrgOptionVisibilityL :: Lens_' EditOrgOption (Maybe E'Visibility)
 editOrgOptionVisibilityL f EditOrgOption{..} = (\editOrgOptionVisibility -> EditOrgOption { editOrgOptionVisibility, ..} ) <$> f editOrgOptionVisibility
@@ -1121,6 +1249,20 @@ editPullRequestOptionStateL f EditPullRequestOption{..} = (\editPullRequestOptio
 editPullRequestOptionTitleL :: Lens_' EditPullRequestOption (Maybe Text)
 editPullRequestOptionTitleL f EditPullRequestOption{..} = (\editPullRequestOptionTitle -> EditPullRequestOption { editPullRequestOptionTitle, ..} ) <$> f editPullRequestOptionTitle
 {-# INLINE editPullRequestOptionTitleL #-}
+
+-- | 'editPullRequestOptionUnsetDueDate' Lens
+editPullRequestOptionUnsetDueDateL :: Lens_' EditPullRequestOption (Maybe Bool)
+editPullRequestOptionUnsetDueDateL f EditPullRequestOption{..} = (\editPullRequestOptionUnsetDueDate -> EditPullRequestOption { editPullRequestOptionUnsetDueDate, ..} ) <$> f editPullRequestOptionUnsetDueDate
+{-# INLINE editPullRequestOptionUnsetDueDateL #-}
+
+
+
+-- * EditReactionOption
+
+-- | 'editReactionOptionContent' Lens
+editReactionOptionContentL :: Lens_' EditReactionOption (Maybe Text)
+editReactionOptionContentL f EditReactionOption{..} = (\editReactionOptionContent -> EditReactionOption { editReactionOptionContent, ..} ) <$> f editReactionOptionContent
+{-# INLINE editReactionOptionContentL #-}
 
 
 
@@ -1195,6 +1337,16 @@ editRepoOptionDescriptionL :: Lens_' EditRepoOption (Maybe Text)
 editRepoOptionDescriptionL f EditRepoOption{..} = (\editRepoOptionDescription -> EditRepoOption { editRepoOptionDescription, ..} ) <$> f editRepoOptionDescription
 {-# INLINE editRepoOptionDescriptionL #-}
 
+-- | 'editRepoOptionExternalTracker' Lens
+editRepoOptionExternalTrackerL :: Lens_' EditRepoOption (Maybe ExternalTracker)
+editRepoOptionExternalTrackerL f EditRepoOption{..} = (\editRepoOptionExternalTracker -> EditRepoOption { editRepoOptionExternalTracker, ..} ) <$> f editRepoOptionExternalTracker
+{-# INLINE editRepoOptionExternalTrackerL #-}
+
+-- | 'editRepoOptionExternalWiki' Lens
+editRepoOptionExternalWikiL :: Lens_' EditRepoOption (Maybe ExternalWiki)
+editRepoOptionExternalWikiL f EditRepoOption{..} = (\editRepoOptionExternalWiki -> EditRepoOption { editRepoOptionExternalWiki, ..} ) <$> f editRepoOptionExternalWiki
+{-# INLINE editRepoOptionExternalWikiL #-}
+
 -- | 'editRepoOptionHasIssues' Lens
 editRepoOptionHasIssuesL :: Lens_' EditRepoOption (Maybe Bool)
 editRepoOptionHasIssuesL f EditRepoOption{..} = (\editRepoOptionHasIssues -> EditRepoOption { editRepoOptionHasIssues, ..} ) <$> f editRepoOptionHasIssues
@@ -1215,6 +1367,11 @@ editRepoOptionIgnoreWhitespaceConflictsL :: Lens_' EditRepoOption (Maybe Bool)
 editRepoOptionIgnoreWhitespaceConflictsL f EditRepoOption{..} = (\editRepoOptionIgnoreWhitespaceConflicts -> EditRepoOption { editRepoOptionIgnoreWhitespaceConflicts, ..} ) <$> f editRepoOptionIgnoreWhitespaceConflicts
 {-# INLINE editRepoOptionIgnoreWhitespaceConflictsL #-}
 
+-- | 'editRepoOptionInternalTracker' Lens
+editRepoOptionInternalTrackerL :: Lens_' EditRepoOption (Maybe InternalTracker)
+editRepoOptionInternalTrackerL f EditRepoOption{..} = (\editRepoOptionInternalTracker -> EditRepoOption { editRepoOptionInternalTracker, ..} ) <$> f editRepoOptionInternalTracker
+{-# INLINE editRepoOptionInternalTrackerL #-}
+
 -- | 'editRepoOptionName' Lens
 editRepoOptionNameL :: Lens_' EditRepoOption (Maybe Text)
 editRepoOptionNameL f EditRepoOption{..} = (\editRepoOptionName -> EditRepoOption { editRepoOptionName, ..} ) <$> f editRepoOptionName
@@ -1225,6 +1382,11 @@ editRepoOptionPrivateL :: Lens_' EditRepoOption (Maybe Bool)
 editRepoOptionPrivateL f EditRepoOption{..} = (\editRepoOptionPrivate -> EditRepoOption { editRepoOptionPrivate, ..} ) <$> f editRepoOptionPrivate
 {-# INLINE editRepoOptionPrivateL #-}
 
+-- | 'editRepoOptionTemplate' Lens
+editRepoOptionTemplateL :: Lens_' EditRepoOption (Maybe Bool)
+editRepoOptionTemplateL f EditRepoOption{..} = (\editRepoOptionTemplate -> EditRepoOption { editRepoOptionTemplate, ..} ) <$> f editRepoOptionTemplate
+{-# INLINE editRepoOptionTemplateL #-}
+
 -- | 'editRepoOptionWebsite' Lens
 editRepoOptionWebsiteL :: Lens_' EditRepoOption (Maybe Text)
 editRepoOptionWebsiteL f EditRepoOption{..} = (\editRepoOptionWebsite -> EditRepoOption { editRepoOptionWebsite, ..} ) <$> f editRepoOptionWebsite
@@ -1234,10 +1396,20 @@ editRepoOptionWebsiteL f EditRepoOption{..} = (\editRepoOptionWebsite -> EditRep
 
 -- * EditTeamOption
 
+-- | 'editTeamOptionCanCreateOrgRepo' Lens
+editTeamOptionCanCreateOrgRepoL :: Lens_' EditTeamOption (Maybe Bool)
+editTeamOptionCanCreateOrgRepoL f EditTeamOption{..} = (\editTeamOptionCanCreateOrgRepo -> EditTeamOption { editTeamOptionCanCreateOrgRepo, ..} ) <$> f editTeamOptionCanCreateOrgRepo
+{-# INLINE editTeamOptionCanCreateOrgRepoL #-}
+
 -- | 'editTeamOptionDescription' Lens
 editTeamOptionDescriptionL :: Lens_' EditTeamOption (Maybe Text)
 editTeamOptionDescriptionL f EditTeamOption{..} = (\editTeamOptionDescription -> EditTeamOption { editTeamOptionDescription, ..} ) <$> f editTeamOptionDescription
 {-# INLINE editTeamOptionDescriptionL #-}
+
+-- | 'editTeamOptionIncludesAllRepositories' Lens
+editTeamOptionIncludesAllRepositoriesL :: Lens_' EditTeamOption (Maybe Bool)
+editTeamOptionIncludesAllRepositoriesL f EditTeamOption{..} = (\editTeamOptionIncludesAllRepositories -> EditTeamOption { editTeamOptionIncludesAllRepositories, ..} ) <$> f editTeamOptionIncludesAllRepositories
+{-# INLINE editTeamOptionIncludesAllRepositoriesL #-}
 
 -- | 'editTeamOptionName' Lens
 editTeamOptionNameL :: Lens_' EditTeamOption (Text)
@@ -1351,6 +1523,34 @@ emailPrimaryL f Email{..} = (\emailPrimary -> Email { emailPrimary, ..} ) <$> f 
 emailVerifiedL :: Lens_' Email (Maybe Bool)
 emailVerifiedL f Email{..} = (\emailVerified -> Email { emailVerified, ..} ) <$> f emailVerified
 {-# INLINE emailVerifiedL #-}
+
+
+
+-- * ExternalTracker
+
+-- | 'externalTrackerExternalTrackerFormat' Lens
+externalTrackerExternalTrackerFormatL :: Lens_' ExternalTracker (Maybe Text)
+externalTrackerExternalTrackerFormatL f ExternalTracker{..} = (\externalTrackerExternalTrackerFormat -> ExternalTracker { externalTrackerExternalTrackerFormat, ..} ) <$> f externalTrackerExternalTrackerFormat
+{-# INLINE externalTrackerExternalTrackerFormatL #-}
+
+-- | 'externalTrackerExternalTrackerStyle' Lens
+externalTrackerExternalTrackerStyleL :: Lens_' ExternalTracker (Maybe Text)
+externalTrackerExternalTrackerStyleL f ExternalTracker{..} = (\externalTrackerExternalTrackerStyle -> ExternalTracker { externalTrackerExternalTrackerStyle, ..} ) <$> f externalTrackerExternalTrackerStyle
+{-# INLINE externalTrackerExternalTrackerStyleL #-}
+
+-- | 'externalTrackerExternalTrackerUrl' Lens
+externalTrackerExternalTrackerUrlL :: Lens_' ExternalTracker (Maybe Text)
+externalTrackerExternalTrackerUrlL f ExternalTracker{..} = (\externalTrackerExternalTrackerUrl -> ExternalTracker { externalTrackerExternalTrackerUrl, ..} ) <$> f externalTrackerExternalTrackerUrl
+{-# INLINE externalTrackerExternalTrackerUrlL #-}
+
+
+
+-- * ExternalWiki
+
+-- | 'externalWikiExternalWikiUrl' Lens
+externalWikiExternalWikiUrlL :: Lens_' ExternalWiki (Maybe Text)
+externalWikiExternalWikiUrlL f ExternalWiki{..} = (\externalWikiExternalWikiUrl -> ExternalWiki { externalWikiExternalWikiUrl, ..} ) <$> f externalWikiExternalWikiUrl
+{-# INLINE externalWikiExternalWikiUrlL #-}
 
 
 
@@ -1733,7 +1933,7 @@ inlineObjectNameL f InlineObject{..} = (\inlineObjectName -> InlineObject { inli
 -- * InlineResponse200
 
 -- | 'inlineResponse200Data' Lens
-inlineResponse200DataL :: Lens_' InlineResponse200 (Maybe [User])
+inlineResponse200DataL :: Lens_' InlineResponse200 (Maybe [Team])
 inlineResponse200DataL f InlineResponse200{..} = (\inlineResponse200Data -> InlineResponse200 { inlineResponse200Data, ..} ) <$> f inlineResponse200Data
 {-# INLINE inlineResponse200DataL #-}
 
@@ -1741,6 +1941,39 @@ inlineResponse200DataL f InlineResponse200{..} = (\inlineResponse200Data -> Inli
 inlineResponse200OkL :: Lens_' InlineResponse200 (Maybe Bool)
 inlineResponse200OkL f InlineResponse200{..} = (\inlineResponse200Ok -> InlineResponse200 { inlineResponse200Ok, ..} ) <$> f inlineResponse200Ok
 {-# INLINE inlineResponse200OkL #-}
+
+
+
+-- * InlineResponse2001
+
+-- | 'inlineResponse2001Data' Lens
+inlineResponse2001DataL :: Lens_' InlineResponse2001 (Maybe [User])
+inlineResponse2001DataL f InlineResponse2001{..} = (\inlineResponse2001Data -> InlineResponse2001 { inlineResponse2001Data, ..} ) <$> f inlineResponse2001Data
+{-# INLINE inlineResponse2001DataL #-}
+
+-- | 'inlineResponse2001Ok' Lens
+inlineResponse2001OkL :: Lens_' InlineResponse2001 (Maybe Bool)
+inlineResponse2001OkL f InlineResponse2001{..} = (\inlineResponse2001Ok -> InlineResponse2001 { inlineResponse2001Ok, ..} ) <$> f inlineResponse2001Ok
+{-# INLINE inlineResponse2001OkL #-}
+
+
+
+-- * InternalTracker
+
+-- | 'internalTrackerAllowOnlyContributorsToTrackTime' Lens
+internalTrackerAllowOnlyContributorsToTrackTimeL :: Lens_' InternalTracker (Maybe Bool)
+internalTrackerAllowOnlyContributorsToTrackTimeL f InternalTracker{..} = (\internalTrackerAllowOnlyContributorsToTrackTime -> InternalTracker { internalTrackerAllowOnlyContributorsToTrackTime, ..} ) <$> f internalTrackerAllowOnlyContributorsToTrackTime
+{-# INLINE internalTrackerAllowOnlyContributorsToTrackTimeL #-}
+
+-- | 'internalTrackerEnableIssueDependencies' Lens
+internalTrackerEnableIssueDependenciesL :: Lens_' InternalTracker (Maybe Bool)
+internalTrackerEnableIssueDependenciesL f InternalTracker{..} = (\internalTrackerEnableIssueDependencies -> InternalTracker { internalTrackerEnableIssueDependencies, ..} ) <$> f internalTrackerEnableIssueDependencies
+{-# INLINE internalTrackerEnableIssueDependenciesL #-}
+
+-- | 'internalTrackerEnableTimeTracker' Lens
+internalTrackerEnableTimeTrackerL :: Lens_' InternalTracker (Maybe Bool)
+internalTrackerEnableTimeTrackerL f InternalTracker{..} = (\internalTrackerEnableTimeTracker -> InternalTracker { internalTrackerEnableTimeTracker, ..} ) <$> f internalTrackerEnableTimeTracker
+{-# INLINE internalTrackerEnableTimeTrackerL #-}
 
 
 
@@ -1781,6 +2014,11 @@ issueDueDateL :: Lens_' Issue (Maybe DateTime)
 issueDueDateL f Issue{..} = (\issueDueDate -> Issue { issueDueDate, ..} ) <$> f issueDueDate
 {-# INLINE issueDueDateL #-}
 
+-- | 'issueHtmlUrl' Lens
+issueHtmlUrlL :: Lens_' Issue (Maybe Text)
+issueHtmlUrlL f Issue{..} = (\issueHtmlUrl -> Issue { issueHtmlUrl, ..} ) <$> f issueHtmlUrl
+{-# INLINE issueHtmlUrlL #-}
+
 -- | 'issueId' Lens
 issueIdL :: Lens_' Issue (Maybe Integer)
 issueIdL f Issue{..} = (\issueId -> Issue { issueId, ..} ) <$> f issueId
@@ -1801,10 +2039,25 @@ issueNumberL :: Lens_' Issue (Maybe Integer)
 issueNumberL f Issue{..} = (\issueNumber -> Issue { issueNumber, ..} ) <$> f issueNumber
 {-# INLINE issueNumberL #-}
 
+-- | 'issueOriginalAuthor' Lens
+issueOriginalAuthorL :: Lens_' Issue (Maybe Text)
+issueOriginalAuthorL f Issue{..} = (\issueOriginalAuthor -> Issue { issueOriginalAuthor, ..} ) <$> f issueOriginalAuthor
+{-# INLINE issueOriginalAuthorL #-}
+
+-- | 'issueOriginalAuthorId' Lens
+issueOriginalAuthorIdL :: Lens_' Issue (Maybe Integer)
+issueOriginalAuthorIdL f Issue{..} = (\issueOriginalAuthorId -> Issue { issueOriginalAuthorId, ..} ) <$> f issueOriginalAuthorId
+{-# INLINE issueOriginalAuthorIdL #-}
+
 -- | 'issuePullRequest' Lens
 issuePullRequestL :: Lens_' Issue (Maybe PullRequestMeta)
 issuePullRequestL f Issue{..} = (\issuePullRequest -> Issue { issuePullRequest, ..} ) <$> f issuePullRequest
 {-# INLINE issuePullRequestL #-}
+
+-- | 'issueRepository' Lens
+issueRepositoryL :: Lens_' Issue (Maybe RepositoryMeta)
+issueRepositoryL f Issue{..} = (\issueRepository -> Issue { issueRepository, ..} ) <$> f issueRepository
+{-# INLINE issueRepositoryL #-}
 
 -- | 'issueState' Lens
 issueStateL :: Lens_' Issue (Maybe Text)
@@ -2068,6 +2321,11 @@ organizationLocationL :: Lens_' Organization (Maybe Text)
 organizationLocationL f Organization{..} = (\organizationLocation -> Organization { organizationLocation, ..} ) <$> f organizationLocation
 {-# INLINE organizationLocationL #-}
 
+-- | 'organizationRepoAdminChangeTeamAccess' Lens
+organizationRepoAdminChangeTeamAccessL :: Lens_' Organization (Maybe Bool)
+organizationRepoAdminChangeTeamAccessL f Organization{..} = (\organizationRepoAdminChangeTeamAccess -> Organization { organizationRepoAdminChangeTeamAccess, ..} ) <$> f organizationRepoAdminChangeTeamAccess
+{-# INLINE organizationRepoAdminChangeTeamAccessL #-}
+
 -- | 'organizationUsername' Lens
 organizationUsernameL :: Lens_' Organization (Maybe Text)
 organizationUsernameL f Organization{..} = (\organizationUsername -> Organization { organizationUsername, ..} ) <$> f organizationUsername
@@ -2184,6 +2442,11 @@ payloadCommitVerificationReasonL f PayloadCommitVerification{..} = (\payloadComm
 payloadCommitVerificationSignatureL :: Lens_' PayloadCommitVerification (Maybe Text)
 payloadCommitVerificationSignatureL f PayloadCommitVerification{..} = (\payloadCommitVerificationSignature -> PayloadCommitVerification { payloadCommitVerificationSignature, ..} ) <$> f payloadCommitVerificationSignature
 {-# INLINE payloadCommitVerificationSignatureL #-}
+
+-- | 'payloadCommitVerificationSigner' Lens
+payloadCommitVerificationSignerL :: Lens_' PayloadCommitVerification (Maybe PayloadUser)
+payloadCommitVerificationSignerL f PayloadCommitVerification{..} = (\payloadCommitVerificationSigner -> PayloadCommitVerification { payloadCommitVerificationSigner, ..} ) <$> f payloadCommitVerificationSigner
+{-# INLINE payloadCommitVerificationSignerL #-}
 
 -- | 'payloadCommitVerificationVerified' Lens
 payloadCommitVerificationVerifiedL :: Lens_' PayloadCommitVerification (Maybe Bool)
@@ -2432,6 +2695,25 @@ pullRequestMetaMergedAtL f PullRequestMeta{..} = (\pullRequestMetaMergedAt -> Pu
 
 
 
+-- * Reaction
+
+-- | 'reactionContent' Lens
+reactionContentL :: Lens_' Reaction (Maybe Text)
+reactionContentL f Reaction{..} = (\reactionContent -> Reaction { reactionContent, ..} ) <$> f reactionContent
+{-# INLINE reactionContentL #-}
+
+-- | 'reactionCreatedAt' Lens
+reactionCreatedAtL :: Lens_' Reaction (Maybe DateTime)
+reactionCreatedAtL f Reaction{..} = (\reactionCreatedAt -> Reaction { reactionCreatedAt, ..} ) <$> f reactionCreatedAt
+{-# INLINE reactionCreatedAtL #-}
+
+-- | 'reactionUser' Lens
+reactionUserL :: Lens_' Reaction (Maybe User)
+reactionUserL f Reaction{..} = (\reactionUser -> Reaction { reactionUser, ..} ) <$> f reactionUser
+{-# INLINE reactionUserL #-}
+
+
+
 -- * Reference
 
 -- | 'referenceObject' Lens
@@ -2554,6 +2836,15 @@ repoCommitUrlL f RepoCommit{..} = (\repoCommitUrl -> RepoCommit { repoCommitUrl,
 
 
 
+-- * RepoTopicOptions
+
+-- | 'repoTopicOptionsTopics' Lens
+repoTopicOptionsTopicsL :: Lens_' RepoTopicOptions (Maybe [Text])
+repoTopicOptionsTopicsL f RepoTopicOptions{..} = (\repoTopicOptionsTopics -> RepoTopicOptions { repoTopicOptionsTopics, ..} ) <$> f repoTopicOptionsTopics
+{-# INLINE repoTopicOptionsTopicsL #-}
+
+
+
 -- * Repository
 
 -- | 'repositoryAllowMergeCommits' Lens
@@ -2611,6 +2902,16 @@ repositoryEmptyL :: Lens_' Repository (Maybe Bool)
 repositoryEmptyL f Repository{..} = (\repositoryEmpty -> Repository { repositoryEmpty, ..} ) <$> f repositoryEmpty
 {-# INLINE repositoryEmptyL #-}
 
+-- | 'repositoryExternalTracker' Lens
+repositoryExternalTrackerL :: Lens_' Repository (Maybe ExternalTracker)
+repositoryExternalTrackerL f Repository{..} = (\repositoryExternalTracker -> Repository { repositoryExternalTracker, ..} ) <$> f repositoryExternalTracker
+{-# INLINE repositoryExternalTrackerL #-}
+
+-- | 'repositoryExternalWiki' Lens
+repositoryExternalWikiL :: Lens_' Repository (Maybe ExternalWiki)
+repositoryExternalWikiL f Repository{..} = (\repositoryExternalWiki -> Repository { repositoryExternalWiki, ..} ) <$> f repositoryExternalWiki
+{-# INLINE repositoryExternalWikiL #-}
+
 -- | 'repositoryFork' Lens
 repositoryForkL :: Lens_' Repository (Maybe Bool)
 repositoryForkL f Repository{..} = (\repositoryFork -> Repository { repositoryFork, ..} ) <$> f repositoryFork
@@ -2656,6 +2957,11 @@ repositoryIgnoreWhitespaceConflictsL :: Lens_' Repository (Maybe Bool)
 repositoryIgnoreWhitespaceConflictsL f Repository{..} = (\repositoryIgnoreWhitespaceConflicts -> Repository { repositoryIgnoreWhitespaceConflicts, ..} ) <$> f repositoryIgnoreWhitespaceConflicts
 {-# INLINE repositoryIgnoreWhitespaceConflictsL #-}
 
+-- | 'repositoryInternalTracker' Lens
+repositoryInternalTrackerL :: Lens_' Repository (Maybe InternalTracker)
+repositoryInternalTrackerL f Repository{..} = (\repositoryInternalTracker -> Repository { repositoryInternalTracker, ..} ) <$> f repositoryInternalTracker
+{-# INLINE repositoryInternalTrackerL #-}
+
 -- | 'repositoryMirror' Lens
 repositoryMirrorL :: Lens_' Repository (Maybe Bool)
 repositoryMirrorL f Repository{..} = (\repositoryMirror -> Repository { repositoryMirror, ..} ) <$> f repositoryMirror
@@ -2670,6 +2976,16 @@ repositoryNameL f Repository{..} = (\repositoryName -> Repository { repositoryNa
 repositoryOpenIssuesCountL :: Lens_' Repository (Maybe Integer)
 repositoryOpenIssuesCountL f Repository{..} = (\repositoryOpenIssuesCount -> Repository { repositoryOpenIssuesCount, ..} ) <$> f repositoryOpenIssuesCount
 {-# INLINE repositoryOpenIssuesCountL #-}
+
+-- | 'repositoryOpenPrCounter' Lens
+repositoryOpenPrCounterL :: Lens_' Repository (Maybe Integer)
+repositoryOpenPrCounterL f Repository{..} = (\repositoryOpenPrCounter -> Repository { repositoryOpenPrCounter, ..} ) <$> f repositoryOpenPrCounter
+{-# INLINE repositoryOpenPrCounterL #-}
+
+-- | 'repositoryOriginalUrl' Lens
+repositoryOriginalUrlL :: Lens_' Repository (Maybe Text)
+repositoryOriginalUrlL f Repository{..} = (\repositoryOriginalUrl -> Repository { repositoryOriginalUrl, ..} ) <$> f repositoryOriginalUrl
+{-# INLINE repositoryOriginalUrlL #-}
 
 -- | 'repositoryOwner' Lens
 repositoryOwnerL :: Lens_' Repository (Maybe User)
@@ -2691,6 +3007,11 @@ repositoryPrivateL :: Lens_' Repository (Maybe Bool)
 repositoryPrivateL f Repository{..} = (\repositoryPrivate -> Repository { repositoryPrivate, ..} ) <$> f repositoryPrivate
 {-# INLINE repositoryPrivateL #-}
 
+-- | 'repositoryReleaseCounter' Lens
+repositoryReleaseCounterL :: Lens_' Repository (Maybe Integer)
+repositoryReleaseCounterL f Repository{..} = (\repositoryReleaseCounter -> Repository { repositoryReleaseCounter, ..} ) <$> f repositoryReleaseCounter
+{-# INLINE repositoryReleaseCounterL #-}
+
 -- | 'repositorySize' Lens
 repositorySizeL :: Lens_' Repository (Maybe Integer)
 repositorySizeL f Repository{..} = (\repositorySize -> Repository { repositorySize, ..} ) <$> f repositorySize
@@ -2706,6 +3027,11 @@ repositoryStarsCountL :: Lens_' Repository (Maybe Integer)
 repositoryStarsCountL f Repository{..} = (\repositoryStarsCount -> Repository { repositoryStarsCount, ..} ) <$> f repositoryStarsCount
 {-# INLINE repositoryStarsCountL #-}
 
+-- | 'repositoryTemplate' Lens
+repositoryTemplateL :: Lens_' Repository (Maybe Bool)
+repositoryTemplateL f Repository{..} = (\repositoryTemplate -> Repository { repositoryTemplate, ..} ) <$> f repositoryTemplate
+{-# INLINE repositoryTemplateL #-}
+
 -- | 'repositoryUpdatedAt' Lens
 repositoryUpdatedAtL :: Lens_' Repository (Maybe DateTime)
 repositoryUpdatedAtL f Repository{..} = (\repositoryUpdatedAt -> Repository { repositoryUpdatedAt, ..} ) <$> f repositoryUpdatedAt
@@ -2720,6 +3046,25 @@ repositoryWatchersCountL f Repository{..} = (\repositoryWatchersCount -> Reposit
 repositoryWebsiteL :: Lens_' Repository (Maybe Text)
 repositoryWebsiteL f Repository{..} = (\repositoryWebsite -> Repository { repositoryWebsite, ..} ) <$> f repositoryWebsite
 {-# INLINE repositoryWebsiteL #-}
+
+
+
+-- * RepositoryMeta
+
+-- | 'repositoryMetaFullName' Lens
+repositoryMetaFullNameL :: Lens_' RepositoryMeta (Maybe Text)
+repositoryMetaFullNameL f RepositoryMeta{..} = (\repositoryMetaFullName -> RepositoryMeta { repositoryMetaFullName, ..} ) <$> f repositoryMetaFullName
+{-# INLINE repositoryMetaFullNameL #-}
+
+-- | 'repositoryMetaId' Lens
+repositoryMetaIdL :: Lens_' RepositoryMeta (Maybe Integer)
+repositoryMetaIdL f RepositoryMeta{..} = (\repositoryMetaId -> RepositoryMeta { repositoryMetaId, ..} ) <$> f repositoryMetaId
+{-# INLINE repositoryMetaIdL #-}
+
+-- | 'repositoryMetaName' Lens
+repositoryMetaNameL :: Lens_' RepositoryMeta (Maybe Text)
+repositoryMetaNameL f RepositoryMeta{..} = (\repositoryMetaName -> RepositoryMeta { repositoryMetaName, ..} ) <$> f repositoryMetaName
+{-# INLINE repositoryMetaNameL #-}
 
 
 
@@ -2795,6 +3140,20 @@ statusUrlL f Status{..} = (\statusUrl -> Status { statusUrl, ..} ) <$> f statusU
 
 
 
+-- * StopWatch
+
+-- | 'stopWatchCreated' Lens
+stopWatchCreatedL :: Lens_' StopWatch (Maybe DateTime)
+stopWatchCreatedL f StopWatch{..} = (\stopWatchCreated -> StopWatch { stopWatchCreated, ..} ) <$> f stopWatchCreated
+{-# INLINE stopWatchCreatedL #-}
+
+-- | 'stopWatchIssueIndex' Lens
+stopWatchIssueIndexL :: Lens_' StopWatch (Maybe Integer)
+stopWatchIssueIndexL f StopWatch{..} = (\stopWatchIssueIndex -> StopWatch { stopWatchIssueIndex, ..} ) <$> f stopWatchIssueIndex
+{-# INLINE stopWatchIssueIndexL #-}
+
+
+
 -- * Tag
 
 -- | 'tagCommit' Lens
@@ -2826,6 +3185,11 @@ tagZipballUrlL f Tag{..} = (\tagZipballUrl -> Tag { tagZipballUrl, ..} ) <$> f t
 
 -- * Team
 
+-- | 'teamCanCreateOrgRepo' Lens
+teamCanCreateOrgRepoL :: Lens_' Team (Maybe Bool)
+teamCanCreateOrgRepoL f Team{..} = (\teamCanCreateOrgRepo -> Team { teamCanCreateOrgRepo, ..} ) <$> f teamCanCreateOrgRepo
+{-# INLINE teamCanCreateOrgRepoL #-}
+
 -- | 'teamDescription' Lens
 teamDescriptionL :: Lens_' Team (Maybe Text)
 teamDescriptionL f Team{..} = (\teamDescription -> Team { teamDescription, ..} ) <$> f teamDescription
@@ -2835,6 +3199,11 @@ teamDescriptionL f Team{..} = (\teamDescription -> Team { teamDescription, ..} )
 teamIdL :: Lens_' Team (Maybe Integer)
 teamIdL f Team{..} = (\teamId -> Team { teamId, ..} ) <$> f teamId
 {-# INLINE teamIdL #-}
+
+-- | 'teamIncludesAllRepositories' Lens
+teamIncludesAllRepositoriesL :: Lens_' Team (Maybe Bool)
+teamIncludesAllRepositoriesL f Team{..} = (\teamIncludesAllRepositories -> Team { teamIncludesAllRepositories, ..} ) <$> f teamIncludesAllRepositories
+{-# INLINE teamIncludesAllRepositoriesL #-}
 
 -- | 'teamName' Lens
 teamNameL :: Lens_' Team (Maybe Text)
@@ -2858,6 +3227,44 @@ teamUnitsL f Team{..} = (\teamUnits -> Team { teamUnits, ..} ) <$> f teamUnits
 
 
 
+-- * TopicName
+
+-- | 'topicNameTopics' Lens
+topicNameTopicsL :: Lens_' TopicName (Maybe [Text])
+topicNameTopicsL f TopicName{..} = (\topicNameTopics -> TopicName { topicNameTopics, ..} ) <$> f topicNameTopics
+{-# INLINE topicNameTopicsL #-}
+
+
+
+-- * TopicResponse
+
+-- | 'topicResponseCreated' Lens
+topicResponseCreatedL :: Lens_' TopicResponse (Maybe DateTime)
+topicResponseCreatedL f TopicResponse{..} = (\topicResponseCreated -> TopicResponse { topicResponseCreated, ..} ) <$> f topicResponseCreated
+{-# INLINE topicResponseCreatedL #-}
+
+-- | 'topicResponseId' Lens
+topicResponseIdL :: Lens_' TopicResponse (Maybe Integer)
+topicResponseIdL f TopicResponse{..} = (\topicResponseId -> TopicResponse { topicResponseId, ..} ) <$> f topicResponseId
+{-# INLINE topicResponseIdL #-}
+
+-- | 'topicResponseRepoCount' Lens
+topicResponseRepoCountL :: Lens_' TopicResponse (Maybe Integer)
+topicResponseRepoCountL f TopicResponse{..} = (\topicResponseRepoCount -> TopicResponse { topicResponseRepoCount, ..} ) <$> f topicResponseRepoCount
+{-# INLINE topicResponseRepoCountL #-}
+
+-- | 'topicResponseTopicName' Lens
+topicResponseTopicNameL :: Lens_' TopicResponse (Maybe Text)
+topicResponseTopicNameL f TopicResponse{..} = (\topicResponseTopicName -> TopicResponse { topicResponseTopicName, ..} ) <$> f topicResponseTopicName
+{-# INLINE topicResponseTopicNameL #-}
+
+-- | 'topicResponseUpdated' Lens
+topicResponseUpdatedL :: Lens_' TopicResponse (Maybe DateTime)
+topicResponseUpdatedL f TopicResponse{..} = (\topicResponseUpdated -> TopicResponse { topicResponseUpdated, ..} ) <$> f topicResponseUpdated
+{-# INLINE topicResponseUpdatedL #-}
+
+
+
 -- * TrackedTime
 
 -- | 'trackedTimeCreated' Lens
@@ -2869,6 +3276,11 @@ trackedTimeCreatedL f TrackedTime{..} = (\trackedTimeCreated -> TrackedTime { tr
 trackedTimeIdL :: Lens_' TrackedTime (Maybe Integer)
 trackedTimeIdL f TrackedTime{..} = (\trackedTimeId -> TrackedTime { trackedTimeId, ..} ) <$> f trackedTimeId
 {-# INLINE trackedTimeIdL #-}
+
+-- | 'trackedTimeIssue' Lens
+trackedTimeIssueL :: Lens_' TrackedTime (Maybe Issue)
+trackedTimeIssueL f TrackedTime{..} = (\trackedTimeIssue -> TrackedTime { trackedTimeIssue, ..} ) <$> f trackedTimeIssue
+{-# INLINE trackedTimeIssueL #-}
 
 -- | 'trackedTimeIssueId' Lens
 trackedTimeIssueIdL :: Lens_' TrackedTime (Maybe Integer)
@@ -2884,6 +3296,11 @@ trackedTimeTimeL f TrackedTime{..} = (\trackedTimeTime -> TrackedTime { trackedT
 trackedTimeUserIdL :: Lens_' TrackedTime (Maybe Integer)
 trackedTimeUserIdL f TrackedTime{..} = (\trackedTimeUserId -> TrackedTime { trackedTimeUserId, ..} ) <$> f trackedTimeUserId
 {-# INLINE trackedTimeUserIdL #-}
+
+-- | 'trackedTimeUserName' Lens
+trackedTimeUserNameL :: Lens_' TrackedTime (Maybe Text)
+trackedTimeUserNameL f TrackedTime{..} = (\trackedTimeUserName -> TrackedTime { trackedTimeUserName, ..} ) <$> f trackedTimeUserName
+{-# INLINE trackedTimeUserNameL #-}
 
 
 
@@ -2908,6 +3325,11 @@ updateFileOptionsCommitterL f UpdateFileOptions{..} = (\updateFileOptionsCommitt
 updateFileOptionsContentL :: Lens_' UpdateFileOptions (Text)
 updateFileOptionsContentL f UpdateFileOptions{..} = (\updateFileOptionsContent -> UpdateFileOptions { updateFileOptionsContent, ..} ) <$> f updateFileOptionsContent
 {-# INLINE updateFileOptionsContentL #-}
+
+-- | 'updateFileOptionsDates' Lens
+updateFileOptionsDatesL :: Lens_' UpdateFileOptions (Maybe CommitDateOptions)
+updateFileOptionsDatesL f UpdateFileOptions{..} = (\updateFileOptionsDates -> UpdateFileOptions { updateFileOptionsDates, ..} ) <$> f updateFileOptionsDates
+{-# INLINE updateFileOptionsDatesL #-}
 
 -- | 'updateFileOptionsFromPath' Lens
 updateFileOptionsFromPathL :: Lens_' UpdateFileOptions (Maybe Text)

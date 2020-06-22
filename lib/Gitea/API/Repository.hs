@@ -153,14 +153,14 @@ instance Produces GetBlob MimeJSON
 
 -- | @GET \/repos\/{owner}\/{repo}\/git\/tags\/{sha}@
 -- 
--- Gets the tag of a repository.
+-- Gets the tag object of an annotated tag (not lightweight tags)
 -- 
 -- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
 getTag 
   :: Owner -- ^ "owner" -  owner of the repo
   -> Repo -- ^ "repo" -  name of the repo
-  -> Sha -- ^ "sha" -  sha of the tag
+  -> Sha -- ^ "sha" -  sha of the tag. The Git tags API only supports annotated tag objects, not lightweight tags.
   -> GiteaRequest GetTag MimeNoContent AnnotatedTag MimeJSON
 getTag (Owner owner) (Repo repo) (Sha sha) =
   _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/git/tags/",toPath sha]
@@ -277,6 +277,32 @@ instance Consumes RepoAddCollaborator MimeJSON
 instance Consumes RepoAddCollaborator MimePlainText
 
 instance Produces RepoAddCollaborator MimeNoContent
+
+
+-- *** repoAddTopc
+
+-- | @PUT \/repos\/{owner}\/{repo}\/topics\/{topic}@
+-- 
+-- Add a topic to a repository
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+repoAddTopc 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> TopicText -- ^ "topic" -  name of the topic to add
+  -> GiteaRequest RepoAddTopc MimeNoContent NoContent MimeNoContent
+repoAddTopc (Owner owner) (Repo repo) (TopicText topic) =
+  _mkRequest "PUT" ["/repos/",toPath owner,"/",toPath repo,"/topics/",toPath topic]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data RepoAddTopc  
+instance Produces RepoAddTopc MimeNoContent
 
 
 -- *** repoCheckCollaborator
@@ -521,7 +547,7 @@ repoCreateStatus
   -> Owner -- ^ "owner" -  owner of the repo
   -> Repo -- ^ "repo" -  name of the repo
   -> Sha -- ^ "sha" -  sha of the commit
-  -> GiteaRequest RepoCreateStatus contentType [Status] MimeJSON
+  -> GiteaRequest RepoCreateStatus contentType Status MimeJSON
 repoCreateStatus _ (Owner owner) (Repo repo) (Sha sha) =
   _mkRequest "POST" ["/repos/",toPath owner,"/",toPath repo,"/statuses/",toPath sha]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
@@ -760,6 +786,32 @@ data RepoDeleteReleaseAttachment
 instance Produces RepoDeleteReleaseAttachment MimeNoContent
 
 
+-- *** repoDeleteTopic
+
+-- | @DELETE \/repos\/{owner}\/{repo}\/topics\/{topic}@
+-- 
+-- Delete a topic from a repository
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+repoDeleteTopic 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> TopicText -- ^ "topic" -  name of the topic to delete
+  -> GiteaRequest RepoDeleteTopic MimeNoContent NoContent MimeNoContent
+repoDeleteTopic (Owner owner) (Repo repo) (TopicText topic) =
+  _mkRequest "DELETE" ["/repos/",toPath owner,"/",toPath repo,"/topics/",toPath topic]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data RepoDeleteTopic  
+instance Produces RepoDeleteTopic MimeNoContent
+
+
 -- *** repoEdit
 
 -- | @PATCH \/repos\/{owner}\/{repo}@
@@ -873,7 +925,7 @@ instance Produces RepoEditHook MimeJSON
 
 -- | @PATCH \/repos\/{owner}\/{repo}\/pulls\/{index}@
 -- 
--- Update a pull request
+-- Update a pull request. If using deadline only the date will be taken into account, and time of day ignored.
 -- 
 -- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
@@ -995,6 +1047,42 @@ data RepoGet
 instance Produces RepoGet MimeJSON
 
 
+-- *** repoGetAllCommits
+
+-- | @GET \/repos\/{owner}\/{repo}\/commits@
+-- 
+-- Get a list of all commits from a repository
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+repoGetAllCommits 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> GiteaRequest RepoGetAllCommits MimeNoContent [Commit] MimeJSON
+repoGetAllCommits (Owner owner) (Repo repo) =
+  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/commits"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data RepoGetAllCommits  
+
+-- | /Optional Param/ "sha" - SHA or branch to start listing commits from (usually 'master')
+instance HasOptionalParam RepoGetAllCommits Sha where
+  applyOptionalParam req (Sha xs) =
+    req `setQuery` toQuery ("sha", Just xs)
+
+-- | /Optional Param/ "page" - page number of requested commits
+instance HasOptionalParam RepoGetAllCommits Page where
+  applyOptionalParam req (Page xs) =
+    req `setQuery` toQuery ("page", Just xs)
+-- | @application/json@
+instance Produces RepoGetAllCommits MimeJSON
+
+
 -- *** repoGetArchive
 
 -- | @GET \/repos\/{owner}\/{repo}\/archive\/{archive}@
@@ -1025,7 +1113,7 @@ instance Produces RepoGetArchive MimeNoContent
 
 -- | @GET \/repos\/{owner}\/{repo}\/branches\/{branch}@
 -- 
--- Retrieve a specific branch from a repository
+-- Retrieve a specific branch from a repository, including its effective branch protection
 -- 
 -- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
@@ -1096,6 +1184,11 @@ repoGetCombinedStatusByRef (Owner owner) (Repo repo) (Ref ref) =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
 data RepoGetCombinedStatusByRef  
+
+-- | /Optional Param/ "page" - page number of results
+instance HasOptionalParam RepoGetCombinedStatusByRef Page where
+  applyOptionalParam req (Page xs) =
+    req `setQuery` toQuery ("page", Just xs)
 -- | @application/json@
 instance Produces RepoGetCombinedStatusByRef MimeJSON
 
@@ -1761,6 +1854,21 @@ repoListStatuses (Owner owner) (Repo repo) (Sha sha) =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
 data RepoListStatuses  
+
+-- | /Optional Param/ "page" - page number of results
+instance HasOptionalParam RepoListStatuses Page where
+  applyOptionalParam req (Page xs) =
+    req `setQuery` toQuery ("page", Just xs)
+
+-- | /Optional Param/ "sort" - type of sort
+instance HasOptionalParam RepoListStatuses Sort3 where
+  applyOptionalParam req (Sort3 xs) =
+    req `setQuery` toQuery ("sort", Just xs)
+
+-- | /Optional Param/ "state" - type of state
+instance HasOptionalParam RepoListStatuses State3 where
+  applyOptionalParam req (State3 xs) =
+    req `setQuery` toQuery ("state", Just xs)
 -- | @application/json@
 instance Produces RepoListStatuses MimeJSON
 
@@ -1815,6 +1923,32 @@ repoListTags (Owner owner) (Repo repo) =
 data RepoListTags  
 -- | @application/json@
 instance Produces RepoListTags MimeJSON
+
+
+-- *** repoListTopics
+
+-- | @GET \/repos\/{owner}\/{repo}\/topics@
+-- 
+-- Get list of topics that a repository has
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+repoListTopics 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> GiteaRequest RepoListTopics MimeNoContent TopicName MimeJSON
+repoListTopics (Owner owner) (Repo repo) =
+  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/topics"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data RepoListTopics  
+-- | @application/json@
+instance Produces RepoListTopics MimeJSON
 
 
 -- *** repoMergePullRequest
@@ -1959,10 +2093,25 @@ instance HasOptionalParam RepoSearch Q where
   applyOptionalParam req (Q xs) =
     req `setQuery` toQuery ("q", Just xs)
 
+-- | /Optional Param/ "topic" - Limit search to repositories with keyword as topic
+instance HasOptionalParam RepoSearch Topic where
+  applyOptionalParam req (Topic xs) =
+    req `setQuery` toQuery ("topic", Just xs)
+
+-- | /Optional Param/ "includeDesc" - include search of keyword within repository description
+instance HasOptionalParam RepoSearch IncludeDesc where
+  applyOptionalParam req (IncludeDesc xs) =
+    req `setQuery` toQuery ("includeDesc", Just xs)
+
 -- | /Optional Param/ "uid" - search only for repos that the user with the given id owns or contributes to
 instance HasOptionalParam RepoSearch Uid where
   applyOptionalParam req (Uid xs) =
     req `setQuery` toQuery ("uid", Just xs)
+
+-- | /Optional Param/ "priority_owner_id" - repo owner to prioritize in the results
+instance HasOptionalParam RepoSearch PriorityOwnerId where
+  applyOptionalParam req (PriorityOwnerId xs) =
+    req `setQuery` toQuery ("priority_owner_id", Just xs)
 
 -- | /Optional Param/ "starredBy" - search only for repos that the user with the given id has starred
 instance HasOptionalParam RepoSearch StarredBy where
@@ -1973,6 +2122,11 @@ instance HasOptionalParam RepoSearch StarredBy where
 instance HasOptionalParam RepoSearch Private where
   applyOptionalParam req (Private xs) =
     req `setQuery` toQuery ("private", Just xs)
+
+-- | /Optional Param/ "template" - include template repositories this user has access to (defaults to true)
+instance HasOptionalParam RepoSearch Template where
+  applyOptionalParam req (Template xs) =
+    req `setQuery` toQuery ("template", Just xs)
 
 -- | /Optional Param/ "page" - page number of results to return (1-based)
 instance HasOptionalParam RepoSearch Page where
@@ -2005,6 +2159,32 @@ instance HasOptionalParam RepoSearch Order where
     req `setQuery` toQuery ("order", Just xs)
 -- | @application/json@
 instance Produces RepoSearch MimeJSON
+
+
+-- *** repoSigningKey
+
+-- | @GET \/repos\/{owner}\/{repo}\/signing-key.gpg@
+-- 
+-- Get signing-key.gpg for given repository
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+repoSigningKey 
+  :: Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> GiteaRequest RepoSigningKey MimeNoContent Text MimePlainText
+repoSigningKey (Owner owner) (Repo repo) =
+  _mkRequest "GET" ["/repos/",toPath owner,"/",toPath repo,"/signing-key.gpg"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data RepoSigningKey  
+-- | @text/plain@
+instance Produces RepoSigningKey MimePlainText
 
 
 -- *** repoTestHook
@@ -2094,6 +2274,40 @@ instance Consumes RepoUpdateFile MimeJSON
 instance Produces RepoUpdateFile MimeJSON
 
 
+-- *** repoUpdateTopics
+
+-- | @PUT \/repos\/{owner}\/{repo}\/topics@
+-- 
+-- Replace list of topics for a repository
+-- 
+-- AuthMethod: 'AuthApiKeyAccessToken', 'AuthApiKeyAuthorizationHeaderToken', 'AuthBasicBasicAuth', 'AuthApiKeySudoHeader', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+repoUpdateTopics 
+  :: (Consumes RepoUpdateTopics contentType)
+  => ContentType contentType -- ^ request content-type ('MimeType')
+  -> Owner -- ^ "owner" -  owner of the repo
+  -> Repo -- ^ "repo" -  name of the repo
+  -> GiteaRequest RepoUpdateTopics contentType NoContent MimeNoContent
+repoUpdateTopics _ (Owner owner) (Repo repo) =
+  _mkRequest "PUT" ["/repos/",toPath owner,"/",toPath repo,"/topics"]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data RepoUpdateTopics 
+instance HasBodyParam RepoUpdateTopics RepoTopicOptions 
+
+-- | @application/json@
+instance Consumes RepoUpdateTopics MimeJSON
+-- | @text/plain@
+instance Consumes RepoUpdateTopics MimePlainText
+
+instance Produces RepoUpdateTopics MimeNoContent
+
+
 -- *** topicSearch
 
 -- | @GET \/topics\/search@
@@ -2104,7 +2318,7 @@ instance Produces RepoUpdateFile MimeJSON
 -- 
 topicSearch 
   :: Q -- ^ "q" -  keywords to search
-  -> GiteaRequest TopicSearch MimeNoContent Repository MimeJSON
+  -> GiteaRequest TopicSearch MimeNoContent [TopicResponse] MimeJSON
 topicSearch (Q q) =
   _mkRequest "GET" ["/topics/search"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
