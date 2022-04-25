@@ -187,6 +187,7 @@ genBranch :: Int -> Gen Branch
 genBranch n =
   Branch
     <$> arbitraryReducedMaybe n -- branchCommit :: Maybe PayloadCommit
+    <*> arbitraryReducedMaybe n -- branchEffectiveBranchProtectionName :: Maybe Text
     <*> arbitraryReducedMaybe n -- branchEnableStatusCheck :: Maybe Bool
     <*> arbitraryReducedMaybe n -- branchName :: Maybe Text
     <*> arbitraryReducedMaybe n -- branchProtected :: Maybe Bool
@@ -194,6 +195,50 @@ genBranch n =
     <*> arbitraryReducedMaybe n -- branchStatusCheckContexts :: Maybe [Text]
     <*> arbitraryReducedMaybe n -- branchUserCanMerge :: Maybe Bool
     <*> arbitraryReducedMaybe n -- branchUserCanPush :: Maybe Bool
+  
+instance Arbitrary BranchProtection where
+  arbitrary = sized genBranchProtection
+
+genBranchProtection :: Int -> Gen BranchProtection
+genBranchProtection n =
+  BranchProtection
+    <$> arbitraryReducedMaybe n -- branchProtectionApprovalsWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- branchProtectionApprovalsWhitelistUsername :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- branchProtectionBlockOnOfficialReviewRequests :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionBlockOnOutdatedBranch :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionBlockOnRejectedReviews :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionBranchName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- branchProtectionCreatedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- branchProtectionDismissStaleApprovals :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionEnableApprovalsWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionEnableMergeWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionEnablePush :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionEnablePushWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionEnableStatusCheck :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionMergeWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- branchProtectionMergeWhitelistUsernames :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- branchProtectionProtectedFilePatterns :: Maybe Text
+    <*> arbitraryReducedMaybe n -- branchProtectionPushWhitelistDeployKeys :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionPushWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- branchProtectionPushWhitelistUsernames :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- branchProtectionRequireSignedCommits :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- branchProtectionRequiredApprovals :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- branchProtectionStatusCheckContexts :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- branchProtectionUpdatedAt :: Maybe DateTime
+  
+instance Arbitrary CombinedStatus where
+  arbitrary = sized genCombinedStatus
+
+genCombinedStatus :: Int -> Gen CombinedStatus
+genCombinedStatus n =
+  CombinedStatus
+    <$> arbitraryReducedMaybe n -- combinedStatusCommitUrl :: Maybe Text
+    <*> arbitraryReducedMaybe n -- combinedStatusRepository :: Maybe Repository
+    <*> arbitraryReducedMaybe n -- combinedStatusSha :: Maybe Text
+    <*> arbitraryReducedMaybe n -- combinedStatusState :: Maybe Text
+    <*> arbitraryReducedMaybe n -- combinedStatusStatuses :: Maybe [CommitStatus]
+    <*> arbitraryReducedMaybe n -- combinedStatusTotalCount :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- combinedStatusUrl :: Maybe Text
   
 instance Arbitrary Comment where
   arbitrary = sized genComment
@@ -221,10 +266,20 @@ genCommit n =
     <$> arbitraryReducedMaybe n -- commitAuthor :: Maybe User
     <*> arbitraryReducedMaybe n -- commitCommit :: Maybe RepoCommit
     <*> arbitraryReducedMaybe n -- commitCommitter :: Maybe User
+    <*> arbitraryReducedMaybe n -- commitCreated :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- commitFiles :: Maybe [CommitAffectedFiles]
     <*> arbitraryReducedMaybe n -- commitHtmlUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- commitParents :: Maybe [CommitMeta]
     <*> arbitraryReducedMaybe n -- commitSha :: Maybe Text
     <*> arbitraryReducedMaybe n -- commitUrl :: Maybe Text
+  
+instance Arbitrary CommitAffectedFiles where
+  arbitrary = sized genCommitAffectedFiles
+
+genCommitAffectedFiles :: Int -> Gen CommitAffectedFiles
+genCommitAffectedFiles n =
+  CommitAffectedFiles
+    <$> arbitraryReducedMaybe n -- commitAffectedFilesFilename :: Maybe Text
   
 instance Arbitrary CommitDateOptions where
   arbitrary = sized genCommitDateOptions
@@ -241,8 +296,25 @@ instance Arbitrary CommitMeta where
 genCommitMeta :: Int -> Gen CommitMeta
 genCommitMeta n =
   CommitMeta
-    <$> arbitraryReducedMaybe n -- commitMetaSha :: Maybe Text
+    <$> arbitraryReducedMaybe n -- commitMetaCreated :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- commitMetaSha :: Maybe Text
     <*> arbitraryReducedMaybe n -- commitMetaUrl :: Maybe Text
+  
+instance Arbitrary CommitStatus where
+  arbitrary = sized genCommitStatus
+
+genCommitStatus :: Int -> Gen CommitStatus
+genCommitStatus n =
+  CommitStatus
+    <$> arbitraryReducedMaybe n -- commitStatusContext :: Maybe Text
+    <*> arbitraryReducedMaybe n -- commitStatusCreatedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- commitStatusCreator :: Maybe User
+    <*> arbitraryReducedMaybe n -- commitStatusDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- commitStatusId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- commitStatusStatus :: Maybe Text
+    <*> arbitraryReducedMaybe n -- commitStatusTargetUrl :: Maybe Text
+    <*> arbitraryReducedMaybe n -- commitStatusUpdatedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- commitStatusUrl :: Maybe Text
   
 instance Arbitrary CommitUser where
   arbitrary = sized genCommitUser
@@ -275,6 +347,51 @@ genContentsResponse n =
     <*> arbitraryReducedMaybe n -- contentsResponseType :: Maybe Text
     <*> arbitraryReducedMaybe n -- contentsResponseUrl :: Maybe Text
   
+instance Arbitrary CreateAccessTokenOption where
+  arbitrary = sized genCreateAccessTokenOption
+
+genCreateAccessTokenOption :: Int -> Gen CreateAccessTokenOption
+genCreateAccessTokenOption n =
+  CreateAccessTokenOption
+    <$> arbitraryReducedMaybe n -- createAccessTokenOptionName :: Maybe Text
+  
+instance Arbitrary CreateBranchProtectionOption where
+  arbitrary = sized genCreateBranchProtectionOption
+
+genCreateBranchProtectionOption :: Int -> Gen CreateBranchProtectionOption
+genCreateBranchProtectionOption n =
+  CreateBranchProtectionOption
+    <$> arbitraryReducedMaybe n -- createBranchProtectionOptionApprovalsWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionApprovalsWhitelistUsername :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionBlockOnOfficialReviewRequests :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionBlockOnOutdatedBranch :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionBlockOnRejectedReviews :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionBranchName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionDismissStaleApprovals :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionEnableApprovalsWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionEnableMergeWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionEnablePush :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionEnablePushWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionEnableStatusCheck :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionMergeWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionMergeWhitelistUsernames :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionProtectedFilePatterns :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionPushWhitelistDeployKeys :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionPushWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionPushWhitelistUsernames :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionRequireSignedCommits :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionRequiredApprovals :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- createBranchProtectionOptionStatusCheckContexts :: Maybe [Text]
+  
+instance Arbitrary CreateBranchRepoOption where
+  arbitrary = sized genCreateBranchRepoOption
+
+genCreateBranchRepoOption :: Int -> Gen CreateBranchRepoOption
+genCreateBranchRepoOption n =
+  CreateBranchRepoOption
+    <$> arbitrary -- createBranchRepoOptionNewBranchName :: Text
+    <*> arbitraryReducedMaybe n -- createBranchRepoOptionOldBranchName :: Maybe Text
+  
 instance Arbitrary CreateEmailOption where
   arbitrary = sized genCreateEmailOption
 
@@ -296,6 +413,7 @@ genCreateFileOptions n =
     <*> arbitraryReducedMaybe n -- createFileOptionsDates :: Maybe CommitDateOptions
     <*> arbitraryReducedMaybe n -- createFileOptionsMessage :: Maybe Text
     <*> arbitraryReducedMaybe n -- createFileOptionsNewBranch :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createFileOptionsSignoff :: Maybe Bool
   
 instance Arbitrary CreateForkOption where
   arbitrary = sized genCreateForkOption
@@ -312,6 +430,7 @@ genCreateGPGKeyOption :: Int -> Gen CreateGPGKeyOption
 genCreateGPGKeyOption n =
   CreateGPGKeyOption
     <$> arbitrary -- createGPGKeyOptionArmoredPublicKey :: Text
+    <*> arbitraryReducedMaybe n -- createGPGKeyOptionArmoredSignature :: Maybe Text
   
 instance Arbitrary CreateHookOption where
   arbitrary = sized genCreateHookOption
@@ -346,6 +465,7 @@ genCreateIssueOption n =
     <*> arbitraryReducedMaybe n -- createIssueOptionDueDate :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- createIssueOptionLabels :: Maybe [Integer]
     <*> arbitraryReducedMaybe n -- createIssueOptionMilestone :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- createIssueOptionRef :: Maybe Text
     <*> arbitrary -- createIssueOptionTitle :: Text
   
 instance Arbitrary CreateKeyOption where
@@ -376,7 +496,17 @@ genCreateMilestoneOption n =
   CreateMilestoneOption
     <$> arbitraryReducedMaybe n -- createMilestoneOptionDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- createMilestoneOptionDueOn :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- createMilestoneOptionState :: Maybe E'State
     <*> arbitraryReducedMaybe n -- createMilestoneOptionTitle :: Maybe Text
+  
+instance Arbitrary CreateOAuth2ApplicationOptions where
+  arbitrary = sized genCreateOAuth2ApplicationOptions
+
+genCreateOAuth2ApplicationOptions :: Int -> Gen CreateOAuth2ApplicationOptions
+genCreateOAuth2ApplicationOptions n =
+  CreateOAuth2ApplicationOptions
+    <$> arbitraryReducedMaybe n -- createOAuth2ApplicationOptionsName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createOAuth2ApplicationOptionsRedirectUris :: Maybe [Text]
   
 instance Arbitrary CreateOrgOption where
   arbitrary = sized genCreateOrgOption
@@ -408,6 +538,28 @@ genCreatePullRequestOption n =
     <*> arbitraryReducedMaybe n -- createPullRequestOptionMilestone :: Maybe Integer
     <*> arbitraryReducedMaybe n -- createPullRequestOptionTitle :: Maybe Text
   
+instance Arbitrary CreatePullReviewComment where
+  arbitrary = sized genCreatePullReviewComment
+
+genCreatePullReviewComment :: Int -> Gen CreatePullReviewComment
+genCreatePullReviewComment n =
+  CreatePullReviewComment
+    <$> arbitraryReducedMaybe n -- createPullReviewCommentBody :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createPullReviewCommentNewPosition :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- createPullReviewCommentOldPosition :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- createPullReviewCommentPath :: Maybe Text
+  
+instance Arbitrary CreatePullReviewOptions where
+  arbitrary = sized genCreatePullReviewOptions
+
+genCreatePullReviewOptions :: Int -> Gen CreatePullReviewOptions
+genCreatePullReviewOptions n =
+  CreatePullReviewOptions
+    <$> arbitraryReducedMaybe n -- createPullReviewOptionsBody :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createPullReviewOptionsComments :: Maybe [CreatePullReviewComment]
+    <*> arbitraryReducedMaybe n -- createPullReviewOptionsCommitId :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createPullReviewOptionsEvent :: Maybe Text
+  
 instance Arbitrary CreateReleaseOption where
   arbitrary = sized genCreateReleaseOption
 
@@ -428,6 +580,7 @@ genCreateRepoOption :: Int -> Gen CreateRepoOption
 genCreateRepoOption n =
   CreateRepoOption
     <$> arbitraryReducedMaybe n -- createRepoOptionAutoInit :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createRepoOptionDefaultBranch :: Maybe Text
     <*> arbitraryReducedMaybe n -- createRepoOptionDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- createRepoOptionGitignores :: Maybe Text
     <*> arbitraryReducedMaybe n -- createRepoOptionIssueLabels :: Maybe Text
@@ -435,6 +588,8 @@ genCreateRepoOption n =
     <*> arbitrary -- createRepoOptionName :: Text
     <*> arbitraryReducedMaybe n -- createRepoOptionPrivate :: Maybe Bool
     <*> arbitraryReducedMaybe n -- createRepoOptionReadme :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createRepoOptionTemplate :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createRepoOptionTrustModel :: Maybe E'TrustModel
   
 instance Arbitrary CreateStatusOption where
   arbitrary = sized genCreateStatusOption
@@ -446,6 +601,16 @@ genCreateStatusOption n =
     <*> arbitraryReducedMaybe n -- createStatusOptionDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- createStatusOptionState :: Maybe Text
     <*> arbitraryReducedMaybe n -- createStatusOptionTargetUrl :: Maybe Text
+  
+instance Arbitrary CreateTagOption where
+  arbitrary = sized genCreateTagOption
+
+genCreateTagOption :: Int -> Gen CreateTagOption
+genCreateTagOption n =
+  CreateTagOption
+    <$> arbitraryReducedMaybe n -- createTagOptionMessage :: Maybe Text
+    <*> arbitrary -- createTagOptionTagName :: Text
+    <*> arbitraryReducedMaybe n -- createTagOptionTarget :: Maybe Text
   
 instance Arbitrary CreateTeamOption where
   arbitrary = sized genCreateTeamOption
@@ -474,6 +639,19 @@ genCreateUserOption n =
     <*> arbitraryReducedMaybe n -- createUserOptionSendNotify :: Maybe Bool
     <*> arbitraryReducedMaybe n -- createUserOptionSourceId :: Maybe Integer
     <*> arbitrary -- createUserOptionUsername :: Text
+    <*> arbitraryReducedMaybe n -- createUserOptionVisibility :: Maybe Text
+  
+instance Arbitrary Cron where
+  arbitrary = sized genCron
+
+genCron :: Int -> Gen Cron
+genCron n =
+  Cron
+    <$> arbitraryReducedMaybe n -- cronExecTimes :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- cronName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- cronNext :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- cronPrev :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- cronSchedule :: Maybe Text
   
 instance Arbitrary DeleteEmailOption where
   arbitrary = sized genDeleteEmailOption
@@ -496,6 +674,7 @@ genDeleteFileOptions n =
     <*> arbitraryReducedMaybe n -- deleteFileOptionsMessage :: Maybe Text
     <*> arbitraryReducedMaybe n -- deleteFileOptionsNewBranch :: Maybe Text
     <*> arbitrary -- deleteFileOptionsSha :: Text
+    <*> arbitraryReducedMaybe n -- deleteFileOptionsSignoff :: Maybe Bool
   
 instance Arbitrary DeployKey where
   arbitrary = sized genDeployKey
@@ -513,6 +692,14 @@ genDeployKey n =
     <*> arbitraryReducedMaybe n -- deployKeyTitle :: Maybe Text
     <*> arbitraryReducedMaybe n -- deployKeyUrl :: Maybe Text
   
+instance Arbitrary DismissPullReviewOptions where
+  arbitrary = sized genDismissPullReviewOptions
+
+genDismissPullReviewOptions :: Int -> Gen DismissPullReviewOptions
+genDismissPullReviewOptions n =
+  DismissPullReviewOptions
+    <$> arbitraryReducedMaybe n -- dismissPullReviewOptionsMessage :: Maybe Text
+  
 instance Arbitrary EditAttachmentOptions where
   arbitrary = sized genEditAttachmentOptions
 
@@ -520,6 +707,33 @@ genEditAttachmentOptions :: Int -> Gen EditAttachmentOptions
 genEditAttachmentOptions n =
   EditAttachmentOptions
     <$> arbitraryReducedMaybe n -- editAttachmentOptionsName :: Maybe Text
+  
+instance Arbitrary EditBranchProtectionOption where
+  arbitrary = sized genEditBranchProtectionOption
+
+genEditBranchProtectionOption :: Int -> Gen EditBranchProtectionOption
+genEditBranchProtectionOption n =
+  EditBranchProtectionOption
+    <$> arbitraryReducedMaybe n -- editBranchProtectionOptionApprovalsWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionApprovalsWhitelistUsername :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionBlockOnOfficialReviewRequests :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionBlockOnOutdatedBranch :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionBlockOnRejectedReviews :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionDismissStaleApprovals :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionEnableApprovalsWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionEnableMergeWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionEnablePush :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionEnablePushWhitelist :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionEnableStatusCheck :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionMergeWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionMergeWhitelistUsernames :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionProtectedFilePatterns :: Maybe Text
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionPushWhitelistDeployKeys :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionPushWhitelistTeams :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionPushWhitelistUsernames :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionRequireSignedCommits :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionRequiredApprovals :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- editBranchProtectionOptionStatusCheckContexts :: Maybe [Text]
   
 instance Arbitrary EditDeadlineOption where
   arbitrary = sized genEditDeadlineOption
@@ -567,6 +781,7 @@ genEditIssueOption n =
     <*> arbitraryReducedMaybe n -- editIssueOptionBody :: Maybe Text
     <*> arbitraryReducedMaybe n -- editIssueOptionDueDate :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- editIssueOptionMilestone :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- editIssueOptionRef :: Maybe Text
     <*> arbitraryReducedMaybe n -- editIssueOptionState :: Maybe Text
     <*> arbitraryReducedMaybe n -- editIssueOptionTitle :: Maybe Text
     <*> arbitraryReducedMaybe n -- editIssueOptionUnsetDueDate :: Maybe Bool
@@ -613,6 +828,7 @@ genEditPullRequestOption n =
   EditPullRequestOption
     <$> arbitraryReducedMaybe n -- editPullRequestOptionAssignee :: Maybe Text
     <*> arbitraryReducedMaybe n -- editPullRequestOptionAssignees :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- editPullRequestOptionBase :: Maybe Text
     <*> arbitraryReducedMaybe n -- editPullRequestOptionBody :: Maybe Text
     <*> arbitraryReducedMaybe n -- editPullRequestOptionDueDate :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- editPullRequestOptionLabels :: Maybe [Integer]
@@ -648,20 +864,26 @@ instance Arbitrary EditRepoOption where
 genEditRepoOption :: Int -> Gen EditRepoOption
 genEditRepoOption n =
   EditRepoOption
-    <$> arbitraryReducedMaybe n -- editRepoOptionAllowMergeCommits :: Maybe Bool
+    <$> arbitraryReducedMaybe n -- editRepoOptionAllowManualMerge :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editRepoOptionAllowMergeCommits :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionAllowRebase :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionAllowRebaseExplicit :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionAllowSquashMerge :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionArchived :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editRepoOptionAutodetectManualMerge :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionDefaultBranch :: Maybe Text
+    <*> arbitraryReducedMaybe n -- editRepoOptionDefaultDeleteBranchAfterMerge :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editRepoOptionDefaultMergeStyle :: Maybe Text
     <*> arbitraryReducedMaybe n -- editRepoOptionDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- editRepoOptionExternalTracker :: Maybe ExternalTracker
     <*> arbitraryReducedMaybe n -- editRepoOptionExternalWiki :: Maybe ExternalWiki
     <*> arbitraryReducedMaybe n -- editRepoOptionHasIssues :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editRepoOptionHasProjects :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionHasPullRequests :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionHasWiki :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionIgnoreWhitespaceConflicts :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionInternalTracker :: Maybe InternalTracker
+    <*> arbitraryReducedMaybe n -- editRepoOptionMirrorInterval :: Maybe Text
     <*> arbitraryReducedMaybe n -- editRepoOptionName :: Maybe Text
     <*> arbitraryReducedMaybe n -- editRepoOptionPrivate :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editRepoOptionTemplate :: Maybe Bool
@@ -691,15 +913,18 @@ genEditUserOption n =
     <*> arbitraryReducedMaybe n -- editUserOptionAllowCreateOrganization :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editUserOptionAllowGitHook :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editUserOptionAllowImportLocal :: Maybe Bool
-    <*> arbitrary -- editUserOptionEmail :: Text
+    <*> arbitraryReducedMaybe n -- editUserOptionDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- editUserOptionEmail :: Maybe Text
     <*> arbitraryReducedMaybe n -- editUserOptionFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- editUserOptionLocation :: Maybe Text
-    <*> arbitraryReducedMaybe n -- editUserOptionLoginName :: Maybe Text
+    <*> arbitrary -- editUserOptionLoginName :: Text
     <*> arbitraryReducedMaybe n -- editUserOptionMaxRepoCreation :: Maybe Integer
     <*> arbitraryReducedMaybe n -- editUserOptionMustChangePassword :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editUserOptionPassword :: Maybe Text
     <*> arbitraryReducedMaybe n -- editUserOptionProhibitLogin :: Maybe Bool
-    <*> arbitraryReducedMaybe n -- editUserOptionSourceId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- editUserOptionRestricted :: Maybe Bool
+    <*> arbitrary -- editUserOptionSourceId :: Integer
+    <*> arbitraryReducedMaybe n -- editUserOptionVisibility :: Maybe Text
     <*> arbitraryReducedMaybe n -- editUserOptionWebsite :: Maybe Text
   
 instance Arbitrary Email where
@@ -738,6 +963,7 @@ genFileCommitResponse n =
   FileCommitResponse
     <$> arbitraryReducedMaybe n -- fileCommitResponseAuthor :: Maybe CommitUser
     <*> arbitraryReducedMaybe n -- fileCommitResponseCommitter :: Maybe CommitUser
+    <*> arbitraryReducedMaybe n -- fileCommitResponseCreated :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- fileCommitResponseHtmlUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- fileCommitResponseMessage :: Maybe Text
     <*> arbitraryReducedMaybe n -- fileCommitResponseParents :: Maybe [CommitMeta]
@@ -793,6 +1019,7 @@ genGPGKey n =
     <*> arbitraryReducedMaybe n -- gPGKeyPrimaryKeyId :: Maybe Text
     <*> arbitraryReducedMaybe n -- gPGKeyPublicKey :: Maybe Text
     <*> arbitraryReducedMaybe n -- gPGKeySubkeys :: Maybe [GPGKey]
+    <*> arbitraryReducedMaybe n -- gPGKeyVerified :: Maybe Bool
   
 instance Arbitrary GPGKeyEmail where
   arbitrary = sized genGPGKeyEmail
@@ -802,6 +1029,68 @@ genGPGKeyEmail n =
   GPGKeyEmail
     <$> arbitraryReducedMaybe n -- gPGKeyEmailEmail :: Maybe Text
     <*> arbitraryReducedMaybe n -- gPGKeyEmailVerified :: Maybe Bool
+  
+instance Arbitrary GeneralAPISettings where
+  arbitrary = sized genGeneralAPISettings
+
+genGeneralAPISettings :: Int -> Gen GeneralAPISettings
+genGeneralAPISettings n =
+  GeneralAPISettings
+    <$> arbitraryReducedMaybe n -- generalAPISettingsDefaultGitTreesPerPage :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- generalAPISettingsDefaultMaxBlobSize :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- generalAPISettingsDefaultPagingNum :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- generalAPISettingsMaxResponseItems :: Maybe Integer
+  
+instance Arbitrary GeneralAttachmentSettings where
+  arbitrary = sized genGeneralAttachmentSettings
+
+genGeneralAttachmentSettings :: Int -> Gen GeneralAttachmentSettings
+genGeneralAttachmentSettings n =
+  GeneralAttachmentSettings
+    <$> arbitraryReducedMaybe n -- generalAttachmentSettingsAllowedTypes :: Maybe Text
+    <*> arbitraryReducedMaybe n -- generalAttachmentSettingsEnabled :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generalAttachmentSettingsMaxFiles :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- generalAttachmentSettingsMaxSize :: Maybe Integer
+  
+instance Arbitrary GeneralRepoSettings where
+  arbitrary = sized genGeneralRepoSettings
+
+genGeneralRepoSettings :: Int -> Gen GeneralRepoSettings
+genGeneralRepoSettings n =
+  GeneralRepoSettings
+    <$> arbitraryReducedMaybe n -- generalRepoSettingsHttpGitDisabled :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generalRepoSettingsLfsDisabled :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generalRepoSettingsMigrationsDisabled :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generalRepoSettingsMirrorsDisabled :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generalRepoSettingsStarsDisabled :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generalRepoSettingsTimeTrackingDisabled :: Maybe Bool
+  
+instance Arbitrary GeneralUISettings where
+  arbitrary = sized genGeneralUISettings
+
+genGeneralUISettings :: Int -> Gen GeneralUISettings
+genGeneralUISettings n =
+  GeneralUISettings
+    <$> arbitraryReducedMaybe n -- generalUISettingsAllowedReactions :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- generalUISettingsCustomEmojis :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- generalUISettingsDefaultTheme :: Maybe Text
+  
+instance Arbitrary GenerateRepoOption where
+  arbitrary = sized genGenerateRepoOption
+
+genGenerateRepoOption :: Int -> Gen GenerateRepoOption
+genGenerateRepoOption n =
+  GenerateRepoOption
+    <$> arbitraryReducedMaybe n -- generateRepoOptionAvatar :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generateRepoOptionDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- generateRepoOptionGitContent :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generateRepoOptionGitHooks :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generateRepoOptionLabels :: Maybe Bool
+    <*> arbitrary -- generateRepoOptionName :: Text
+    <*> arbitrary -- generateRepoOptionOwner :: Text
+    <*> arbitraryReducedMaybe n -- generateRepoOptionPrivate :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generateRepoOptionTopics :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generateRepoOptionWebhooks :: Maybe Bool
   
 instance Arbitrary GitBlobResponse where
   arbitrary = sized genGitBlobResponse
@@ -884,14 +1173,6 @@ genIdentity n =
     <$> arbitraryReducedMaybe n -- identityEmail :: Maybe Text
     <*> arbitraryReducedMaybe n -- identityName :: Maybe Text
   
-instance Arbitrary InlineObject where
-  arbitrary = sized genInlineObject
-
-genInlineObject :: Int -> Gen InlineObject
-genInlineObject n =
-  InlineObject
-    <$> arbitrary -- inlineObjectName :: Text
-  
 instance Arbitrary InlineResponse200 where
   arbitrary = sized genInlineResponse200
 
@@ -935,12 +1216,14 @@ genIssue n =
     <*> arbitraryReducedMaybe n -- issueDueDate :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- issueHtmlUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- issueId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- issueIsLocked :: Maybe Bool
     <*> arbitraryReducedMaybe n -- issueLabels :: Maybe [Label]
     <*> arbitraryReducedMaybe n -- issueMilestone :: Maybe Milestone
     <*> arbitraryReducedMaybe n -- issueNumber :: Maybe Integer
     <*> arbitraryReducedMaybe n -- issueOriginalAuthor :: Maybe Text
     <*> arbitraryReducedMaybe n -- issueOriginalAuthorId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- issuePullRequest :: Maybe PullRequestMeta
+    <*> arbitraryReducedMaybe n -- issueRef :: Maybe Text
     <*> arbitraryReducedMaybe n -- issueRepository :: Maybe RepositoryMeta
     <*> arbitraryReducedMaybe n -- issueState :: Maybe Text
     <*> arbitraryReducedMaybe n -- issueTitle :: Maybe Text
@@ -963,6 +1246,19 @@ genIssueLabelsOption :: Int -> Gen IssueLabelsOption
 genIssueLabelsOption n =
   IssueLabelsOption
     <$> arbitraryReducedMaybe n -- issueLabelsOptionLabels :: Maybe [Integer]
+  
+instance Arbitrary IssueTemplate where
+  arbitrary = sized genIssueTemplate
+
+genIssueTemplate :: Int -> Gen IssueTemplate
+genIssueTemplate n =
+  IssueTemplate
+    <$> arbitraryReducedMaybe n -- issueTemplateAbout :: Maybe Text
+    <*> arbitraryReducedMaybe n -- issueTemplateContent :: Maybe Text
+    <*> arbitraryReducedMaybe n -- issueTemplateFileName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- issueTemplateLabels :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- issueTemplateName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- issueTemplateTitle :: Maybe Text
   
 instance Arbitrary Label where
   arbitrary = sized genLabel
@@ -994,8 +1290,11 @@ genMergePullRequestOption :: Int -> Gen MergePullRequestOption
 genMergePullRequestOption n =
   MergePullRequestOption
     <$> arbitrary -- mergePullRequestOptionDo :: E'Do
+    <*> arbitraryReducedMaybe n -- mergePullRequestOptionMergeCommitId :: Maybe Text
     <*> arbitraryReducedMaybe n -- mergePullRequestOptionMergeMessageField :: Maybe Text
     <*> arbitraryReducedMaybe n -- mergePullRequestOptionMergeTitleField :: Maybe Text
+    <*> arbitraryReducedMaybe n -- mergePullRequestOptionDeleteBranchAfterMerge :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- mergePullRequestOptionForceMerge :: Maybe Bool
   
 instance Arbitrary MigrateRepoForm where
   arbitrary = sized genMigrateRepoForm
@@ -1004,19 +1303,51 @@ genMigrateRepoForm :: Int -> Gen MigrateRepoForm
 genMigrateRepoForm n =
   MigrateRepoForm
     <$> arbitraryReducedMaybe n -- migrateRepoFormAuthPassword :: Maybe Text
+    <*> arbitraryReducedMaybe n -- migrateRepoFormAuthToken :: Maybe Text
     <*> arbitraryReducedMaybe n -- migrateRepoFormAuthUsername :: Maybe Text
     <*> arbitrary -- migrateRepoFormCloneAddr :: Text
     <*> arbitraryReducedMaybe n -- migrateRepoFormDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- migrateRepoFormIssues :: Maybe Bool
     <*> arbitraryReducedMaybe n -- migrateRepoFormLabels :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoFormLfs :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoFormLfsEndpoint :: Maybe Text
     <*> arbitraryReducedMaybe n -- migrateRepoFormMilestones :: Maybe Bool
     <*> arbitraryReducedMaybe n -- migrateRepoFormMirror :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoFormMirrorInterval :: Maybe Text
     <*> arbitraryReducedMaybe n -- migrateRepoFormPrivate :: Maybe Bool
     <*> arbitraryReducedMaybe n -- migrateRepoFormPullRequests :: Maybe Bool
     <*> arbitraryReducedMaybe n -- migrateRepoFormReleases :: Maybe Bool
     <*> arbitrary -- migrateRepoFormRepoName :: Text
+    <*> arbitraryReducedMaybe n -- migrateRepoFormService :: Maybe Integer
     <*> arbitrary -- migrateRepoFormUid :: Integer
     <*> arbitraryReducedMaybe n -- migrateRepoFormWiki :: Maybe Bool
+  
+instance Arbitrary MigrateRepoOptions where
+  arbitrary = sized genMigrateRepoOptions
+
+genMigrateRepoOptions :: Int -> Gen MigrateRepoOptions
+genMigrateRepoOptions n =
+  MigrateRepoOptions
+    <$> arbitraryReducedMaybe n -- migrateRepoOptionsAuthPassword :: Maybe Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsAuthToken :: Maybe Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsAuthUsername :: Maybe Text
+    <*> arbitrary -- migrateRepoOptionsCloneAddr :: Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsIssues :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsLabels :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsLfs :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsLfsEndpoint :: Maybe Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsMilestones :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsMirror :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsMirrorInterval :: Maybe Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsPrivate :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsPullRequests :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsReleases :: Maybe Bool
+    <*> arbitrary -- migrateRepoOptionsRepoName :: Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsRepoOwner :: Maybe Text
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsService :: Maybe E'Service
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsUid :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- migrateRepoOptionsWiki :: Maybe Bool
   
 instance Arbitrary Milestone where
   arbitrary = sized genMilestone
@@ -1026,12 +1357,61 @@ genMilestone n =
   Milestone
     <$> arbitraryReducedMaybe n -- milestoneClosedAt :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- milestoneClosedIssues :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- milestoneCreatedAt :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- milestoneDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- milestoneDueOn :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- milestoneId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- milestoneOpenIssues :: Maybe Integer
     <*> arbitraryReducedMaybe n -- milestoneState :: Maybe Text
     <*> arbitraryReducedMaybe n -- milestoneTitle :: Maybe Text
+    <*> arbitraryReducedMaybe n -- milestoneUpdatedAt :: Maybe DateTime
+  
+instance Arbitrary NotificationCount where
+  arbitrary = sized genNotificationCount
+
+genNotificationCount :: Int -> Gen NotificationCount
+genNotificationCount n =
+  NotificationCount
+    <$> arbitraryReducedMaybe n -- notificationCountNew :: Maybe Integer
+  
+instance Arbitrary NotificationSubject where
+  arbitrary = sized genNotificationSubject
+
+genNotificationSubject :: Int -> Gen NotificationSubject
+genNotificationSubject n =
+  NotificationSubject
+    <$> arbitraryReducedMaybe n -- notificationSubjectLatestCommentUrl :: Maybe Text
+    <*> arbitraryReducedMaybe n -- notificationSubjectState :: Maybe Text
+    <*> arbitraryReducedMaybe n -- notificationSubjectTitle :: Maybe Text
+    <*> arbitraryReducedMaybe n -- notificationSubjectType :: Maybe Text
+    <*> arbitraryReducedMaybe n -- notificationSubjectUrl :: Maybe Text
+  
+instance Arbitrary NotificationThread where
+  arbitrary = sized genNotificationThread
+
+genNotificationThread :: Int -> Gen NotificationThread
+genNotificationThread n =
+  NotificationThread
+    <$> arbitraryReducedMaybe n -- notificationThreadId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- notificationThreadPinned :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- notificationThreadRepository :: Maybe Repository
+    <*> arbitraryReducedMaybe n -- notificationThreadSubject :: Maybe NotificationSubject
+    <*> arbitraryReducedMaybe n -- notificationThreadUnread :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- notificationThreadUpdatedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- notificationThreadUrl :: Maybe Text
+  
+instance Arbitrary OAuth2Application where
+  arbitrary = sized genOAuth2Application
+
+genOAuth2Application :: Int -> Gen OAuth2Application
+genOAuth2Application n =
+  OAuth2Application
+    <$> arbitraryReducedMaybe n -- oAuth2ApplicationClientId :: Maybe Text
+    <*> arbitraryReducedMaybe n -- oAuth2ApplicationClientSecret :: Maybe Text
+    <*> arbitraryReducedMaybe n -- oAuth2ApplicationCreated :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- oAuth2ApplicationId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- oAuth2ApplicationName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- oAuth2ApplicationRedirectUris :: Maybe [Text]
   
 instance Arbitrary Organization where
   arbitrary = sized genOrganization
@@ -1144,6 +1524,7 @@ genPullRequest n =
     <*> arbitraryReducedMaybe n -- pullRequestHead :: Maybe PRBranchInfo
     <*> arbitraryReducedMaybe n -- pullRequestHtmlUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- pullRequestId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- pullRequestIsLocked :: Maybe Bool
     <*> arbitraryReducedMaybe n -- pullRequestLabels :: Maybe [Label]
     <*> arbitraryReducedMaybe n -- pullRequestMergeBase :: Maybe Text
     <*> arbitraryReducedMaybe n -- pullRequestMergeCommitSha :: Maybe Text
@@ -1168,6 +1549,57 @@ genPullRequestMeta n =
   PullRequestMeta
     <$> arbitraryReducedMaybe n -- pullRequestMetaMerged :: Maybe Bool
     <*> arbitraryReducedMaybe n -- pullRequestMetaMergedAt :: Maybe DateTime
+  
+instance Arbitrary PullReview where
+  arbitrary = sized genPullReview
+
+genPullReview :: Int -> Gen PullReview
+genPullReview n =
+  PullReview
+    <$> arbitraryReducedMaybe n -- pullReviewBody :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentsCount :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- pullReviewCommitId :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewDismissed :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- pullReviewHtmlUrl :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- pullReviewOfficial :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- pullReviewPullRequestUrl :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewStale :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- pullReviewState :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewSubmittedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- pullReviewTeam :: Maybe Team
+    <*> arbitraryReducedMaybe n -- pullReviewUser :: Maybe User
+  
+instance Arbitrary PullReviewComment where
+  arbitrary = sized genPullReviewComment
+
+genPullReviewComment :: Int -> Gen PullReviewComment
+genPullReviewComment n =
+  PullReviewComment
+    <$> arbitraryReducedMaybe n -- pullReviewCommentBody :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentCommitId :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentCreatedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- pullReviewCommentDiffHunk :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentHtmlUrl :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- pullReviewCommentOriginalCommitId :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentOriginalPosition :: Maybe Int
+    <*> arbitraryReducedMaybe n -- pullReviewCommentPath :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentPosition :: Maybe Int
+    <*> arbitraryReducedMaybe n -- pullReviewCommentPullRequestReviewId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- pullReviewCommentPullRequestUrl :: Maybe Text
+    <*> arbitraryReducedMaybe n -- pullReviewCommentResolver :: Maybe User
+    <*> arbitraryReducedMaybe n -- pullReviewCommentUpdatedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- pullReviewCommentUser :: Maybe User
+  
+instance Arbitrary PullReviewRequestOptions where
+  arbitrary = sized genPullReviewRequestOptions
+
+genPullReviewRequestOptions :: Int -> Gen PullReviewRequestOptions
+genPullReviewRequestOptions n =
+  PullReviewRequestOptions
+    <$> arbitraryReducedMaybe n -- pullReviewRequestOptionsReviewers :: Maybe [Text]
+    <*> arbitraryReducedMaybe n -- pullReviewRequestOptionsTeamReviewers :: Maybe [Text]
   
 instance Arbitrary Reaction where
   arbitrary = sized genReaction
@@ -1200,6 +1632,7 @@ genRelease n =
     <*> arbitraryReducedMaybe n -- releaseBody :: Maybe Text
     <*> arbitraryReducedMaybe n -- releaseCreatedAt :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- releaseDraft :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- releaseHtmlUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- releaseId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- releaseName :: Maybe Text
     <*> arbitraryReducedMaybe n -- releasePrerelease :: Maybe Bool
@@ -1245,6 +1678,7 @@ genRepository n =
     <*> arbitraryReducedMaybe n -- repositoryCloneUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryCreatedAt :: Maybe DateTime
     <*> arbitraryReducedMaybe n -- repositoryDefaultBranch :: Maybe Text
+    <*> arbitraryReducedMaybe n -- repositoryDefaultMergeStyle :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryEmpty :: Maybe Bool
     <*> arbitraryReducedMaybe n -- repositoryExternalTracker :: Maybe ExternalTracker
@@ -1253,13 +1687,16 @@ genRepository n =
     <*> arbitraryReducedMaybe n -- repositoryForksCount :: Maybe Integer
     <*> arbitraryReducedMaybe n -- repositoryFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryHasIssues :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- repositoryHasProjects :: Maybe Bool
     <*> arbitraryReducedMaybe n -- repositoryHasPullRequests :: Maybe Bool
     <*> arbitraryReducedMaybe n -- repositoryHasWiki :: Maybe Bool
     <*> arbitraryReducedMaybe n -- repositoryHtmlUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- repositoryIgnoreWhitespaceConflicts :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- repositoryInternal :: Maybe Bool
     <*> arbitraryReducedMaybe n -- repositoryInternalTracker :: Maybe InternalTracker
     <*> arbitraryReducedMaybe n -- repositoryMirror :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- repositoryMirrorInterval :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryName :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryOpenIssuesCount :: Maybe Integer
     <*> arbitraryReducedMaybe n -- repositoryOpenPrCounter :: Maybe Integer
@@ -1286,6 +1723,7 @@ genRepositoryMeta n =
     <$> arbitraryReducedMaybe n -- repositoryMetaFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- repositoryMetaId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- repositoryMetaName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- repositoryMetaOwner :: Maybe Text
   
 instance Arbitrary SearchResults where
   arbitrary = sized genSearchResults
@@ -1304,22 +1742,6 @@ genServerVersion n =
   ServerVersion
     <$> arbitraryReducedMaybe n -- serverVersionVersion :: Maybe Text
   
-instance Arbitrary Status where
-  arbitrary = sized genStatus
-
-genStatus :: Int -> Gen Status
-genStatus n =
-  Status
-    <$> arbitraryReducedMaybe n -- statusContext :: Maybe Text
-    <*> arbitraryReducedMaybe n -- statusCreatedAt :: Maybe DateTime
-    <*> arbitraryReducedMaybe n -- statusCreator :: Maybe User
-    <*> arbitraryReducedMaybe n -- statusDescription :: Maybe Text
-    <*> arbitraryReducedMaybe n -- statusId :: Maybe Integer
-    <*> arbitraryReducedMaybe n -- statusStatus :: Maybe Text
-    <*> arbitraryReducedMaybe n -- statusTargetUrl :: Maybe Text
-    <*> arbitraryReducedMaybe n -- statusUpdatedAt :: Maybe DateTime
-    <*> arbitraryReducedMaybe n -- statusUrl :: Maybe Text
-  
 instance Arbitrary StopWatch where
   arbitrary = sized genStopWatch
 
@@ -1327,7 +1749,21 @@ genStopWatch :: Int -> Gen StopWatch
 genStopWatch n =
   StopWatch
     <$> arbitraryReducedMaybe n -- stopWatchCreated :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- stopWatchDuration :: Maybe Text
     <*> arbitraryReducedMaybe n -- stopWatchIssueIndex :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- stopWatchIssueTitle :: Maybe Text
+    <*> arbitraryReducedMaybe n -- stopWatchRepoName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- stopWatchRepoOwnerName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- stopWatchSeconds :: Maybe Integer
+  
+instance Arbitrary SubmitPullReviewOptions where
+  arbitrary = sized genSubmitPullReviewOptions
+
+genSubmitPullReviewOptions :: Int -> Gen SubmitPullReviewOptions
+genSubmitPullReviewOptions n =
+  SubmitPullReviewOptions
+    <$> arbitraryReducedMaybe n -- submitPullReviewOptionsBody :: Maybe Text
+    <*> arbitraryReducedMaybe n -- submitPullReviewOptionsEvent :: Maybe Text
   
 instance Arbitrary Tag where
   arbitrary = sized genTag
@@ -1337,6 +1773,7 @@ genTag n =
   Tag
     <$> arbitraryReducedMaybe n -- tagCommit :: Maybe CommitMeta
     <*> arbitraryReducedMaybe n -- tagId :: Maybe Text
+    <*> arbitraryReducedMaybe n -- tagMessage :: Maybe Text
     <*> arbitraryReducedMaybe n -- tagName :: Maybe Text
     <*> arbitraryReducedMaybe n -- tagTarballUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- tagZipballUrl :: Maybe Text
@@ -1390,6 +1827,15 @@ genTrackedTime n =
     <*> arbitraryReducedMaybe n -- trackedTimeUserId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- trackedTimeUserName :: Maybe Text
   
+instance Arbitrary TransferRepoOption where
+  arbitrary = sized genTransferRepoOption
+
+genTransferRepoOption :: Int -> Gen TransferRepoOption
+genTransferRepoOption n =
+  TransferRepoOption
+    <$> arbitrary -- transferRepoOptionNewOwner :: Text
+    <*> arbitraryReducedMaybe n -- transferRepoOptionTeamIds :: Maybe [Integer]
+  
 instance Arbitrary UpdateFileOptions where
   arbitrary = sized genUpdateFileOptions
 
@@ -1405,6 +1851,7 @@ genUpdateFileOptions n =
     <*> arbitraryReducedMaybe n -- updateFileOptionsMessage :: Maybe Text
     <*> arbitraryReducedMaybe n -- updateFileOptionsNewBranch :: Maybe Text
     <*> arbitrary -- updateFileOptionsSha :: Text
+    <*> arbitraryReducedMaybe n -- updateFileOptionsSignoff :: Maybe Bool
   
 instance Arbitrary User where
   arbitrary = sized genUser
@@ -1412,15 +1859,25 @@ instance Arbitrary User where
 genUser :: Int -> Gen User
 genUser n =
   User
-    <$> arbitraryReducedMaybe n -- userAvatarUrl :: Maybe Text
+    <$> arbitraryReducedMaybe n -- userActive :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- userAvatarUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- userCreated :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- userDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- userEmail :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userFollowersCount :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- userFollowingCount :: Maybe Integer
     <*> arbitraryReducedMaybe n -- userFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- userId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- userIsAdmin :: Maybe Bool
     <*> arbitraryReducedMaybe n -- userLanguage :: Maybe Text
     <*> arbitraryReducedMaybe n -- userLastLogin :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- userLocation :: Maybe Text
     <*> arbitraryReducedMaybe n -- userLogin :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userProhibitLogin :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- userRestricted :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- userStarredReposCount :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- userVisibility :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userWebsite :: Maybe Text
   
 instance Arbitrary UserHeatmapData where
   arbitrary = sized genUserHeatmapData
@@ -1430,6 +1887,38 @@ genUserHeatmapData n =
   UserHeatmapData
     <$> arbitraryReducedMaybe n -- userHeatmapDataContributions :: Maybe Integer
     <*> arbitraryReducedMaybe n -- userHeatmapDataTimestamp :: Maybe Integer
+  
+instance Arbitrary UserSettings where
+  arbitrary = sized genUserSettings
+
+genUserSettings :: Int -> Gen UserSettings
+genUserSettings n =
+  UserSettings
+    <$> arbitraryReducedMaybe n -- userSettingsDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsDiffViewStyle :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsFullName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsHideActivity :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- userSettingsHideEmail :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- userSettingsLanguage :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsLocation :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsTheme :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsWebsite :: Maybe Text
+  
+instance Arbitrary UserSettingsOptions where
+  arbitrary = sized genUserSettingsOptions
+
+genUserSettingsOptions :: Int -> Gen UserSettingsOptions
+genUserSettingsOptions n =
+  UserSettingsOptions
+    <$> arbitraryReducedMaybe n -- userSettingsOptionsDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsDiffViewStyle :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsFullName :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsHideActivity :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsHideEmail :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsLanguage :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsLocation :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsTheme :: Maybe Text
+    <*> arbitraryReducedMaybe n -- userSettingsOptionsWebsite :: Maybe Text
   
 instance Arbitrary WatchInfo where
   arbitrary = sized genWatchInfo
@@ -1450,10 +1939,16 @@ genWatchInfo n =
 instance Arbitrary E'Do where
   arbitrary = arbitraryBoundedEnum
 
+instance Arbitrary E'Inner where
+  arbitrary = arbitraryBoundedEnum
+
 instance Arbitrary E'Permission where
   arbitrary = arbitraryBoundedEnum
 
 instance Arbitrary E'Permission2 where
+  arbitrary = arbitraryBoundedEnum
+
+instance Arbitrary E'Service where
   arbitrary = arbitraryBoundedEnum
 
 instance Arbitrary E'Sort where
@@ -1468,7 +1963,16 @@ instance Arbitrary E'State where
 instance Arbitrary E'State2 where
   arbitrary = arbitraryBoundedEnum
 
+instance Arbitrary E'State3 where
+  arbitrary = arbitraryBoundedEnum
+
+instance Arbitrary E'TrustModel where
+  arbitrary = arbitraryBoundedEnum
+
 instance Arbitrary E'Type where
+  arbitrary = arbitraryBoundedEnum
+
+instance Arbitrary E'Type2 where
   arbitrary = arbitraryBoundedEnum
 
 instance Arbitrary E'Visibility where
