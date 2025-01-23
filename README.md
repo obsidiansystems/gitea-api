@@ -1,6 +1,6 @@
-## OpenAPI Auto-Generated [http-client](https://www.stackage.org/lts-10.0/package/http-client-0.5.7.1) Bindings to `Gitea API.`
+## OpenAPI Auto-Generated [http-client](https://www.stackage.org/lts-10.0/package/http-client-0.5.7.1) Bindings to `Gitea API`
 
-The library in `lib` provides auto-generated-from-OpenAPI [http-client](https://www.stackage.org/lts-10.0/package/http-client-0.5.7.1) bindings to the Gitea API. API.
+The library in `lib` provides auto-generated-from-OpenAPI [http-client](https://www.stackage.org/lts-10.0/package/http-client-0.5.7.1) bindings to the Gitea API API.
 
 OpenApi Version: 3.0.1
 
@@ -61,7 +61,7 @@ These options allow some customization of the code generation process.
 | allowToJsonNulls                | allow emitting JSON Null during model encoding to JSON                                                                        | false    | false                |
 | baseModule                      | Set the base module namespace                                                                                                 |          | Gitea                      |
 | cabalPackage                    | Set the cabal package name, which consists of one or more alphanumeric words separated by hyphens                             |          | gitea-api                    |
-| cabalVersion                    | Set the cabal version number, consisting of a sequence of one or more integers separated by dots                              | 0.1.0.0  | 1.20.6.0                    |
+| cabalVersion                    | Set the cabal version number, consisting of a sequence of one or more integers separated by dots                              | 0.1.0.0  | 1.21.11.0                    |
 | customTestInstanceModule        | test module used to provide typeclass instances for types not known by the generator                                          |          |         |
 | configType                      | Set the name of the type used for configuration                                                                               |          | GiteaConfig                      |
 | dateFormat                      | format string used to parse/render a date                                                                                     | %Y-%m-%d | %Y-%m-%d                      |

@@ -365,6 +365,7 @@ genCommitAffectedFiles :: Int -> Gen CommitAffectedFiles
 genCommitAffectedFiles n =
   CommitAffectedFiles
     <$> arbitraryReducedMaybe n -- commitAffectedFilesFilename :: Maybe Text
+    <*> arbitraryReducedMaybe n -- commitAffectedFilesStatus :: Maybe Text
   
 instance Arbitrary CommitDateOptions where
   arbitrary = sized genCommitDateOptions
@@ -589,6 +590,7 @@ genCreateLabelOption n =
     <$> arbitrary -- createLabelOptionColor :: Text
     <*> arbitraryReducedMaybe n -- createLabelOptionDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- createLabelOptionExclusive :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- createLabelOptionIsArchived :: Maybe Bool
     <*> arbitrary -- createLabelOptionName :: Text
   
 instance Arbitrary CreateMilestoneOption where
@@ -612,6 +614,14 @@ genCreateOAuth2ApplicationOptions n =
     <*> arbitraryReducedMaybe n -- createOAuth2ApplicationOptionsName :: Maybe Text
     <*> arbitraryReducedMaybe n -- createOAuth2ApplicationOptionsRedirectUris :: Maybe [Text]
   
+instance Arbitrary CreateOrUpdateSecretOption where
+  arbitrary = sized genCreateOrUpdateSecretOption
+
+genCreateOrUpdateSecretOption :: Int -> Gen CreateOrUpdateSecretOption
+genCreateOrUpdateSecretOption n =
+  CreateOrUpdateSecretOption
+    <$> arbitrary -- createOrUpdateSecretOptionData :: Text
+  
 instance Arbitrary CreateOrgOption where
   arbitrary = sized genCreateOrgOption
 
@@ -619,6 +629,7 @@ genCreateOrgOption :: Int -> Gen CreateOrgOption
 genCreateOrgOption n =
   CreateOrgOption
     <$> arbitraryReducedMaybe n -- createOrgOptionDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- createOrgOptionEmail :: Maybe Text
     <*> arbitraryReducedMaybe n -- createOrgOptionFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- createOrgOptionLocation :: Maybe Text
     <*> arbitraryReducedMaybe n -- createOrgOptionRepoAdminChangeTeamAccess :: Maybe Bool
@@ -753,7 +764,7 @@ genCreateUserOption n =
     <*> arbitraryReducedMaybe n -- createUserOptionFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- createUserOptionLoginName :: Maybe Text
     <*> arbitraryReducedMaybe n -- createUserOptionMustChangePassword :: Maybe Bool
-    <*> arbitrary -- createUserOptionPassword :: Text
+    <*> arbitraryReducedMaybe n -- createUserOptionPassword :: Maybe Text
     <*> arbitraryReducedMaybe n -- createUserOptionRestricted :: Maybe Bool
     <*> arbitraryReducedMaybe n -- createUserOptionSendNotify :: Maybe Bool
     <*> arbitraryReducedMaybe n -- createUserOptionSourceId :: Maybe Integer
@@ -927,6 +938,7 @@ genEditLabelOption n =
     <$> arbitraryReducedMaybe n -- editLabelOptionColor :: Maybe Text
     <*> arbitraryReducedMaybe n -- editLabelOptionDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- editLabelOptionExclusive :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- editLabelOptionIsArchived :: Maybe Bool
     <*> arbitraryReducedMaybe n -- editLabelOptionName :: Maybe Text
   
 instance Arbitrary EditMilestoneOption where
@@ -947,6 +959,7 @@ genEditOrgOption :: Int -> Gen EditOrgOption
 genEditOrgOption n =
   EditOrgOption
     <$> arbitraryReducedMaybe n -- editOrgOptionDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- editOrgOptionEmail :: Maybe Text
     <*> arbitraryReducedMaybe n -- editOrgOptionFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- editOrgOptionLocation :: Maybe Text
     <*> arbitraryReducedMaybe n -- editOrgOptionRepoAdminChangeTeamAccess :: Maybe Bool
@@ -1244,6 +1257,7 @@ genGenerateRepoOption n =
     <*> arbitrary -- generateRepoOptionName :: Text
     <*> arbitrary -- generateRepoOptionOwner :: Text
     <*> arbitraryReducedMaybe n -- generateRepoOptionPrivate :: Maybe Bool
+    <*> arbitraryReducedMaybe n -- generateRepoOptionProtectedBranch :: Maybe Bool
     <*> arbitraryReducedMaybe n -- generateRepoOptionTopics :: Maybe Bool
     <*> arbitraryReducedMaybe n -- generateRepoOptionWebhooks :: Maybe Bool
   
@@ -1471,6 +1485,7 @@ genLabel n =
     <*> arbitraryReducedMaybe n -- labelDescription :: Maybe Text
     <*> arbitraryReducedMaybe n -- labelExclusive :: Maybe Bool
     <*> arbitraryReducedMaybe n -- labelId :: Maybe Integer
+    <*> arbitraryReducedMaybe n -- labelIsArchived :: Maybe Bool
     <*> arbitraryReducedMaybe n -- labelName :: Maybe Text
     <*> arbitraryReducedMaybe n -- labelUrl :: Maybe Text
   
@@ -1719,6 +1734,7 @@ genOrganization n =
   Organization
     <$> arbitraryReducedMaybe n -- organizationAvatarUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- organizationDescription :: Maybe Text
+    <*> arbitraryReducedMaybe n -- organizationEmail :: Maybe Text
     <*> arbitraryReducedMaybe n -- organizationFullName :: Maybe Text
     <*> arbitraryReducedMaybe n -- organizationId :: Maybe Integer
     <*> arbitraryReducedMaybe n -- organizationLocation :: Maybe Text
@@ -2000,6 +2016,7 @@ genRelease n =
     <*> arbitraryReducedMaybe n -- releaseTagName :: Maybe Text
     <*> arbitraryReducedMaybe n -- releaseTarballUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- releaseTargetCommitish :: Maybe Text
+    <*> arbitraryReducedMaybe n -- releaseUploadUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- releaseUrl :: Maybe Text
     <*> arbitraryReducedMaybe n -- releaseZipballUrl :: Maybe Text
   
@@ -2135,6 +2152,15 @@ genSearchResults n =
   SearchResults
     <$> arbitraryReducedMaybe n -- searchResultsData :: Maybe [Repository]
     <*> arbitraryReducedMaybe n -- searchResultsOk :: Maybe Bool
+  
+instance Arbitrary Secret where
+  arbitrary = sized genSecret
+
+genSecret :: Int -> Gen Secret
+genSecret n =
+  Secret
+    <$> arbitraryReducedMaybe n -- secretCreatedAt :: Maybe DateTime
+    <*> arbitraryReducedMaybe n -- secretName :: Maybe Text
   
 instance Arbitrary ServerVersion where
   arbitrary = sized genServerVersion
@@ -2300,6 +2326,22 @@ genUpdateFileOptions n =
     <*> arbitraryReducedMaybe n -- updateFileOptionsNewBranch :: Maybe Text
     <*> arbitrary -- updateFileOptionsSha :: Text
     <*> arbitraryReducedMaybe n -- updateFileOptionsSignoff :: Maybe Bool
+  
+instance Arbitrary UpdateRepoAvatarOption where
+  arbitrary = sized genUpdateRepoAvatarOption
+
+genUpdateRepoAvatarOption :: Int -> Gen UpdateRepoAvatarOption
+genUpdateRepoAvatarOption n =
+  UpdateRepoAvatarOption
+    <$> arbitraryReducedMaybe n -- updateRepoAvatarOptionImage :: Maybe Text
+  
+instance Arbitrary UpdateUserAvatarOption where
+  arbitrary = sized genUpdateUserAvatarOption
+
+genUpdateUserAvatarOption :: Int -> Gen UpdateUserAvatarOption
+genUpdateUserAvatarOption n =
+  UpdateUserAvatarOption
+    <$> arbitraryReducedMaybe n -- updateUserAvatarOptionImage :: Maybe Text
   
 instance Arbitrary User where
   arbitrary = sized genUser
