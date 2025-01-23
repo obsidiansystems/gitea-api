@@ -9,7 +9,7 @@
 -}
 
 {-|
-Module : Gitea.API.Miscellaneous
+Module : Gitea.API.Settings
 -}
 
 {-# LANGUAGE FlexibleContexts #-}
@@ -19,7 +19,7 @@ Module : Gitea.API.Miscellaneous
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-imports #-}
 
-module Gitea.API.Miscellaneous where
+module Gitea.API.Settings where
 
 import Gitea.Core
 import Gitea.MimeTypes
@@ -55,20 +55,20 @@ import qualified Prelude as P
 -- * Operations
 
 
--- ** Miscellaneous
+-- ** Settings
 
--- *** getNodeInfo
+-- *** getGeneralAPISettings
 
--- | @GET \/nodeinfo@
+-- | @GET \/settings\/api@
 -- 
--- Returns the nodeinfo of the Gitea application
+-- Get instance's global settings for api
 -- 
 -- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-getNodeInfo
-  :: GiteaRequest GetNodeInfo MimeNoContent NodeInfo MimeJSON
-getNodeInfo =
-  _mkRequest "GET" ["/nodeinfo"]
+getGeneralAPISettings
+  :: GiteaRequest GetGeneralAPISettings MimeNoContent GeneralAPISettings MimeJSON
+getGeneralAPISettings =
+  _mkRequest "GET" ["/settings/api"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
@@ -77,23 +77,23 @@ getNodeInfo =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
-data GetNodeInfo  
+data GetGeneralAPISettings  
 -- | @application/json@
-instance Produces GetNodeInfo MimeJSON
+instance Produces GetGeneralAPISettings MimeJSON
 
 
--- *** getSigningKey
+-- *** getGeneralAttachmentSettings
 
--- | @GET \/signing-key.gpg@
+-- | @GET \/settings\/attachment@
 -- 
--- Get default signing-key.gpg
+-- Get instance's global settings for Attachment
 -- 
 -- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-getSigningKey
-  :: GiteaRequest GetSigningKey MimeNoContent Text MimePlainText
-getSigningKey =
-  _mkRequest "GET" ["/signing-key.gpg"]
+getGeneralAttachmentSettings
+  :: GiteaRequest GetGeneralAttachmentSettings MimeNoContent GeneralAttachmentSettings MimeJSON
+getGeneralAttachmentSettings =
+  _mkRequest "GET" ["/settings/attachment"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
@@ -102,49 +102,23 @@ getSigningKey =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
-data GetSigningKey  
--- | @text/plain@
-instance Produces GetSigningKey MimePlainText
-
-
--- *** getVersion
-
--- | @GET \/version@
--- 
--- Returns the version of the Gitea application
--- 
--- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
--- 
-getVersion
-  :: GiteaRequest GetVersion MimeNoContent ServerVersion MimeJSON
-getVersion =
-  _mkRequest "GET" ["/version"]
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
-
-data GetVersion  
+data GetGeneralAttachmentSettings  
 -- | @application/json@
-instance Produces GetVersion MimeJSON
+instance Produces GetGeneralAttachmentSettings MimeJSON
 
 
--- *** renderMarkdown
+-- *** getGeneralRepositorySettings
 
--- | @POST \/markdown@
+-- | @GET \/settings\/repository@
 -- 
--- Render a markdown document as HTML
+-- Get instance's global settings for repositories
 -- 
 -- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-renderMarkdown
-  :: (Consumes RenderMarkdown MimeJSON)
-  => GiteaRequest RenderMarkdown MimeJSON Text MimeTextHtml
-renderMarkdown =
-  _mkRequest "POST" ["/markdown"]
+getGeneralRepositorySettings
+  :: GiteaRequest GetGeneralRepositorySettings MimeNoContent GeneralRepoSettings MimeJSON
+getGeneralRepositorySettings =
+  _mkRequest "GET" ["/settings/repository"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
@@ -153,30 +127,23 @@ renderMarkdown =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
-data RenderMarkdown 
-instance HasBodyParam RenderMarkdown MarkdownOption 
-
+data GetGeneralRepositorySettings  
 -- | @application/json@
-instance Consumes RenderMarkdown MimeJSON
-
--- | @text/html@
-instance Produces RenderMarkdown MimeTextHtml
+instance Produces GetGeneralRepositorySettings MimeJSON
 
 
--- *** renderMarkdownRaw
+-- *** getGeneralUISettings
 
--- | @POST \/markdown\/raw@
+-- | @GET \/settings\/ui@
 -- 
--- Render raw markdown as HTML
+-- Get instance's global settings for ui
 -- 
 -- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-renderMarkdownRaw
-  :: (Consumes RenderMarkdownRaw MimePlainText, MimeRender MimePlainText Body)
-  => Body -- ^ "body" -  Request body to render
-  -> GiteaRequest RenderMarkdownRaw MimePlainText Text MimeTextHtml
-renderMarkdownRaw body =
-  _mkRequest "POST" ["/markdown/raw"]
+getGeneralUISettings
+  :: GiteaRequest GetGeneralUISettings MimeNoContent GeneralUISettings MimeJSON
+getGeneralUISettings =
+  _mkRequest "GET" ["/settings/ui"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
@@ -184,16 +151,8 @@ renderMarkdownRaw body =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
-    `setBodyParam` body
 
-data RenderMarkdownRaw 
-
--- | /Body Param/ "body" - Request body to render
-instance HasBodyParam RenderMarkdownRaw Body 
-
--- | @text/plain@
-instance Consumes RenderMarkdownRaw MimePlainText
-
--- | @text/html@
-instance Produces RenderMarkdownRaw MimeTextHtml
+data GetGeneralUISettings  
+-- | @application/json@
+instance Produces GetGeneralUISettings MimeJSON
 

@@ -1,6 +1,7 @@
+{ specFile ? ./1.19.4.yaml }:
 { gitea-api = import ./openapi-hs-generator {
-    pkgs = (import ./reflex-platform {}).nixpkgs;
-    specFile = ./swagger.v1.json;
+    pkgs = import ./nixpkgs {};
+    inherit specFile;
     packageName = "gitea-api";
     baseModule = "Gitea";
     versionFn = x: x + ".0";

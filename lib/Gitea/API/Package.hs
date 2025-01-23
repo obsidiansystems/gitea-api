@@ -9,7 +9,7 @@
 -}
 
 {-|
-Module : Gitea.API.Miscellaneous
+Module : Gitea.API.Package
 -}
 
 {-# LANGUAGE FlexibleContexts #-}
@@ -19,7 +19,7 @@ Module : Gitea.API.Miscellaneous
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-unused-binds -fno-warn-unused-imports #-}
 
-module Gitea.API.Miscellaneous where
+module Gitea.API.Package where
 
 import Gitea.Core
 import Gitea.MimeTypes
@@ -55,20 +55,24 @@ import qualified Prelude as P
 -- * Operations
 
 
--- ** Miscellaneous
+-- ** Package
 
--- *** getNodeInfo
+-- *** deletePackage
 
--- | @GET \/nodeinfo@
+-- | @DELETE \/packages\/{owner}\/{type}\/{name}\/{version}@
 -- 
--- Returns the nodeinfo of the Gitea application
+-- Delete a package
 -- 
 -- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-getNodeInfo
-  :: GiteaRequest GetNodeInfo MimeNoContent NodeInfo MimeJSON
-getNodeInfo =
-  _mkRequest "GET" ["/nodeinfo"]
+deletePackage
+  :: Owner -- ^ "owner" -  owner of the package
+  -> ParamTypeText -- ^ "_type" -  type of the package
+  -> Name -- ^ "name" -  name of the package
+  -> Version -- ^ "version" -  version of the package
+  -> GiteaRequest DeletePackage MimeNoContent NoContent MimeNoContent
+deletePackage (Owner owner) (ParamTypeText _type) (Name name) (Version version) =
+  _mkRequest "DELETE" ["/packages/",toPath owner,"/",toPath _type,"/",toPath name,"/",toPath version]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
@@ -77,23 +81,55 @@ getNodeInfo =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
-data GetNodeInfo  
+data DeletePackage  
+instance Produces DeletePackage MimeNoContent
+
+
+-- *** getPackage
+
+-- | @GET \/packages\/{owner}\/{type}\/{name}\/{version}@
+-- 
+-- Gets a package
+-- 
+-- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
+-- 
+getPackage
+  :: Owner -- ^ "owner" -  owner of the package
+  -> ParamTypeText -- ^ "_type" -  type of the package
+  -> Name -- ^ "name" -  name of the package
+  -> Version -- ^ "version" -  version of the package
+  -> GiteaRequest GetPackage MimeNoContent Package MimeJSON
+getPackage (Owner owner) (ParamTypeText _type) (Name name) (Version version) =
+  _mkRequest "GET" ["/packages/",toPath owner,"/",toPath _type,"/",toPath name,"/",toPath version]
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
+    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
+
+data GetPackage  
 -- | @application/json@
-instance Produces GetNodeInfo MimeJSON
+instance Produces GetPackage MimeJSON
 
 
--- *** getSigningKey
+-- *** listPackageFiles
 
--- | @GET \/signing-key.gpg@
+-- | @GET \/packages\/{owner}\/{type}\/{name}\/{version}\/files@
 -- 
--- Get default signing-key.gpg
+-- Gets all files of a package
 -- 
 -- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-getSigningKey
-  :: GiteaRequest GetSigningKey MimeNoContent Text MimePlainText
-getSigningKey =
-  _mkRequest "GET" ["/signing-key.gpg"]
+listPackageFiles
+  :: Owner -- ^ "owner" -  owner of the package
+  -> ParamTypeText -- ^ "_type" -  type of the package
+  -> Name -- ^ "name" -  name of the package
+  -> Version -- ^ "version" -  version of the package
+  -> GiteaRequest ListPackageFiles MimeNoContent [PackageFile] MimeJSON
+listPackageFiles (Owner owner) (ParamTypeText _type) (Name name) (Version version) =
+  _mkRequest "GET" ["/packages/",toPath owner,"/",toPath _type,"/",toPath name,"/",toPath version,"/files"]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
@@ -102,49 +138,24 @@ getSigningKey =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
-data GetSigningKey  
--- | @text/plain@
-instance Produces GetSigningKey MimePlainText
-
-
--- *** getVersion
-
--- | @GET \/version@
--- 
--- Returns the version of the Gitea application
--- 
--- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
--- 
-getVersion
-  :: GiteaRequest GetVersion MimeNoContent ServerVersion MimeJSON
-getVersion =
-  _mkRequest "GET" ["/version"]
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
-
-data GetVersion  
+data ListPackageFiles  
 -- | @application/json@
-instance Produces GetVersion MimeJSON
+instance Produces ListPackageFiles MimeJSON
 
 
--- *** renderMarkdown
+-- *** listPackages
 
--- | @POST \/markdown@
+-- | @GET \/packages\/{owner}@
 -- 
--- Render a markdown document as HTML
+-- Gets all packages of an owner
 -- 
 -- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
 -- 
-renderMarkdown
-  :: (Consumes RenderMarkdown MimeJSON)
-  => GiteaRequest RenderMarkdown MimeJSON Text MimeTextHtml
-renderMarkdown =
-  _mkRequest "POST" ["/markdown"]
+listPackages
+  :: Owner -- ^ "owner" -  owner of the packages
+  -> GiteaRequest ListPackages MimeNoContent [Package] MimeJSON
+listPackages (Owner owner) =
+  _mkRequest "GET" ["/packages/",toPath owner]
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
@@ -153,47 +164,27 @@ renderMarkdown =
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
     `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
 
-data RenderMarkdown 
-instance HasBodyParam RenderMarkdown MarkdownOption 
+data ListPackages  
 
+-- | /Optional Param/ "page" - page number of results to return (1-based)
+instance HasOptionalParam ListPackages Page where
+  applyOptionalParam req (Page xs) =
+    req `addQuery` toQuery ("page", Just xs)
+
+-- | /Optional Param/ "limit" - page size of results
+instance HasOptionalParam ListPackages Limit where
+  applyOptionalParam req (Limit xs) =
+    req `addQuery` toQuery ("limit", Just xs)
+
+-- | /Optional Param/ "type" - package type filter
+instance HasOptionalParam ListPackages ParamType where
+  applyOptionalParam req (ParamType xs) =
+    req `addQuery` toQuery ("type", Just xs)
+
+-- | /Optional Param/ "q" - name filter
+instance HasOptionalParam ListPackages Q where
+  applyOptionalParam req (Q xs) =
+    req `addQuery` toQuery ("q", Just xs)
 -- | @application/json@
-instance Consumes RenderMarkdown MimeJSON
-
--- | @text/html@
-instance Produces RenderMarkdown MimeTextHtml
-
-
--- *** renderMarkdownRaw
-
--- | @POST \/markdown\/raw@
--- 
--- Render raw markdown as HTML
--- 
--- AuthMethod: 'AuthApiKeyTOTPHeader', 'AuthApiKeyAuthorizationHeaderToken', 'AuthApiKeySudoHeader', 'AuthBasicBasicAuth', 'AuthApiKeyAccessToken', 'AuthApiKeySudoParam', 'AuthApiKeyToken'
--- 
-renderMarkdownRaw
-  :: (Consumes RenderMarkdownRaw MimePlainText, MimeRender MimePlainText Body)
-  => Body -- ^ "body" -  Request body to render
-  -> GiteaRequest RenderMarkdownRaw MimePlainText Text MimeTextHtml
-renderMarkdownRaw body =
-  _mkRequest "POST" ["/markdown/raw"]
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyTOTPHeader)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAuthorizationHeaderToken)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoHeader)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthBasicBasicAuth)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyAccessToken)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeySudoParam)
-    `_hasAuthType` (P.Proxy :: P.Proxy AuthApiKeyToken)
-    `setBodyParam` body
-
-data RenderMarkdownRaw 
-
--- | /Body Param/ "body" - Request body to render
-instance HasBodyParam RenderMarkdownRaw Body 
-
--- | @text/plain@
-instance Consumes RenderMarkdownRaw MimePlainText
-
--- | @text/html@
-instance Produces RenderMarkdownRaw MimeTextHtml
+instance Produces ListPackages MimeJSON
 
