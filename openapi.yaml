@@ -5,7 +5,7 @@ info:
     name: MIT
     url: http://opensource.org/licenses/MIT
   title: Gitea API.
-  version: 1.19.4
+  version: 1.20.6
 servers:
 - url: http://https://gitea.com/api/v1
 - url: https://https://gitea.com/api/v1
@@ -109,6 +109,83 @@ paths:
           content: {}
           description: APINotFound is a not found empty response
       summary: Run cron task
+      tags:
+      - admin
+  /admin/emails:
+    get:
+      operationId: adminGetAllEmails
+      parameters:
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Email'
+                type: array
+          description: EmailList
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: List all emails
+      tags:
+      - admin
+  /admin/emails/search:
+    get:
+      operationId: adminSearchEmails
+      parameters:
+      - description: keyword
+        in: query
+        name: q
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Email'
+                type: array
+          description: EmailList
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Search all emails
       tags:
       - admin
   /admin/hooks:
@@ -368,8 +445,19 @@ paths:
       - admin
   /admin/users:
     get:
-      operationId: adminGetAllUsers
+      operationId: adminSearchUsers
       parameters:
+      - description: ID of the user's login source to search for
+        in: query
+        name: source_id
+        schema:
+          format: int64
+          type: integer
+      - description: user's login name to search for
+        in: query
+        name: login_name
+        schema:
+          type: string
       - description: page number of results to return (1-based)
         in: query
         name: page
@@ -399,7 +487,7 @@ paths:
             url:
               schema:
                 type: string
-      summary: List all users
+      summary: Search users according filter conditions
       tags:
       - admin
     post:
@@ -481,6 +569,9 @@ paths:
             url:
               schema:
                 type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
         "422":
           content: {}
           description: APIValidationError is error format response related to input
@@ -675,6 +766,54 @@ paths:
       tags:
       - admin
       x-codegen-request-body-name: organization
+  /admin/users/{username}/rename:
+    post:
+      operationId: adminRenameUser
+      parameters:
+      - description: existing username of user
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameUserOption'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/RenameUserOption'
+        required: true
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Rename a user
+      tags:
+      - admin
+      x-codegen-request-body-name: body
   /admin/users/{username}/repos:
     post:
       operationId: adminCreateRepo
@@ -746,6 +885,122 @@ paths:
       tags:
       - admin
       x-codegen-request-body-name: repository
+  /gitignore/templates:
+    get:
+      operationId: listGitignoresTemplates
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: GitignoreTemplateList
+      summary: Returns a list of all gitignore templates
+      tags:
+      - miscellaneous
+  /gitignore/templates/{name}:
+    get:
+      operationId: getGitignoreTemplateInfo
+      parameters:
+      - description: name of the template
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitignoreTemplateInfo'
+          description: GitignoreTemplateInfo
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Returns information about a gitignore template
+      tags:
+      - miscellaneous
+  /label/templates:
+    get:
+      operationId: listLabelTemplates
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: LabelTemplateList
+      summary: Returns a list of all label templates
+      tags:
+      - miscellaneous
+  /label/templates/{name}:
+    get:
+      operationId: getLabelTemplateInfo
+      parameters:
+      - description: name of the template
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LabelTemplate'
+                type: array
+          description: LabelTemplateInfo
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Returns all labels in a template
+      tags:
+      - miscellaneous
+  /licenses:
+    get:
+      operationId: listLicenseTemplates
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LicensesTemplateListEntry'
+                type: array
+          description: LicenseTemplateList
+      summary: Returns a list of all license templates
+      tags:
+      - miscellaneous
+  /licenses/{name}:
+    get:
+      operationId: getLicenseTemplateInfo
+      parameters:
+      - description: name of the license
+        in: path
+        name: name
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LicenseTemplateInfo'
+          description: LicenseTemplateInfo
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Returns information about a license template
+      tags:
+      - miscellaneous
   /markdown:
     post:
       operationId: renderMarkdown
@@ -806,6 +1061,37 @@ paths:
               schema:
                 type: string
       summary: Render raw markdown as HTML
+      tags:
+      - miscellaneous
+      x-codegen-request-body-name: body
+  /markup:
+    post:
+      operationId: renderMarkup
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkupOption'
+        required: false
+      responses:
+        "200":
+          content:
+            text/html:
+              schema:
+                type: string
+          description: MarkupRender is a rendered markup document
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Render a markup document as HTML
       tags:
       - miscellaneous
       x-codegen-request-body-name: body
@@ -1199,6 +1485,47 @@ paths:
       tags:
       - organization
       x-codegen-request-body-name: body
+  /orgs/{org}/activities/feeds:
+    get:
+      operationId: orgListActivityFeeds
+      parameters:
+      - description: name of the org
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: the date of the activities to be found
+        in: query
+        name: date
+        schema:
+          format: date
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Activity'
+                type: array
+          description: ActivityFeedsList
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: List an organization's activity feeds
+      tags:
+      - organization
   /orgs/{org}/hooks:
     get:
       operationId: orgListHooks
@@ -1923,20 +2250,26 @@ paths:
         name: type
         schema:
           enum:
+          - alpine
           - cargo
           - chef
           - composer
           - conan
           - conda
           - container
+          - cran
+          - debian
           - generic
+          - go
           - helm
           - maven
           - npm
           - nuget
           - pub
           - pypi
+          - rpm
           - rubygems
+          - swift
           - vagrant
           type: string
       - description: name filter
@@ -2146,6 +2479,11 @@ paths:
       - description: "filter pulls requesting your review, default is false"
         in: query
         name: review_requested
+        schema:
+          type: boolean
+      - description: "filter pulls reviewed by you, default is false"
+        in: query
+        name: reviewed
         schema:
           type: boolean
       - description: filter by owner
@@ -2461,6 +2799,53 @@ paths:
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/activities/feeds:
+    get:
+      operationId: repoListActivityFeeds
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: the date of the activities to be found
+        in: query
+        name: date
+        schema:
+          format: date
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Activity'
+                type: array
+          description: ActivityFeedsList
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: List a repository's activity feeds
+      tags:
+      - repository
   /repos/{owner}/{repo}/archive/{archive}:
     get:
       operationId: repoGetArchive
@@ -2791,6 +3176,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Branch'
           description: Branch
+        "403":
+          content: {}
+          description: The branch is archived or a mirror.
         "404":
           content: {}
           description: The old branch does not exist.
@@ -3124,6 +3512,18 @@ paths:
         name: stat
         schema:
           type: boolean
+      - description: "include verification for every commit (disable for speedup,\
+          \ default 'true')"
+        in: query
+        name: verification
+        schema:
+          type: boolean
+      - description: "include a list of affected files for every commit (disable for\
+          \ speedup, default 'true')"
+        in: query
+        name: files
+        schema:
+          type: boolean
       - description: page number of results to return (1-based)
         in: query
         name: page
@@ -3134,6 +3534,11 @@ paths:
         name: limit
         schema:
           type: integer
+      - description: commits that match the given specifier will not be listed.
+        in: query
+        name: not
+        schema:
+          type: string
       responses:
         "200":
           content:
@@ -3345,6 +3750,61 @@ paths:
       summary: Gets the metadata of all the entries of the root dir
       tags:
       - repository
+    post:
+      operationId: repoChangeFiles
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeFilesOptions'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilesResponse'
+          description: FilesResponse
+        "403":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Modify multiple files in a repository
+      tags:
+      - repository
+      x-codegen-request-body-name: body
   /repos/{owner}/{repo}/contents/{filepath}:
     delete:
       operationId: repoDeleteFile
@@ -3809,6 +4269,24 @@ paths:
         required: true
         schema:
           type: string
+      - description: "include diff stats for every commit (disable for speedup, default\
+          \ 'true')"
+        in: query
+        name: stat
+        schema:
+          type: boolean
+      - description: "include verification for every commit (disable for speedup,\
+          \ default 'true')"
+        in: query
+        name: verification
+        schema:
+          type: boolean
+      - description: "include a list of affected files for every commit (disable for\
+          \ speedup, default 'true')"
+        in: query
+        name: files
+        schema:
+          type: boolean
       responses:
         "200":
           content:
@@ -4444,6 +4922,58 @@ paths:
           content: {}
           description: APIEmpty is an empty response
       summary: Test a push webhook
+      tags:
+      - repository
+  /repos/{owner}/{repo}/issue_config:
+    get:
+      operationId: repoGetIssueConfig
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueConfig'
+          description: RepoIssueConfig
+      summary: Returns the issue config for a repo
+      tags:
+      - repository
+  /repos/{owner}/{repo}/issue_config/validate:
+    get:
+      operationId: repoValidateIssueConfig
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueConfigValidation'
+          description: RepoIssueConfigValidation
+      summary: Returns the validation information for a issue config
       tags:
       - repository
   /repos/{owner}/{repo}/issue_templates:
@@ -5244,6 +5774,34 @@ paths:
       tags:
       - issue
       x-codegen-request-body-name: content
+  /repos/{owner}/{repo}/issues/pinned:
+    get:
+      operationId: repoListPinnedIssues
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Issue'
+                type: array
+          description: IssueList
+      summary: List a repo's pinned issues
+      tags:
+      - repository
   /repos/{owner}/{repo}/issues/{index}:
     delete:
       operationId: issueDelete
@@ -5645,6 +6203,135 @@ paths:
       tags:
       - issue
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/issues/{index}/blocks:
+    delete:
+      operationId: issueRemoveIssueBlocking
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+          description: Issue
+      summary: Unblock the issue given in the body by the issue in path
+      tags:
+      - issue
+      x-codegen-request-body-name: body
+    get:
+      operationId: issueListBlocks
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Issue'
+                type: array
+          description: IssueList
+      summary: List issues that are blocked by this issue
+      tags:
+      - issue
+    post:
+      operationId: issueCreateIssueBlocking
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+        required: false
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+          description: Issue
+        "404":
+          content: {}
+          description: the issue does not exist
+      summary: Block the issue given in the body by the issue in path
+      tags:
+      - issue
+      x-codegen-request-body-name: body
   /repos/{owner}/{repo}/issues/{index}/comments:
     get:
       operationId: issueGetComments
@@ -5910,6 +6597,135 @@ paths:
       tags:
       - issue
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/issues/{index}/dependencies:
+    delete:
+      operationId: issueRemoveIssueDependencies
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+          description: Issue
+      summary: Remove an issue dependency
+      tags:
+      - issue
+      x-codegen-request-body-name: body
+    get:
+      operationId: issueListIssueDependencies
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Issue'
+                type: array
+          description: IssueList
+      summary: "List an issue's dependencies, i.e all issues that block this issue."
+      tags:
+      - issue
+    post:
+      operationId: issueCreateIssueDependencies
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of the issue
+        in: path
+        name: index
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/IssueMeta'
+        required: false
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+          description: Issue
+        "404":
+          content: {}
+          description: the issue does not exist
+      summary: Make the issue in the url depend on the issue in the form.
+      tags:
+      - issue
+      x-codegen-request-body-name: body
   /repos/{owner}/{repo}/issues/{index}/labels:
     delete:
       operationId: issueClearLabels
@@ -6145,6 +6961,141 @@ paths:
               schema:
                 type: string
       summary: Remove a label from an issue
+      tags:
+      - issue
+  /repos/{owner}/{repo}/issues/{index}/pin:
+    delete:
+      operationId: unpinIssue
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of issue to unpin
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Unpin an Issue
+      tags:
+      - issue
+    post:
+      operationId: pinIssue
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of issue to pin
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Pin an Issue
+      tags:
+      - issue
+  /repos/{owner}/{repo}/issues/{index}/pin/{position}:
+    patch:
+      operationId: moveIssuePin
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: index of issue
+        in: path
+        name: index
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: the new position
+        in: path
+        name: position
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Moves the Pin to the given Position
       tags:
       - issue
   /repos/{owner}/{repo}/issues/{index}/reactions:
@@ -7525,6 +8476,32 @@ paths:
       summary: Sync a mirrored repository
       tags:
       - repository
+  /repos/{owner}/{repo}/new_pin_allowed:
+    get:
+      operationId: repoNewPinAllowed
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewIssuePinsAllowed'
+          description: RepoNewIssuePinsAllowed
+      summary: Returns if new Issue Pins are allowed
+      tags:
+      - repository
   /repos/{owner}/{repo}/notifications:
     get:
       operationId: notifyGetRepoList
@@ -7791,6 +8768,34 @@ paths:
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/pulls/pinned:
+    get:
+      operationId: repoListPinnedPullRequests
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/PullRequest'
+                type: array
+          description: PullRequestList
+      summary: List a repo's pinned pull requests
+      tags:
+      - repository
   /repos/{owner}/{repo}/pulls/{index}:
     get:
       operationId: repoGetPullRequest
@@ -8947,7 +9952,7 @@ paths:
               $ref: '#/components/schemas/CreatePushMirrorOption'
         required: false
       responses:
-        "201":
+        "200":
           content:
             application/json:
               schema:
@@ -11252,6 +12257,48 @@ paths:
       tags:
       - organization
       x-codegen-request-body-name: body
+  /teams/{id}/activities/feeds:
+    get:
+      operationId: orgListTeamActivityFeeds
+      parameters:
+      - description: id of the team
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: the date of the activities to be found
+        in: query
+        name: date
+        schema:
+          format: date
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Activity'
+                type: array
+          description: ActivityFeedsList
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: List a team's activity feeds
+      tags:
+      - organization
   /teams/{id}/members:
     get:
       operationId: orgListTeamMembers
@@ -12039,6 +13086,116 @@ paths:
       summary: Get a GPG key
       tags:
       - user
+  /user/hooks:
+    get:
+      operationId: userListHooks
+      parameters:
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Hook'
+                type: array
+          description: HookList
+      summary: List the authenticated user's webhooks
+      tags:
+      - user
+    post:
+      operationId: userCreateHook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHookOption'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hook'
+          description: Hook
+      summary: Create a hook
+      tags:
+      - user
+      x-codegen-request-body-name: body
+  /user/hooks/{id}:
+    delete:
+      operationId: userDeleteHook
+      parameters:
+      - description: id of the hook to delete
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+      summary: Delete a hook
+      tags:
+      - user
+    get:
+      operationId: userGetHook
+      parameters:
+      - description: id of the hook to get
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hook'
+          description: Hook
+      summary: Get a hook
+      tags:
+      - user
+    patch:
+      operationId: userEditHook
+      parameters:
+      - description: id of the hook to update
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditHookOption'
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hook'
+          description: Hook
+      summary: Update a hook
+      tags:
+      - user
+      x-codegen-request-body-name: body
   /user/keys:
     get:
       operationId: userCurrentListKeys
@@ -12561,6 +13718,52 @@ paths:
       summary: Get a user
       tags:
       - user
+  /users/{username}/activities/feeds:
+    get:
+      operationId: userListActivityFeeds
+      parameters:
+      - description: username of user
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: "if true, only show actions performed by the requested user"
+        in: query
+        name: only-performed-by
+        schema:
+          type: boolean
+      - description: the date of the activities to be found
+        in: query
+        name: date
+        schema:
+          format: date
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Activity'
+                type: array
+          description: ActivityFeedsList
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: List a user's activity feeds
+      tags:
+      - user
   /users/{username}/followers:
     get:
       operationId: userListFollowers
@@ -13054,6 +14257,19 @@ components:
               $ref: '#/components/schemas/AccessToken'
             type: array
       description: AccessTokenList represents a list of API access token.
+    ActivityFeedsList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/Activity'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/Activity'
+            type: array
+      description: ActivityFeedsList
     ActivityPub:
       content:
         application/json:
@@ -13373,6 +14589,15 @@ components:
           schema:
             $ref: '#/components/schemas/FileResponse'
       description: FileResponse
+    FilesResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FilesResponse'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/FilesResponse'
+      description: FilesResponse
     GPGKey:
       content:
         application/json:
@@ -13471,6 +14696,28 @@ components:
           schema:
             $ref: '#/components/schemas/GitTreeResponse'
       description: GitTreeResponse
+    GitignoreTemplateInfo:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GitignoreTemplateInfo'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/GitignoreTemplateInfo'
+      description: GitignoreTemplateInfo
+    GitignoreTemplateList:
+      content:
+        application/json:
+          schema:
+            items:
+              type: string
+            type: array
+        text/html:
+          schema:
+            items:
+              type: string
+            type: array
+      description: GitignoreTemplateList
     Hook:
       content:
         application/json:
@@ -13559,6 +14806,32 @@ components:
               $ref: '#/components/schemas/Label'
             type: array
       description: LabelList
+    LabelTemplateInfo:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/LabelTemplate'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/LabelTemplate'
+            type: array
+      description: LabelTemplateInfo
+    LabelTemplateList:
+      content:
+        application/json:
+          schema:
+            items:
+              type: string
+            type: array
+        text/html:
+          schema:
+            items:
+              type: string
+            type: array
+      description: LabelTemplateList
     LanguageStatistics:
       content:
         application/json:
@@ -13574,6 +14847,28 @@ components:
               type: integer
             type: object
       description: LanguageStatistics
+    LicenseTemplateInfo:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LicenseTemplateInfo'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/LicenseTemplateInfo'
+      description: LicenseTemplateInfo
+    LicenseTemplateList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/LicensesTemplateListEntry'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/LicensesTemplateListEntry'
+            type: array
+      description: LicenseTemplateList
     MarkdownRender:
       content:
         application/json:
@@ -13583,6 +14878,15 @@ components:
           schema:
             type: string
       description: MarkdownRender is a rendered markdown document
+    MarkupRender:
+      content:
+        application/json:
+          schema:
+            type: string
+        text/html:
+          schema:
+            type: string
+      description: MarkupRender is a rendered markup document
     Milestone:
       content:
         application/json:
@@ -13927,6 +15231,33 @@ components:
           schema:
             $ref: '#/components/schemas/RepoCollaboratorPermission'
       description: RepoCollaboratorPermission
+    RepoIssueConfig:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IssueConfig'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/IssueConfig'
+      description: RepoIssueConfig
+    RepoIssueConfigValidation:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IssueConfigValidation'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/IssueConfigValidation'
+      description: RepoIssueConfigValidation
+    RepoNewIssuePinsAllowed:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NewIssuePinsAllowed'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/NewIssuePinsAllowed'
+      description: RepoNewIssuePinsAllowed
     Repository:
       content:
         application/json:
@@ -14309,6 +15640,332 @@ components:
       title: AccessToken represents an API access token.
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    Activity:
+      example:
+        is_private: true
+        ref_name: ref_name
+        act_user:
+          website: website
+          visibility: visibility
+          created: 2000-01-23T04:56:07.000+00:00
+          last_login: 2000-01-23T04:56:07.000+00:00
+          active: true
+          description: description
+          language: language
+          starred_repos_count: 5
+          login: login
+          is_admin: true
+          full_name: full_name
+          login_name: empty
+          avatar_url: avatar_url
+          following_count: 6
+          restricted: true
+          followers_count: 0
+          location: location
+          id: 1
+          prohibit_login: true
+          email: email
+        created: 2000-01-23T04:56:07.000+00:00
+        repo:
+          parent: null
+          has_packages: true
+          open_pr_counter: 5
+          has_releases: true
+          language: language
+          repo_transfer:
+            teams:
+            - can_create_org_repo: true
+              units_map:
+                repo.code: read
+                repo.ext_issues: none
+                repo.ext_wiki: none
+                repo.issues: write
+                repo.projects: none
+                repo.pulls: owner
+                repo.releases: none
+                repo.wiki: admin
+              organization:
+                website: website
+                full_name: full_name
+                repo_admin_change_team_access: true
+                avatar_url: avatar_url
+                visibility: visibility
+                name: name
+                description: description
+                location: location
+                id: 0
+                username: username
+              name: name
+              description: description
+              permission: none
+              id: 2
+              includes_all_repositories: true
+              units:
+              - repo.code
+              - repo.issues
+              - repo.ext_issues
+              - repo.wiki
+              - repo.pulls
+              - repo.releases
+              - repo.projects
+              - repo.ext_wiki
+            - can_create_org_repo: true
+              units_map:
+                repo.code: read
+                repo.ext_issues: none
+                repo.ext_wiki: none
+                repo.issues: write
+                repo.projects: none
+                repo.pulls: owner
+                repo.releases: none
+                repo.wiki: admin
+              organization:
+                website: website
+                full_name: full_name
+                repo_admin_change_team_access: true
+                avatar_url: avatar_url
+                visibility: visibility
+                name: name
+                description: description
+                location: location
+                id: 0
+                username: username
+              name: name
+              description: description
+              permission: none
+              id: 2
+              includes_all_repositories: true
+              units:
+              - repo.code
+              - repo.issues
+              - repo.ext_issues
+              - repo.wiki
+              - repo.pulls
+              - repo.releases
+              - repo.projects
+              - repo.ext_wiki
+            doer:
+              website: website
+              visibility: visibility
+              created: 2000-01-23T04:56:07.000+00:00
+              last_login: 2000-01-23T04:56:07.000+00:00
+              active: true
+              description: description
+              language: language
+              starred_repos_count: 5
+              login: login
+              is_admin: true
+              full_name: full_name
+              login_name: empty
+              avatar_url: avatar_url
+              following_count: 6
+              restricted: true
+              followers_count: 0
+              location: location
+              id: 1
+              prohibit_login: true
+              email: email
+            recipient:
+              website: website
+              visibility: visibility
+              created: 2000-01-23T04:56:07.000+00:00
+              last_login: 2000-01-23T04:56:07.000+00:00
+              active: true
+              description: description
+              language: language
+              starred_repos_count: 5
+              login: login
+              is_admin: true
+              full_name: full_name
+              login_name: empty
+              avatar_url: avatar_url
+              following_count: 6
+              restricted: true
+              followers_count: 0
+              location: location
+              id: 1
+              prohibit_login: true
+              email: email
+          has_pull_requests: true
+          empty: true
+          has_actions: true
+          permissions:
+            pull: true
+            admin: true
+            push: true
+          id: 6
+          release_counter: 5
+          default_delete_branch_after_merge: true
+          ssh_url: ssh_url
+          full_name: full_name
+          size: 7
+          languages_url: languages_url
+          clone_url: clone_url
+          html_url: html_url
+          name: name
+          default_branch: default_branch
+          mirror_updated: 2000-01-23T04:56:07.000+00:00
+          ignore_whitespace_conflicts: true
+          template: true
+          internal: true
+          mirror: true
+          private: true
+          open_issues_count: 1
+          link: link
+          created_at: 2000-01-23T04:56:07.000+00:00
+          default_allow_maintainer_edit: true
+          description: description
+          allow_rebase_update: true
+          has_projects: true
+          archived: true
+          has_wiki: true
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          allow_merge_commits: true
+          stars_count: 9
+          allow_rebase_explicit: true
+          external_tracker:
+            external_tracker_regexp_pattern: external_tracker_regexp_pattern
+            external_tracker_style: external_tracker_style
+            external_tracker_url: external_tracker_url
+            external_tracker_format: external_tracker_format
+          mirror_interval: mirror_interval
+          owner:
+            website: website
+            visibility: visibility
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            active: true
+            description: description
+            language: language
+            starred_repos_count: 5
+            login: login
+            is_admin: true
+            full_name: full_name
+            login_name: empty
+            avatar_url: avatar_url
+            following_count: 6
+            restricted: true
+            followers_count: 0
+            location: location
+            id: 1
+            prohibit_login: true
+            email: email
+          allow_squash_merge: true
+          external_wiki:
+            external_wiki_url: external_wiki_url
+          website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
+          internal_tracker:
+            enable_issue_dependencies: true
+            allow_only_contributors_to_track_time: true
+            enable_time_tracker: true
+          has_issues: true
+          allow_rebase: true
+          url: url
+          default_merge_style: default_merge_style
+          fork: true
+          avatar_url: avatar_url
+          original_url: original_url
+          watchers_count: 3
+          forks_count: 0
+        comment_id: 7
+        content: content
+        user_id: 2
+        repo_id: 3
+        act_user_id: 0
+        comment:
+          issue_url: issue_url
+          assets:
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          html_url: html_url
+          original_author_id: 2
+          created_at: 2000-01-23T04:56:07.000+00:00
+          id: 5
+          pull_request_url: pull_request_url
+          body: body
+          original_author: original_author
+          user:
+            website: website
+            visibility: visibility
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            active: true
+            description: description
+            language: language
+            starred_repos_count: 5
+            login: login
+            is_admin: true
+            full_name: full_name
+            login_name: empty
+            avatar_url: avatar_url
+            following_count: 6
+            restricted: true
+            followers_count: 0
+            location: location
+            id: 1
+            prohibit_login: true
+            email: email
+        id: 9
+        op_type: op_type
+      properties:
+        act_user:
+          $ref: '#/components/schemas/User'
+        act_user_id:
+          format: int64
+          type: integer
+          x-go-name: ActUserID
+        comment:
+          $ref: '#/components/schemas/Comment'
+        comment_id:
+          format: int64
+          type: integer
+          x-go-name: CommentID
+        content:
+          type: string
+          x-go-name: Content
+        created:
+          format: date-time
+          type: string
+          x-go-name: Created
+        id:
+          format: int64
+          type: integer
+          x-go-name: ID
+        is_private:
+          type: boolean
+          x-go-name: IsPrivate
+        op_type:
+          type: string
+          x-go-name: OpType
+        ref_name:
+          type: string
+          x-go-name: RefName
+        repo:
+          $ref: '#/components/schemas/Repository'
+        repo_id:
+          format: int64
+          type: integer
+          x-go-name: RepoID
+        user_id:
+          format: int64
+          type: integer
+          x-go-name: UserID
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     ActivityPub:
       description: ActivityPub type
       example:
@@ -14420,13 +16077,13 @@ components:
     Attachment:
       description: Attachment a generic attachment
       example:
-        size: 1
+        size: 5
         name: name
         created_at: 2000-01-23T04:56:07.000+00:00
         browser_download_url: browser_download_url
-        id: 6
+        id: 1
         uuid: uuid
-        download_count: 0
+        download_count: 6
       properties:
         browser_download_url:
           type: string
@@ -14669,6 +16326,111 @@ components:
           x-go-name: Updated
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    ChangeFileOperation:
+      description: "ChangeFileOperation for creating, updating or deleting a file"
+      example:
+        path: path
+        from_path: from_path
+        operation: create
+        sha: sha
+        content: content
+      properties:
+        content:
+          description: "new or updated file content, must be base64 encoded"
+          type: string
+          x-go-name: Content
+        from_path:
+          description: old path of the file to move
+          type: string
+          x-go-name: FromPath
+        operation:
+          description: indicates what to do with the file
+          enum:
+          - create
+          - update
+          - delete
+          type: string
+          x-go-name: Operation
+        path:
+          description: path to the existing or new file
+          type: string
+          x-go-name: Path
+        sha:
+          description: "sha is the SHA for the file that already exists, required\
+            \ for update or delete"
+          type: string
+          x-go-name: SHA
+      required:
+      - operation
+      - path
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    ChangeFilesOptions:
+      description: |-
+        ChangeFilesOptions options for creating, updating or deleting multiple files
+        Note: `author` and `committer` are optional (if only one is given, it will be used for the other, otherwise the authenticated user will be used)
+      example:
+        committer:
+          name: name
+          email: email
+        author:
+          name: name
+          email: email
+        new_branch: new_branch
+        files:
+        - path: path
+          from_path: from_path
+          operation: create
+          sha: sha
+          content: content
+        - path: path
+          from_path: from_path
+          operation: create
+          sha: sha
+          content: content
+        dates:
+          committer: 2000-01-23T04:56:07.000+00:00
+          author: 2000-01-23T04:56:07.000+00:00
+        signoff: true
+        message: message
+        branch: branch
+      properties:
+        author:
+          $ref: '#/components/schemas/Identity'
+        branch:
+          description: "branch (optional) to base this file from. if not given, the\
+            \ default branch is used"
+          type: string
+          x-go-name: BranchName
+        committer:
+          $ref: '#/components/schemas/Identity'
+        dates:
+          $ref: '#/components/schemas/CommitDateOptions'
+        files:
+          description: list of file operations
+          items:
+            $ref: '#/components/schemas/ChangeFileOperation'
+          type: array
+          x-go-name: Files
+        message:
+          description: "message (optional) for the commit of this file. if not supplied,\
+            \ a default message will be used"
+          type: string
+          x-go-name: Message
+        new_branch:
+          description: new_branch (optional) will make a new branch from `branch`
+            before creating the file
+          type: string
+          x-go-name: NewBranchName
+        signoff:
+          description: Add a Signed-off-by trailer by the committer at the end of
+            the commit log message.
+          type: boolean
+          x-go-name: Signoff
+      required:
+      - files
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     ChangedFile:
       description: ChangedFile store information about files affected by the pull
         request
@@ -14783,7 +16545,9 @@ components:
         state: state
         repository:
           parent: null
+          has_packages: true
           open_pr_counter: 5
+          has_releases: true
           language: language
           repo_transfer:
             teams:
@@ -14901,6 +16665,7 @@ components:
               email: email
           has_pull_requests: true
           empty: true
+          has_actions: true
           permissions:
             pull: true
             admin: true
@@ -14966,12 +16731,14 @@ components:
           external_wiki:
             external_wiki_url: external_wiki_url
           website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
           internal_tracker:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
           has_issues: true
           allow_rebase: true
+          url: url
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -15014,25 +16781,25 @@ components:
       example:
         issue_url: issue_url
         assets:
-        - size: 1
+        - size: 5
           name: name
           created_at: 2000-01-23T04:56:07.000+00:00
           browser_download_url: browser_download_url
-          id: 6
+          id: 1
           uuid: uuid
-          download_count: 0
-        - size: 1
+          download_count: 6
+        - size: 5
           name: name
           created_at: 2000-01-23T04:56:07.000+00:00
           browser_download_url: browser_download_url
-          id: 6
+          id: 1
           uuid: uuid
-          download_count: 0
+          download_count: 6
         updated_at: 2000-01-23T04:56:07.000+00:00
         html_url: html_url
-        original_author_id: 6
+        original_author_id: 2
         created_at: 2000-01-23T04:56:07.000+00:00
-        id: 0
+        id: 5
         pull_request_url: pull_request_url
         body: body
         original_author: original_author
@@ -15606,6 +17373,7 @@ components:
     CreateBranchRepoOption:
       description: CreateBranchRepoOption options when creating a branch in a repository
       example:
+        old_ref_name: old_ref_name
         new_branch_name: new_branch_name
         old_branch_name: old_branch_name
       properties:
@@ -15614,9 +17382,15 @@ components:
           type: string
           x-go-name: BranchName
         old_branch_name:
-          description: Name of the old branch to create from
+          description: |-
+            Deprecated: true
+            Name of the old branch to create from
           type: string
           x-go-name: OldBranchName
+        old_ref_name:
+          description: Name of the old branch/tag/commit to create from
+          type: string
+          x-go-name: OldRefName
       required:
       - new_branch_name
       type: object
@@ -16553,7 +18327,9 @@ components:
         id: 0
         repository:
           parent: null
+          has_packages: true
           open_pr_counter: 5
+          has_releases: true
           language: language
           repo_transfer:
             teams:
@@ -16671,6 +18447,7 @@ components:
               email: email
           has_pull_requests: true
           empty: true
+          has_actions: true
           permissions:
             pull: true
             admin: true
@@ -16736,12 +18513,14 @@ components:
           external_wiki:
             external_wiki_url: external_wiki_url
           website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
           internal_tracker:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
           has_issues: true
           allow_rebase: true
+          url: url
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -17233,6 +19012,8 @@ components:
         template: true
         allow_manual_merge: true
         private: true
+        has_packages: true
+        has_releases: true
         default_allow_maintainer_edit: true
         description: description
         allow_rebase_update: true
@@ -17240,6 +19021,7 @@ components:
         has_projects: true
         archived: true
         autodetect_manual_merge: true
+        has_actions: true
         has_wiki: true
         allow_merge_commits: true
         allow_rebase_explicit: true
@@ -17333,11 +19115,21 @@ components:
           $ref: '#/components/schemas/ExternalTracker'
         external_wiki:
           $ref: '#/components/schemas/ExternalWiki'
+        has_actions:
+          description: "either `true` to enable actions unit, or `false` to disable\
+            \ them."
+          type: boolean
+          x-go-name: HasActions
         has_issues:
           description: either `true` to enable issues for this repository or `false`
             to disable them.
           type: boolean
           x-go-name: HasIssues
+        has_packages:
+          description: "either `true` to enable packages unit, or `false` to disable\
+            \ them."
+          type: boolean
+          x-go-name: HasPackages
         has_projects:
           description: "either `true` to enable project unit, or `false` to disable\
             \ them."
@@ -17348,6 +19140,11 @@ components:
             \ pull request."
           type: boolean
           x-go-name: HasPullRequests
+        has_releases:
+          description: "either `true` to enable releases unit, or `false` to disable\
+            \ them."
+          type: boolean
+          x-go-name: HasReleases
         has_wiki:
           description: either `true` to enable the wiki for this repository or `false`
             to disable it.
@@ -17551,9 +19348,11 @@ components:
     Email:
       description: Email an email address belonging to a user
       example:
+        user_id: 0
         verified: true
         email: email
         primary: true
+        username: username
       properties:
         email:
           format: email
@@ -17562,6 +19361,13 @@ components:
         primary:
           type: boolean
           x-go-name: Primary
+        user_id:
+          format: int64
+          type: integer
+          x-go-name: UserID
+        username:
+          type: string
+          x-go-name: UserName
         verified:
           type: boolean
           x-go-name: Verified
@@ -17792,6 +19598,93 @@ components:
           $ref: '#/components/schemas/FileCommitResponse'
         content:
           $ref: '#/components/schemas/ContentsResponse'
+        verification:
+          $ref: '#/components/schemas/PayloadCommitVerification'
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    FilesResponse:
+      description: FilesResponse contains information about multiple files from a
+        repo
+      example:
+        commit:
+          committer:
+            date: date
+            name: name
+            email: email
+          author:
+            date: date
+            name: name
+            email: email
+          created: 2000-01-23T04:56:07.000+00:00
+          html_url: html_url
+          tree:
+            created: 2000-01-23T04:56:07.000+00:00
+            sha: sha
+            url: url
+          message: message
+          sha: sha
+          url: url
+          parents:
+          - created: 2000-01-23T04:56:07.000+00:00
+            sha: sha
+            url: url
+          - created: 2000-01-23T04:56:07.000+00:00
+            sha: sha
+            url: url
+        files:
+        - _links:
+            git: git
+            self: self
+            html: html
+          submodule_git_url: submodule_git_url
+          last_commit_sha: last_commit_sha
+          encoding: encoding
+          type: type
+          sha: sha
+          content: content
+          url: url
+          target: target
+          path: path
+          size: 0
+          html_url: html_url
+          download_url: download_url
+          name: name
+          git_url: git_url
+        - _links:
+            git: git
+            self: self
+            html: html
+          submodule_git_url: submodule_git_url
+          last_commit_sha: last_commit_sha
+          encoding: encoding
+          type: type
+          sha: sha
+          content: content
+          url: url
+          target: target
+          path: path
+          size: 0
+          html_url: html_url
+          download_url: download_url
+          name: name
+          git_url: git_url
+        verification:
+          reason: reason
+          payload: payload
+          signature: signature
+          verified: true
+          signer:
+            name: name
+            email: email
+            username: username
+      properties:
+        commit:
+          $ref: '#/components/schemas/FileCommitResponse'
+        files:
+          items:
+            $ref: '#/components/schemas/ContentsResponse'
+          type: array
+          x-go-name: Files
         verification:
           $ref: '#/components/schemas/PayloadCommitVerification'
       type: object
@@ -18193,9 +20086,24 @@ components:
           x-go-name: URL
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    GitignoreTemplateInfo:
+      description: GitignoreTemplateInfo name and text of a gitignore template
+      example:
+        name: name
+        source: source
+      properties:
+        name:
+          type: string
+          x-go-name: Name
+        source:
+          type: string
+          x-go-name: Source
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     Hook:
       description: Hook a hook is a web hook when one repository changed
       example:
+        branch_filter: branch_filter
         updated_at: 2000-01-23T04:56:07.000+00:00
         active: true
         created_at: 2000-01-23T04:56:07.000+00:00
@@ -18214,6 +20122,9 @@ components:
         authorization_header:
           type: string
           x-go-name: AuthorizationHeader
+        branch_filter:
+          type: string
+          x-go-name: BranchFilter
         config:
           additionalProperties:
             type: string
@@ -18282,13 +20193,7 @@ components:
       description: Issue represents an issue in a repository
       example:
         is_locked: true
-        pull_request:
-          merged_at: 2000-01-23T04:56:07.000+00:00
-          merged: true
-        closed_at: 2000-01-23T04:56:07.000+00:00
-        comments: 5
-        original_author_id: 2
-        due_date: 2000-01-23T04:56:07.000+00:00
+        pin_order: 9
         assignees:
         - website: website
           visibility: visibility
@@ -18336,8 +20241,35 @@ components:
           owner: owner
           full_name: full_name
           name: name
-          id: 4
+          id: 3
         title: title
+        number: 2
+        ref: ref
+        assets:
+        - size: 5
+          name: name
+          created_at: 2000-01-23T04:56:07.000+00:00
+          browser_download_url: browser_download_url
+          id: 1
+          uuid: uuid
+          download_count: 6
+        - size: 5
+          name: name
+          created_at: 2000-01-23T04:56:07.000+00:00
+          browser_download_url: browser_download_url
+          id: 1
+          uuid: uuid
+          download_count: 6
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        id: 6
+        state: state
+        pull_request:
+          merged_at: 2000-01-23T04:56:07.000+00:00
+          merged: true
+        closed_at: 2000-01-23T04:56:07.000+00:00
+        comments: 0
+        original_author_id: 7
+        due_date: 2000-01-23T04:56:07.000+00:00
         url: url
         labels:
         - color: 00aabb
@@ -18352,35 +20284,17 @@ components:
           exclusive: false
           id: 0
           url: url
-        number: 3
-        ref: ref
-        assets:
-        - size: 1
-          name: name
-          created_at: 2000-01-23T04:56:07.000+00:00
-          browser_download_url: browser_download_url
-          id: 6
-          uuid: uuid
-          download_count: 0
-        - size: 1
-          name: name
-          created_at: 2000-01-23T04:56:07.000+00:00
-          browser_download_url: browser_download_url
-          id: 6
-          uuid: uuid
-          download_count: 0
         milestone:
           closed_at: 2000-01-23T04:56:07.000+00:00
           updated_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
-          id: 7
+          id: 5
           state: state
-          closed_issues: 2
-          open_issues: 9
+          closed_issues: 1
+          open_issues: 5
           title: title
           due_on: 2000-01-23T04:56:07.000+00:00
-        updated_at: 2000-01-23T04:56:07.000+00:00
         html_url: html_url
         assignee:
           website: website
@@ -18403,8 +20317,6 @@ components:
           id: 1
           prohibit_login: true
           email: email
-        id: 5
-        state: state
         original_author: original_author
         user:
           website: website
@@ -18487,6 +20399,10 @@ components:
           format: int64
           type: integer
           x-go-name: OriginalAuthorID
+        pin_order:
+          format: int64
+          type: integer
+          x-go-name: PinOrder
         pull_request:
           $ref: '#/components/schemas/PullRequestMeta'
         ref:
@@ -18510,6 +20426,57 @@ components:
           x-go-name: URL
         user:
           $ref: '#/components/schemas/User'
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    IssueConfig:
+      example:
+        contact_links:
+        - about: about
+          name: name
+          url: url
+        - about: about
+          name: name
+          url: url
+        blank_issues_enabled: true
+      properties:
+        blank_issues_enabled:
+          type: boolean
+          x-go-name: BlankIssuesEnabled
+        contact_links:
+          items:
+            $ref: '#/components/schemas/IssueConfigContactLink'
+          type: array
+          x-go-name: ContactLinks
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    IssueConfigContactLink:
+      example:
+        about: about
+        name: name
+        url: url
+      properties:
+        about:
+          type: string
+          x-go-name: About
+        name:
+          type: string
+          x-go-name: Name
+        url:
+          type: string
+          x-go-name: URL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    IssueConfigValidation:
+      example:
+        valid: true
+        message: message
+      properties:
+        message:
+          type: string
+          x-go-name: Message
+        valid:
+          type: boolean
+          x-go-name: Valid
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     IssueDeadline:
@@ -18572,6 +20539,25 @@ components:
             type: integer
           type: array
           x-go-name: Labels
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    IssueMeta:
+      description: IssueMeta basic issue information
+      example:
+        owner: owner
+        repo: repo
+        index: 0
+      properties:
+        index:
+          format: int64
+          type: integer
+          x-go-name: Index
+        owner:
+          type: string
+          x-go-name: Owner
+        repo:
+          type: string
+          x-go-name: Name
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     IssueTemplate:
@@ -18668,6 +20654,74 @@ components:
           x-go-name: URL
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    LabelTemplate:
+      description: LabelTemplate info of a Label template
+      example:
+        color: 00aabb
+        name: name
+        description: description
+        exclusive: false
+      properties:
+        color:
+          example: 00aabb
+          type: string
+          x-go-name: Color
+        description:
+          type: string
+          x-go-name: Description
+        exclusive:
+          example: false
+          type: boolean
+          x-go-name: Exclusive
+        name:
+          type: string
+          x-go-name: Name
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    LicenseTemplateInfo:
+      description: LicensesInfo contains information about a License
+      example:
+        implementation: implementation
+        name: name
+        body: body
+        key: key
+        url: url
+      properties:
+        body:
+          type: string
+          x-go-name: Body
+        implementation:
+          type: string
+          x-go-name: Implementation
+        key:
+          type: string
+          x-go-name: Key
+        name:
+          type: string
+          x-go-name: Name
+        url:
+          type: string
+          x-go-name: URL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    LicensesTemplateListEntry:
+      description: LicensesListEntry is used for the API
+      example:
+        name: name
+        key: key
+        url: url
+      properties:
+        key:
+          type: string
+          x-go-name: Key
+        name:
+          type: string
+          x-go-name: Name
+        url:
+          type: string
+          x-go-name: URL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     MarkdownOption:
       description: MarkdownOption markdown options
       example:
@@ -18684,13 +20738,54 @@ components:
           type: string
         Mode:
           description: |-
-            Mode to render
+            Mode to render (comment, gfm, markdown)
 
             in: body
           type: string
         Text:
           description: |-
             Text markdown to render
+
+            in: body
+          type: string
+        Wiki:
+          description: |-
+            Is it a wiki page ?
+
+            in: body
+          type: boolean
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    MarkupOption:
+      description: MarkupOption markup options
+      example:
+        Context: Context
+        FilePath: FilePath
+        Mode: Mode
+        Wiki: true
+        Text: Text
+      properties:
+        Context:
+          description: |-
+            Context to render
+
+            in: body
+          type: string
+        FilePath:
+          description: |-
+            File path for detecting extension in file mode
+
+            in: body
+          type: string
+        Mode:
+          description: |-
+            Mode to render (comment, gfm, markdown, file)
+
+            in: body
+          type: string
+        Text:
+          description: |-
+            Text markup to render
 
             in: body
           type: string
@@ -18855,10 +20950,10 @@ components:
         updated_at: 2000-01-23T04:56:07.000+00:00
         created_at: 2000-01-23T04:56:07.000+00:00
         description: description
-        id: 7
+        id: 5
         state: state
-        closed_issues: 2
-        open_issues: 9
+        closed_issues: 1
+        open_issues: 5
         title: title
         due_on: 2000-01-23T04:56:07.000+00:00
       properties:
@@ -18900,6 +20995,21 @@ components:
           format: date-time
           type: string
           x-go-name: Updated
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    NewIssuePinsAllowed:
+      description: NewIssuePinsAllowed represents an API response that says if new
+        Issue Pins are allowed
+      example:
+        pull_requests: true
+        issues: true
+      properties:
+        issues:
+          type: boolean
+          x-go-name: Issues
+        pull_requests:
+          type: boolean
+          x-go-name: PullRequests
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     NodeInfo:
@@ -19205,7 +21315,9 @@ components:
         id: 0
         repository:
           parent: null
+          has_packages: true
           open_pr_counter: 5
+          has_releases: true
           language: language
           repo_transfer:
             teams:
@@ -19323,6 +21435,7 @@ components:
               email: email
           has_pull_requests: true
           empty: true
+          has_actions: true
           permissions:
             pull: true
             admin: true
@@ -19388,12 +21501,14 @@ components:
           external_wiki:
             external_wiki_url: external_wiki_url
           website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
           internal_tracker:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
           has_issues: true
           allow_rebase: true
+          url: url
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -19551,7 +21666,9 @@ components:
         repo_id: 0
         repo:
           parent: null
+          has_packages: true
           open_pr_counter: 5
+          has_releases: true
           language: language
           repo_transfer:
             teams:
@@ -19669,6 +21786,7 @@ components:
               email: email
           has_pull_requests: true
           empty: true
+          has_actions: true
           permissions:
             pull: true
             admin: true
@@ -19734,12 +21852,14 @@ components:
           external_wiki:
             external_wiki_url: external_wiki_url
           website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
           internal_tracker:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
           has_issues: true
           allow_rebase: true
+          url: url
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -19811,12 +21931,15 @@ components:
           id: 1
           prohibit_login: true
           email: email
+        html_url: html_url
         name: name
         created_at: 2000-01-23T04:56:07.000+00:00
         id: 0
         repository:
           parent: null
+          has_packages: true
           open_pr_counter: 5
+          has_releases: true
           language: language
           repo_transfer:
             teams:
@@ -19934,6 +22057,7 @@ components:
               email: email
           has_pull_requests: true
           empty: true
+          has_actions: true
           permissions:
             pull: true
             admin: true
@@ -19999,12 +22123,14 @@ components:
           external_wiki:
             external_wiki_url: external_wiki_url
           website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
           internal_tracker:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
           has_issues: true
           allow_rebase: true
+          url: url
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -20020,6 +22146,9 @@ components:
           x-go-name: CreatedAt
         creator:
           $ref: '#/components/schemas/User'
+        html_url:
+          type: string
+          x-go-name: HTMLURL
         id:
           format: int64
           type: integer
@@ -20279,6 +22408,7 @@ components:
       description: PullRequest represents a pull request
       example:
         is_locked: true
+        pin_order: 5
         assignees:
         - website: website
           visibility: visibility
@@ -20322,6 +22452,47 @@ components:
           email: email
         created_at: 2000-01-23T04:56:07.000+00:00
         diff_url: diff_url
+        requested_reviewers:
+        - website: website
+          visibility: visibility
+          created: 2000-01-23T04:56:07.000+00:00
+          last_login: 2000-01-23T04:56:07.000+00:00
+          active: true
+          description: description
+          language: language
+          starred_repos_count: 5
+          login: login
+          is_admin: true
+          full_name: full_name
+          login_name: empty
+          avatar_url: avatar_url
+          following_count: 6
+          restricted: true
+          followers_count: 0
+          location: location
+          id: 1
+          prohibit_login: true
+          email: email
+        - website: website
+          visibility: visibility
+          created: 2000-01-23T04:56:07.000+00:00
+          last_login: 2000-01-23T04:56:07.000+00:00
+          active: true
+          description: description
+          language: language
+          starred_repos_count: 5
+          login: login
+          is_admin: true
+          full_name: full_name
+          login_name: empty
+          avatar_url: avatar_url
+          following_count: 6
+          restricted: true
+          followers_count: 0
+          location: location
+          id: 1
+          prohibit_login: true
+          email: email
         merged_by:
           website: website
           visibility: visibility
@@ -20350,7 +22521,9 @@ components:
           repo_id: 0
           repo:
             parent: null
+            has_packages: true
             open_pr_counter: 5
+            has_releases: true
             language: language
             repo_transfer:
               teams:
@@ -20468,6 +22641,7 @@ components:
                 email: email
             has_pull_requests: true
             empty: true
+            has_actions: true
             permissions:
               pull: true
               admin: true
@@ -20533,12 +22707,14 @@ components:
             external_wiki:
               external_wiki_url: external_wiki_url
             website: website
+            archived_at: 2000-01-23T04:56:07.000+00:00
             internal_tracker:
               enable_issue_dependencies: true
               allow_only_contributors_to_track_time: true
               enable_time_tracker: true
             has_issues: true
             allow_rebase: true
+            url: url
             default_merge_style: default_merge_style
             fork: true
             avatar_url: avatar_url
@@ -20579,10 +22755,10 @@ components:
           updated_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
-          id: 7
+          id: 5
           state: state
-          closed_issues: 2
-          open_issues: 9
+          closed_issues: 1
+          open_issues: 5
           title: title
           due_on: 2000-01-23T04:56:07.000+00:00
         allow_maintainer_edit: true
@@ -20634,7 +22810,9 @@ components:
           repo_id: 0
           repo:
             parent: null
+            has_packages: true
             open_pr_counter: 5
+            has_releases: true
             language: language
             repo_transfer:
               teams:
@@ -20752,6 +22930,7 @@ components:
                 email: email
             has_pull_requests: true
             empty: true
+            has_actions: true
             permissions:
               pull: true
               admin: true
@@ -20817,12 +22996,14 @@ components:
             external_wiki:
               external_wiki_url: external_wiki_url
             website: website
+            archived_at: 2000-01-23T04:56:07.000+00:00
             internal_tracker:
               enable_issue_dependencies: true
               allow_only_contributors_to_track_time: true
               enable_time_tracker: true
             has_issues: true
             allow_rebase: true
+            url: url
             default_merge_style: default_merge_style
             fork: true
             avatar_url: avatar_url
@@ -20910,6 +23091,15 @@ components:
         patch_url:
           type: string
           x-go-name: PatchURL
+        pin_order:
+          format: int64
+          type: integer
+          x-go-name: PinOrder
+        requested_reviewers:
+          items:
+            $ref: '#/components/schemas/User'
+          type: array
+          x-go-name: RequestedReviewers
         state:
           description: StateType issue state type
           type: string
@@ -21321,20 +23511,20 @@ components:
         body: body
         url: url
         assets:
-        - size: 1
+        - size: 5
           name: name
           created_at: 2000-01-23T04:56:07.000+00:00
           browser_download_url: browser_download_url
-          id: 6
+          id: 1
           uuid: uuid
-          download_count: 0
-        - size: 1
+          download_count: 6
+        - size: 5
           name: name
           created_at: 2000-01-23T04:56:07.000+00:00
           browser_download_url: browser_download_url
-          id: 6
+          id: 1
           uuid: uuid
-          download_count: 0
+          download_count: 6
         prerelease: true
         draft: true
         html_url: html_url
@@ -21394,6 +23584,20 @@ components:
         zipball_url:
           type: string
           x-go-name: ZipURL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    RenameUserOption:
+      description: RenameUserOption options when renaming a user
+      example:
+        new_username: new_username
+      properties:
+        new_username:
+          description: New username for this user. This name cannot be in use yet
+            by any other user.
+          type: string
+          x-go-name: NewName
+      required:
+      - new_username
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     RepoCollaboratorPermission:
@@ -21623,7 +23827,9 @@ components:
       description: Repository represents a repository
       example:
         parent: null
+        has_packages: true
         open_pr_counter: 5
+        has_releases: true
         language: language
         repo_transfer:
           teams:
@@ -21741,6 +23947,7 @@ components:
             email: email
         has_pull_requests: true
         empty: true
+        has_actions: true
         permissions:
           pull: true
           admin: true
@@ -21806,12 +24013,14 @@ components:
         external_wiki:
           external_wiki_url: external_wiki_url
         website: website
+        archived_at: 2000-01-23T04:56:07.000+00:00
         internal_tracker:
           enable_issue_dependencies: true
           allow_only_contributors_to_track_time: true
           enable_time_tracker: true
         has_issues: true
         allow_rebase: true
+        url: url
         default_merge_style: default_merge_style
         fork: true
         avatar_url: avatar_url
@@ -21837,6 +24046,10 @@ components:
         archived:
           type: boolean
           x-go-name: Archived
+        archived_at:
+          format: date-time
+          type: string
+          x-go-name: ArchivedAt
         avatar_url:
           type: string
           x-go-name: AvatarURL
@@ -21879,15 +24092,24 @@ components:
         full_name:
           type: string
           x-go-name: FullName
+        has_actions:
+          type: boolean
+          x-go-name: HasActions
         has_issues:
           type: boolean
           x-go-name: HasIssues
+        has_packages:
+          type: boolean
+          x-go-name: HasPackages
         has_projects:
           type: boolean
           x-go-name: HasProjects
         has_pull_requests:
           type: boolean
           x-go-name: HasPullRequests
+        has_releases:
+          type: boolean
+          x-go-name: HasReleases
         has_wiki:
           type: boolean
           x-go-name: HasWiki
@@ -21972,6 +24194,9 @@ components:
           format: date-time
           type: string
           x-go-name: Updated
+        url:
+          type: string
+          x-go-name: URL
         watchers_count:
           format: int64
           type: integer
@@ -21987,7 +24212,7 @@ components:
         owner: owner
         full_name: full_name
         name: name
-        id: 4
+        id: 3
       properties:
         full_name:
           type: string
@@ -22013,7 +24238,9 @@ components:
       example:
         data:
         - parent: null
+          has_packages: true
           open_pr_counter: 5
+          has_releases: true
           language: language
           repo_transfer:
             teams:
@@ -22131,6 +24358,7 @@ components:
               email: email
           has_pull_requests: true
           empty: true
+          has_actions: true
           permissions:
             pull: true
             admin: true
@@ -22196,12 +24424,14 @@ components:
           external_wiki:
             external_wiki_url: external_wiki_url
           website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
           internal_tracker:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
           has_issues: true
           allow_rebase: true
+          url: url
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -22209,7 +24439,9 @@ components:
           watchers_count: 3
           forks_count: 0
         - parent: null
+          has_packages: true
           open_pr_counter: 5
+          has_releases: true
           language: language
           repo_transfer:
             teams:
@@ -22327,6 +24559,7 @@ components:
               email: email
           has_pull_requests: true
           empty: true
+          has_actions: true
           permissions:
             pull: true
             admin: true
@@ -22392,12 +24625,14 @@ components:
           external_wiki:
             external_wiki_url: external_wiki_url
           website: website
+          archived_at: 2000-01-23T04:56:07.000+00:00
           internal_tracker:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
           has_issues: true
           allow_rebase: true
+          url: url
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -22627,21 +24862,15 @@ components:
           updated_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
-          id: 7
+          id: 5
           state: state
-          closed_issues: 2
-          open_issues: 9
+          closed_issues: 1
+          open_issues: 5
           title: title
           due_on: 2000-01-23T04:56:07.000+00:00
         ref_issue:
           is_locked: true
-          pull_request:
-            merged_at: 2000-01-23T04:56:07.000+00:00
-            merged: true
-          closed_at: 2000-01-23T04:56:07.000+00:00
-          comments: 5
-          original_author_id: 2
-          due_date: 2000-01-23T04:56:07.000+00:00
+          pin_order: 9
           assignees:
           - website: website
             visibility: visibility
@@ -22689,8 +24918,35 @@ components:
             owner: owner
             full_name: full_name
             name: name
-            id: 4
+            id: 3
           title: title
+          number: 2
+          ref: ref
+          assets:
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          id: 6
+          state: state
+          pull_request:
+            merged_at: 2000-01-23T04:56:07.000+00:00
+            merged: true
+          closed_at: 2000-01-23T04:56:07.000+00:00
+          comments: 0
+          original_author_id: 7
+          due_date: 2000-01-23T04:56:07.000+00:00
           url: url
           labels:
           - color: 00aabb
@@ -22705,35 +24961,17 @@ components:
             exclusive: false
             id: 0
             url: url
-          number: 3
-          ref: ref
-          assets:
-          - size: 1
-            name: name
-            created_at: 2000-01-23T04:56:07.000+00:00
-            browser_download_url: browser_download_url
-            id: 6
-            uuid: uuid
-            download_count: 0
-          - size: 1
-            name: name
-            created_at: 2000-01-23T04:56:07.000+00:00
-            browser_download_url: browser_download_url
-            id: 6
-            uuid: uuid
-            download_count: 0
           milestone:
             closed_at: 2000-01-23T04:56:07.000+00:00
             updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             description: description
-            id: 7
+            id: 5
             state: state
-            closed_issues: 2
-            open_issues: 9
+            closed_issues: 1
+            open_issues: 5
             title: title
             due_on: 2000-01-23T04:56:07.000+00:00
-          updated_at: 2000-01-23T04:56:07.000+00:00
           html_url: html_url
           assignee:
             website: website
@@ -22756,8 +24994,6 @@ components:
             id: 1
             prohibit_login: true
             email: email
-          id: 5
-          state: state
           original_author: original_author
           user:
             website: website
@@ -22811,13 +25047,7 @@ components:
         project_id: 1
         dependent_issue:
           is_locked: true
-          pull_request:
-            merged_at: 2000-01-23T04:56:07.000+00:00
-            merged: true
-          closed_at: 2000-01-23T04:56:07.000+00:00
-          comments: 5
-          original_author_id: 2
-          due_date: 2000-01-23T04:56:07.000+00:00
+          pin_order: 9
           assignees:
           - website: website
             visibility: visibility
@@ -22865,8 +25095,35 @@ components:
             owner: owner
             full_name: full_name
             name: name
-            id: 4
+            id: 3
           title: title
+          number: 2
+          ref: ref
+          assets:
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          id: 6
+          state: state
+          pull_request:
+            merged_at: 2000-01-23T04:56:07.000+00:00
+            merged: true
+          closed_at: 2000-01-23T04:56:07.000+00:00
+          comments: 0
+          original_author_id: 7
+          due_date: 2000-01-23T04:56:07.000+00:00
           url: url
           labels:
           - color: 00aabb
@@ -22881,35 +25138,17 @@ components:
             exclusive: false
             id: 0
             url: url
-          number: 3
-          ref: ref
-          assets:
-          - size: 1
-            name: name
-            created_at: 2000-01-23T04:56:07.000+00:00
-            browser_download_url: browser_download_url
-            id: 6
-            uuid: uuid
-            download_count: 0
-          - size: 1
-            name: name
-            created_at: 2000-01-23T04:56:07.000+00:00
-            browser_download_url: browser_download_url
-            id: 6
-            uuid: uuid
-            download_count: 0
           milestone:
             closed_at: 2000-01-23T04:56:07.000+00:00
             updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             description: description
-            id: 7
+            id: 5
             state: state
-            closed_issues: 2
-            open_issues: 9
+            closed_issues: 1
+            open_issues: 5
             title: title
             due_on: 2000-01-23T04:56:07.000+00:00
-          updated_at: 2000-01-23T04:56:07.000+00:00
           html_url: html_url
           assignee:
             website: website
@@ -22932,8 +25171,6 @@ components:
             id: 1
             prohibit_login: true
             email: email
-          id: 5
-          state: state
           original_author: original_author
           user:
             website: website
@@ -22961,13 +25198,7 @@ components:
         tracked_time:
           issue:
             is_locked: true
-            pull_request:
-              merged_at: 2000-01-23T04:56:07.000+00:00
-              merged: true
-            closed_at: 2000-01-23T04:56:07.000+00:00
-            comments: 5
-            original_author_id: 2
-            due_date: 2000-01-23T04:56:07.000+00:00
+            pin_order: 9
             assignees:
             - website: website
               visibility: visibility
@@ -23015,8 +25246,35 @@ components:
               owner: owner
               full_name: full_name
               name: name
-              id: 4
+              id: 3
             title: title
+            number: 2
+            ref: ref
+            assets:
+            - size: 5
+              name: name
+              created_at: 2000-01-23T04:56:07.000+00:00
+              browser_download_url: browser_download_url
+              id: 1
+              uuid: uuid
+              download_count: 6
+            - size: 5
+              name: name
+              created_at: 2000-01-23T04:56:07.000+00:00
+              browser_download_url: browser_download_url
+              id: 1
+              uuid: uuid
+              download_count: 6
+            updated_at: 2000-01-23T04:56:07.000+00:00
+            id: 6
+            state: state
+            pull_request:
+              merged_at: 2000-01-23T04:56:07.000+00:00
+              merged: true
+            closed_at: 2000-01-23T04:56:07.000+00:00
+            comments: 0
+            original_author_id: 7
+            due_date: 2000-01-23T04:56:07.000+00:00
             url: url
             labels:
             - color: 00aabb
@@ -23031,35 +25289,17 @@ components:
               exclusive: false
               id: 0
               url: url
-            number: 3
-            ref: ref
-            assets:
-            - size: 1
-              name: name
-              created_at: 2000-01-23T04:56:07.000+00:00
-              browser_download_url: browser_download_url
-              id: 6
-              uuid: uuid
-              download_count: 0
-            - size: 1
-              name: name
-              created_at: 2000-01-23T04:56:07.000+00:00
-              browser_download_url: browser_download_url
-              id: 6
-              uuid: uuid
-              download_count: 0
             milestone:
               closed_at: 2000-01-23T04:56:07.000+00:00
               updated_at: 2000-01-23T04:56:07.000+00:00
               created_at: 2000-01-23T04:56:07.000+00:00
               description: description
-              id: 7
+              id: 5
               state: state
-              closed_issues: 2
-              open_issues: 9
+              closed_issues: 1
+              open_issues: 5
               title: title
               due_on: 2000-01-23T04:56:07.000+00:00
-            updated_at: 2000-01-23T04:56:07.000+00:00
             html_url: html_url
             assignee:
               website: website
@@ -23082,8 +25322,6 @@ components:
               id: 1
               prohibit_login: true
               email: email
-            id: 5
-            state: state
             original_author: original_author
             user:
               website: website
@@ -23126,10 +25364,10 @@ components:
           updated_at: 2000-01-23T04:56:07.000+00:00
           created_at: 2000-01-23T04:56:07.000+00:00
           description: description
-          id: 7
+          id: 5
           state: state
-          closed_issues: 2
-          open_issues: 9
+          closed_issues: 1
+          open_issues: 5
           title: title
           due_on: 2000-01-23T04:56:07.000+00:00
         new_ref: new_ref
@@ -23174,25 +25412,25 @@ components:
         ref_comment:
           issue_url: issue_url
           assets:
-          - size: 1
+          - size: 5
             name: name
             created_at: 2000-01-23T04:56:07.000+00:00
             browser_download_url: browser_download_url
-            id: 6
+            id: 1
             uuid: uuid
-            download_count: 0
-          - size: 1
+            download_count: 6
+          - size: 5
             name: name
             created_at: 2000-01-23T04:56:07.000+00:00
             browser_download_url: browser_download_url
-            id: 6
+            id: 1
             uuid: uuid
-            download_count: 0
+            download_count: 6
           updated_at: 2000-01-23T04:56:07.000+00:00
           html_url: html_url
-          original_author_id: 6
+          original_author_id: 2
           created_at: 2000-01-23T04:56:07.000+00:00
-          id: 0
+          id: 5
           pull_request_url: pull_request_url
           body: body
           original_author: original_author
@@ -23395,13 +25633,7 @@ components:
       example:
         issue:
           is_locked: true
-          pull_request:
-            merged_at: 2000-01-23T04:56:07.000+00:00
-            merged: true
-          closed_at: 2000-01-23T04:56:07.000+00:00
-          comments: 5
-          original_author_id: 2
-          due_date: 2000-01-23T04:56:07.000+00:00
+          pin_order: 9
           assignees:
           - website: website
             visibility: visibility
@@ -23449,8 +25681,35 @@ components:
             owner: owner
             full_name: full_name
             name: name
-            id: 4
+            id: 3
           title: title
+          number: 2
+          ref: ref
+          assets:
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          - size: 5
+            name: name
+            created_at: 2000-01-23T04:56:07.000+00:00
+            browser_download_url: browser_download_url
+            id: 1
+            uuid: uuid
+            download_count: 6
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          id: 6
+          state: state
+          pull_request:
+            merged_at: 2000-01-23T04:56:07.000+00:00
+            merged: true
+          closed_at: 2000-01-23T04:56:07.000+00:00
+          comments: 0
+          original_author_id: 7
+          due_date: 2000-01-23T04:56:07.000+00:00
           url: url
           labels:
           - color: 00aabb
@@ -23465,35 +25724,17 @@ components:
             exclusive: false
             id: 0
             url: url
-          number: 3
-          ref: ref
-          assets:
-          - size: 1
-            name: name
-            created_at: 2000-01-23T04:56:07.000+00:00
-            browser_download_url: browser_download_url
-            id: 6
-            uuid: uuid
-            download_count: 0
-          - size: 1
-            name: name
-            created_at: 2000-01-23T04:56:07.000+00:00
-            browser_download_url: browser_download_url
-            id: 6
-            uuid: uuid
-            download_count: 0
           milestone:
             closed_at: 2000-01-23T04:56:07.000+00:00
             updated_at: 2000-01-23T04:56:07.000+00:00
             created_at: 2000-01-23T04:56:07.000+00:00
             description: description
-            id: 7
+            id: 5
             state: state
-            closed_issues: 2
-            open_issues: 9
+            closed_issues: 1
+            open_issues: 5
             title: title
             due_on: 2000-01-23T04:56:07.000+00:00
-          updated_at: 2000-01-23T04:56:07.000+00:00
           html_url: html_url
           assignee:
             website: website
@@ -23516,8 +25757,6 @@ components:
             id: 1
             prohibit_login: true
             email: email
-          id: 5
-          state: state
           original_author: original_author
           user:
             website: website
