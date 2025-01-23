@@ -5,7 +5,7 @@ info:
     name: MIT
     url: http://opensource.org/licenses/MIT
   title: Gitea API
-  version: 1.22.6
+  version: 1.23.1
 servers:
 - url: /api/v1
 security:
@@ -3153,97 +3153,112 @@ paths:
     get:
       operationId: issueSearchIssues
       parameters:
-      - description: whether issue is open or closed
+      - description: State of the issue
         in: query
         name: state
         schema:
+          default: open
+          enum:
+          - open
+          - closed
+          - all
           type: string
-      - description: comma separated list of labels. Fetch only issues that have any
-          of this labels. Non existent labels are discarded
+      - description: Comma-separated list of label names. Fetch only issues that have
+          any of these labels. Non existent labels are discarded.
         in: query
         name: labels
         schema:
           type: string
-      - description: comma separated list of milestone names. Fetch only issues that
-          have any of this milestones. Non existent are discarded
+      - description: Comma-separated list of milestone names. Fetch only issues that
+          have any of these milestones. Non existent milestones are discarded.
         in: query
         name: milestones
         schema:
           type: string
-      - description: search string
+      - description: Search string
         in: query
         name: q
         schema:
           type: string
-      - description: repository to prioritize in the results
+      - description: Repository ID to prioritize in the results
         in: query
         name: priority_repo_id
         schema:
           format: int64
           type: integer
-      - description: filter by type (issues / pulls) if set
+      - description: Filter by issue type
         in: query
         name: type
         schema:
+          enum:
+          - issues
+          - pulls
           type: string
-      - description: Only show notifications updated after the given time. This is
-          a timestamp in RFC 3339 format
+      - description: Only show issues updated after the given time (RFC 3339 format)
         in: query
         name: since
         schema:
           format: date-time
           type: string
-      - description: Only show notifications updated before the given time. This is
-          a timestamp in RFC 3339 format
+      - description: Only show issues updated before the given time (RFC 3339 format)
         in: query
         name: before
         schema:
           format: date-time
           type: string
-      - description: "filter (issues / pulls) assigned to you, default is false"
+      - description: Filter issues or pulls assigned to the authenticated user
         in: query
         name: assigned
         schema:
+          default: false
           type: boolean
-      - description: "filter (issues / pulls) created by you, default is false"
+      - description: Filter issues or pulls created by the authenticated user
         in: query
         name: created
         schema:
+          default: false
           type: boolean
-      - description: "filter (issues / pulls) mentioning you, default is false"
+      - description: Filter issues or pulls mentioning the authenticated user
         in: query
         name: mentioned
         schema:
+          default: false
           type: boolean
-      - description: "filter pulls requesting your review, default is false"
+      - description: Filter pull requests where the authenticated user's review was
+          requested
         in: query
         name: review_requested
         schema:
+          default: false
           type: boolean
-      - description: "filter pulls reviewed by you, default is false"
+      - description: Filter pull requests reviewed by the authenticated user
         in: query
         name: reviewed
         schema:
+          default: false
           type: boolean
-      - description: filter by owner
+      - description: Filter by repository owner
         in: query
         name: owner
         schema:
           type: string
-      - description: filter by team (requires organization owner parameter to be provided)
+      - description: Filter by team (requires organization owner parameter)
         in: query
         name: team
         schema:
           type: string
-      - description: page number of results to return (1-based)
+      - description: Page number of results to return (1-based)
         in: query
         name: page
         schema:
+          default: 1
+          minimum: 1
           type: integer
-      - description: page size of results
+      - description: Number of items per page
         in: query
         name: limit
         schema:
+          minimum: 0
           type: integer
       responses:
         "200":
@@ -3254,6 +3269,27 @@ paths:
                   $ref: '#/components/schemas/Issue'
                 type: array
           description: IssueList
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Search for issues across the repositories that the user has access
         to
       tags:
@@ -3381,7 +3417,8 @@ paths:
         schema:
           type: boolean
       - description: "sort repos by attribute. Supported values are \"alpha\", \"\
-          created\", \"updated\", \"size\", and \"id\". Default is \"alpha\""
+          created\", \"updated\", \"size\", \"git_size\", \"lfs_size\", \"stars\"\
+          , \"forks\" and \"id\". Default is \"alpha\""
         in: query
         name: sort
         schema:
@@ -3547,6 +3584,33 @@ paths:
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/actions/runners/registration-token:
+    get:
+      operationId: repoGetRunnerRegistrationToken
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content: {}
+          description: RegistrationToken is response related to registration token
+          headers:
+            token:
+              schema:
+                type: string
+      summary: Get a repository's actions runner registration token
+      tags:
+      - repository
   /repos/{owner}/{repo}/actions/secrets:
     get:
       operationId: repoListActionsSecrets
@@ -3681,6 +3745,79 @@ paths:
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/actions/tasks:
+    get:
+      operationId: ListActionTasks
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: "page size of results, default maximum page size is 50"
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionTaskResponse'
+          description: TasksList
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "409":
+          content: {}
+          description: APIConflict is a conflict empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: List a repository's action tasks
+      tags:
+      - repository
   /repos/{owner}/{repo}/actions/variables:
     get:
       operationId: getRepoVariablesList
@@ -4202,6 +4339,61 @@ paths:
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/branch_protections/priority:
+    post:
+      operationId: repoUpdateBranchProtectionPriories
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBranchProtectionPriories'
+        required: false
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Update the priorities of branch protections for a repository.
+      tags:
+      - repository
+      x-codegen-request-body-name: body
   /repos/{owner}/{repo}/branch_protections/{name}:
     delete:
       operationId: repoDeleteBranchProtection
@@ -4510,6 +4702,65 @@ paths:
         \ branch protection"
       tags:
       - repository
+    patch:
+      operationId: repoUpdateBranch
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: name of the branch
+        in: path
+        name: branch
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBranchRepoOption'
+        required: false
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Update a branch
+      tags:
+      - repository
+      x-codegen-request-body-name: body
   /repos/{owner}/{repo}/collaborators:
     get:
       operationId: repoListCollaborators
@@ -4694,7 +4945,7 @@ paths:
             url:
               schema:
                 type: string
-      summary: Add a collaborator to a repository
+      summary: Add or Update a collaborator to a repository
       tags:
       - repository
       x-codegen-request-body-name: body
@@ -5014,7 +5265,7 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
-      summary: Get the pull request of the commit
+      summary: Get the merged pull request of the commit
       tags:
       - repository
   /repos/{owner}/{repo}/compare/{basehead}:
@@ -6962,6 +7213,17 @@ paths:
             url:
               schema:
                 type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "423":
           content: {}
           description: APIRepoArchivedError is an error that is raised when an archived
@@ -7128,6 +7390,17 @@ paths:
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
           headers:
             message:
               schema:
@@ -7582,6 +7855,17 @@ paths:
             url:
               schema:
                 type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "423":
           content: {}
           description: APIRepoArchivedError is an error that is raised when an archived
@@ -7748,6 +8032,17 @@ paths:
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
           headers:
             message:
               schema:
@@ -9901,6 +10196,37 @@ paths:
       summary: Get languages and number of bytes of code written
       tags:
       - repository
+  /repos/{owner}/{repo}/licenses:
+    get:
+      operationId: repoGetLicenses
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: LicensesList
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get repo licenses
+      tags:
+      - repository
   /repos/{owner}/{repo}/media/{filepath}:
     get:
       operationId: repoGetRawFileOrLFS
@@ -9917,21 +10243,27 @@ paths:
         required: true
         schema:
           type: string
-      - description: filepath of the file to get
+      - description: "path of the file to get, it should be \"{ref}/{filepath}\".\
+          \ If there is no ref could be inferred, it will be treated as the default\
+          \ branch"
         in: path
         name: filepath
         required: true
         schema:
           type: string
       - description: The name of the commit/branch/tag. Default the repository’s default
-          branch (usually master)
+          branch
         in: query
         name: ref
         schema:
           type: string
       responses:
         "200":
-          content: {}
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
           description: Returns raw file content.
         "404":
           content: {}
@@ -9939,6 +10271,55 @@ paths:
       summary: Get a file or it's LFS object from a repository
       tags:
       - repository
+  /repos/{owner}/{repo}/merge-upstream:
+    post:
+      operationId: repoMergeUpstream
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MergeUpstreamRequest'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/MergeUpstreamRequest'
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MergeUpstreamResponse'
+          description: ""
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Merge a branch from upstream
+      tags:
+      - repository
+      x-codegen-request-body-name: body
   /repos/{owner}/{repo}/milestones:
     get:
       operationId: issueGetMilestonesList
@@ -10343,25 +10724,26 @@ paths:
     get:
       operationId: repoListPullRequests
       parameters:
-      - description: owner of the repo
+      - description: Owner of the repo
         in: path
         name: owner
         required: true
         schema:
           type: string
-      - description: name of the repo
+      - description: Name of the repo
         in: path
         name: repo
         required: true
         schema:
           type: string
-      - description: "State of pull request: open or closed (optional)"
+      - description: State of pull request
         in: query
         name: state
         schema:
+          default: open
           enum:
-          - closed
           - open
+          - closed
           - all
           type: string
       - description: Type of sort
@@ -10392,15 +10774,23 @@ paths:
             type: integer
           type: array
         style: form
-      - description: page number of results to return (1-based)
+      - description: Filter by pull request author
+        in: query
+        name: poster
+        schema:
+          type: string
+      - description: Page number of results to return (1-based)
         in: query
         name: page
         schema:
+          default: 1
+          minimum: 1
           type: integer
-      - description: page size of results
+      - description: Page size of results
         in: query
         name: limit
         schema:
+          minimum: 0
           type: integer
       responses:
         "200":
@@ -10414,6 +10804,16 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "500":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: List a repo's pull requests
       tags:
       - repository
@@ -11972,21 +12372,27 @@ paths:
         required: true
         schema:
           type: string
-      - description: filepath of the file to get
+      - description: "path of the file to get, it should be \"{ref}/{filepath}\".\
+          \ If there is no ref could be inferred, it will be treated as the default\
+          \ branch"
         in: path
         name: filepath
         required: true
         schema:
           type: string
       - description: The name of the commit/branch/tag. Default the repository’s default
-          branch (usually master)
+          branch
         in: query
         name: ref
         schema:
           type: string
       responses:
         "200":
-          content: {}
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
           description: Returns raw file content.
         "404":
           content: {}
@@ -12087,6 +12493,17 @@ paths:
             url:
               schema:
                 type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a release
       tags:
       - repository
@@ -12150,9 +12567,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
-        "405":
+        "422":
           content: {}
-          description: APIEmpty is an empty response
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a release by tag name
       tags:
       - repository
@@ -12220,9 +12645,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
-        "405":
+        "422":
           content: {}
-          description: APIEmpty is an empty response
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a release
       tags:
       - repository
@@ -12526,6 +12959,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Edit a release attachment
       tags:
       - repository
@@ -12559,33 +13003,6 @@ paths:
           content: {}
           description: APINotFound is a not found empty response
       summary: Return all users that can be requested to review in this repo
-      tags:
-      - repository
-  /repos/{owner}/{repo}/runners/registration-token:
-    get:
-      operationId: repoGetRunnerRegistrationToken
-      parameters:
-      - description: owner of the repo
-        in: path
-        name: owner
-        required: true
-        schema:
-          type: string
-      - description: name of the repo
-        in: path
-        name: repo
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          content: {}
-          description: RegistrationToken is response related to registration token
-          headers:
-            token:
-              schema:
-                type: string
-      summary: Get a repository's actions runner registration token
       tags:
       - repository
   /repos/{owner}/{repo}/signing-key.gpg:
@@ -12927,6 +13344,231 @@ paths:
       summary: Watch a repo
       tags:
       - repository
+  /repos/{owner}/{repo}/tag_protections:
+    get:
+      operationId: repoListTagProtection
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TagProtection'
+                type: array
+          description: TagProtectionList
+      summary: List tag protections for a repository
+      tags:
+      - repository
+    post:
+      operationId: repoCreateTagProtection
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTagProtectionOption'
+        required: false
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagProtection'
+          description: TagProtection
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Create a tag protections for a repository
+      tags:
+      - repository
+      x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/tag_protections/{id}:
+    delete:
+      operationId: repoDeleteTagProtection
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: id of protected tag
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Delete a specific tag protection for the repository
+      tags:
+      - repository
+    get:
+      operationId: repoGetTagProtection
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: id of the tag protect to get
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagProtection'
+          description: TagProtection
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get a specific tag protection for the repository
+      tags:
+      - repository
+    patch:
+      operationId: repoEditTagProtection
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: id of protected tag
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTagProtectionOption'
+        required: false
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagProtection'
+          description: TagProtection
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Edit a tag protections for a repository. Only fields that are set will
+        be changed
+      tags:
+      - repository
+      x-codegen-request-body-name: body
   /repos/{owner}/{repo}/tags:
     get:
       operationId: repoListTags
@@ -13008,6 +13650,17 @@ paths:
         "409":
           content: {}
           description: APIConflict is a conflict empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "423":
           content: {}
           description: APIRepoArchivedError is an error that is raised when an archived
@@ -13058,6 +13711,17 @@ paths:
         "409":
           content: {}
           description: APIConflict is a conflict empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "423":
           content: {}
           description: APIRepoArchivedError is an error that is raised when an archived
@@ -17433,6 +18097,19 @@ components:
               $ref: '#/components/schemas/LicensesTemplateListEntry'
             type: array
       description: LicenseTemplateList
+    LicensesList:
+      content:
+        application/json:
+          schema:
+            items:
+              type: string
+            type: array
+        text/html:
+          schema:
+            items:
+              type: string
+            type: array
+      description: LicensesList
     MarkdownRender:
       content:
         application/json:
@@ -17451,6 +18128,24 @@ components:
           schema:
             type: string
       description: MarkupRender is a rendered markup document
+    MergeUpstreamRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MergeUpstreamRequest'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/MergeUpstreamRequest'
+      description: ""
+    MergeUpstreamResponse:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MergeUpstreamResponse'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/MergeUpstreamResponse'
+      description: ""
     Milestone:
       content:
         application/json:
@@ -17948,6 +18643,37 @@ components:
               $ref: '#/components/schemas/Tag'
             type: array
       description: TagList
+    TagProtection:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TagProtection'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/TagProtection'
+      description: TagProtection
+    TagProtectionList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/TagProtection'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/TagProtection'
+            type: array
+      description: TagProtectionList
+    TasksList:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionTaskResponse'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/ActionTaskResponse'
+      description: TasksList
     Team:
       content:
         application/json:
@@ -18257,6 +18983,112 @@ components:
       title: AccessToken represents an API access token.
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    ActionTask:
+      description: ActionTask represents a ActionTask
+      example:
+        workflow_id: workflow_id
+        run_started_at: 2000-01-23T04:56:07.000+00:00
+        head_branch: head_branch
+        display_title: display_title
+        created_at: 2000-01-23T04:56:07.000+00:00
+        head_sha: head_sha
+        url: url
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        name: name
+        run_number: 1
+        id: 6
+        event: event
+        status: status
+      properties:
+        created_at:
+          format: date-time
+          type: string
+          x-go-name: CreatedAt
+        display_title:
+          type: string
+          x-go-name: DisplayTitle
+        event:
+          type: string
+          x-go-name: Event
+        head_branch:
+          type: string
+          x-go-name: HeadBranch
+        head_sha:
+          type: string
+          x-go-name: HeadSHA
+        id:
+          format: int64
+          type: integer
+          x-go-name: ID
+        name:
+          type: string
+          x-go-name: Name
+        run_number:
+          format: int64
+          type: integer
+          x-go-name: RunNumber
+        run_started_at:
+          format: date-time
+          type: string
+          x-go-name: RunStartedAt
+        status:
+          type: string
+          x-go-name: Status
+        updated_at:
+          format: date-time
+          type: string
+          x-go-name: UpdatedAt
+        url:
+          type: string
+          x-go-name: URL
+        workflow_id:
+          type: string
+          x-go-name: WorkflowID
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    ActionTaskResponse:
+      description: ActionTaskResponse returns a ActionTask
+      example:
+        total_count: 0
+        workflow_runs:
+        - workflow_id: workflow_id
+          run_started_at: 2000-01-23T04:56:07.000+00:00
+          head_branch: head_branch
+          display_title: display_title
+          created_at: 2000-01-23T04:56:07.000+00:00
+          head_sha: head_sha
+          url: url
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          name: name
+          run_number: 1
+          id: 6
+          event: event
+          status: status
+        - workflow_id: workflow_id
+          run_started_at: 2000-01-23T04:56:07.000+00:00
+          head_branch: head_branch
+          display_title: display_title
+          created_at: 2000-01-23T04:56:07.000+00:00
+          head_sha: head_sha
+          url: url
+          updated_at: 2000-01-23T04:56:07.000+00:00
+          name: name
+          run_number: 1
+          id: 6
+          event: event
+          status: status
+      properties:
+        total_count:
+          format: int64
+          type: integer
+          x-go-name: TotalCount
+        workflow_runs:
+          items:
+            $ref: '#/components/schemas/ActionTask'
+          type: array
+          x-go-name: Entries
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     ActionVariable:
       description: ActionVariable return value of the query API
       example:
@@ -18306,6 +19138,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -18409,6 +19242,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -18431,6 +19265,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -18498,6 +19333,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -18512,12 +19348,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -18569,13 +19411,14 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
             source_id: 5
             email: email
         id: 9
-        op_type: op_type
+        op_type: create_repo
       properties:
         act_user:
           $ref: '#/components/schemas/User'
@@ -18604,6 +19447,35 @@ components:
           type: boolean
           x-go-name: IsPrivate
         op_type:
+          description: the type of action
+          enum:
+          - create_repo
+          - rename_repo
+          - star_repo
+          - watch_repo
+          - commit_repo
+          - create_issue
+          - create_pull_request
+          - transfer_repo
+          - push_tag
+          - comment_issue
+          - merge_pull_request
+          - close_issue
+          - reopen_issue
+          - close_pull_request
+          - reopen_pull_request
+          - delete_tag
+          - delete_branch
+          - mirror_sync_push
+          - mirror_sync_create
+          - mirror_sync_delete
+          - approve_pull_request
+          - reject_pull_request
+          - comment_pull
+          - publish_release
+          - pull_review_dismissed
+          - pull_request_ready_for_review
+          - auto_merge_pull_request
           type: string
           x-go-name: OpType
         ref_name:
@@ -18635,9 +19507,13 @@ components:
       description: AddCollaboratorOption options when adding a user as a collaborator
         of a repository
       example:
-        permission: permission
+        permission: read
       properties:
         permission:
+          enum:
+          - read
+          - write
+          - admin
           type: string
           x-go-name: Permission
       type: object
@@ -18869,6 +19745,10 @@ components:
     BranchProtection:
       description: BranchProtection represents a branch protection for a repository
       example:
+        force_push_allowlist_deploy_keys: true
+        force_push_allowlist_teams:
+        - force_push_allowlist_teams
+        - force_push_allowlist_teams
         merge_whitelist_teams:
         - merge_whitelist_teams
         - merge_whitelist_teams
@@ -18883,9 +19763,15 @@ components:
         merge_whitelist_usernames:
         - merge_whitelist_usernames
         - merge_whitelist_usernames
+        enable_force_push: true
         updated_at: 2000-01-23T04:56:07.000+00:00
         branch_name: branch_name
-        required_approvals: 0
+        enable_force_push_allowlist: true
+        block_admin_merge_override: true
+        required_approvals: 6
+        force_push_allowlist_usernames:
+        - force_push_allowlist_usernames
+        - force_push_allowlist_usernames
         block_on_rejected_reviews: true
         require_signed_commits: true
         enable_merge_whitelist: true
@@ -18896,6 +19782,7 @@ components:
         - approvals_whitelist_username
         ignore_stale_approvals: true
         dismiss_stale_approvals: true
+        priority: 0
         status_check_contexts:
         - status_check_contexts
         - status_check_contexts
@@ -18920,6 +19807,9 @@ components:
             type: string
           type: array
           x-go-name: ApprovalsWhitelistUsernames
+        block_admin_merge_override:
+          type: boolean
+          x-go-name: BlockAdminMergeOverride
         block_on_official_review_requests:
           type: boolean
           x-go-name: BlockOnOfficialReviewRequests
@@ -18943,6 +19833,12 @@ components:
         enable_approvals_whitelist:
           type: boolean
           x-go-name: EnableApprovalsWhitelist
+        enable_force_push:
+          type: boolean
+          x-go-name: EnableForcePush
+        enable_force_push_allowlist:
+          type: boolean
+          x-go-name: EnableForcePushAllowlist
         enable_merge_whitelist:
           type: boolean
           x-go-name: EnableMergeWhitelist
@@ -18955,6 +19851,19 @@ components:
         enable_status_check:
           type: boolean
           x-go-name: EnableStatusCheck
+        force_push_allowlist_deploy_keys:
+          type: boolean
+          x-go-name: ForcePushAllowlistDeployKeys
+        force_push_allowlist_teams:
+          items:
+            type: string
+          type: array
+          x-go-name: ForcePushAllowlistTeams
+        force_push_allowlist_usernames:
+          items:
+            type: string
+          type: array
+          x-go-name: ForcePushAllowlistUsernames
         ignore_stale_approvals:
           type: boolean
           x-go-name: IgnoreStaleApprovals
@@ -18968,6 +19877,10 @@ components:
             type: string
           type: array
           x-go-name: MergeWhitelistUsernames
+        priority:
+          format: int64
+          type: integer
+          x-go-name: Priority
         protected_file_patterns:
           type: string
           x-go-name: ProtectedFilePatterns
@@ -19183,6 +20096,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -19213,6 +20127,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -19324,6 +20239,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -19346,6 +20262,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -19413,6 +20330,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -19427,12 +20345,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -19512,6 +20436,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -19577,6 +20502,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -19603,6 +20529,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -19774,6 +20701,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -19867,6 +20795,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -19893,6 +20822,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -19955,6 +20885,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -19981,6 +20912,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -20140,42 +21072,53 @@ components:
     CreateBranchProtectionOption:
       description: CreateBranchProtectionOption options for creating a branch protection
       example:
-        block_on_rejected_reviews: true
+        force_push_allowlist_deploy_keys: true
+        force_push_allowlist_teams:
+        - force_push_allowlist_teams
+        - force_push_allowlist_teams
         merge_whitelist_teams:
         - merge_whitelist_teams
         - merge_whitelist_teams
         enable_push: true
-        require_signed_commits: true
-        enable_merge_whitelist: true
-        enable_push_whitelist: true
         push_whitelist_teams:
         - push_whitelist_teams
         - push_whitelist_teams
         block_on_outdated_branch: true
         push_whitelist_deploy_keys: true
+        enable_status_check: true
+        merge_whitelist_usernames:
+        - merge_whitelist_usernames
+        - merge_whitelist_usernames
+        enable_force_push: true
+        branch_name: branch_name
+        enable_force_push_allowlist: true
+        block_admin_merge_override: true
+        required_approvals: 6
+        force_push_allowlist_usernames:
+        - force_push_allowlist_usernames
+        - force_push_allowlist_usernames
+        block_on_rejected_reviews: true
+        require_signed_commits: true
+        enable_merge_whitelist: true
+        enable_push_whitelist: true
         rule_name: rule_name
         approvals_whitelist_username:
         - approvals_whitelist_username
         - approvals_whitelist_username
         ignore_stale_approvals: true
         dismiss_stale_approvals: true
-        enable_status_check: true
+        priority: 0
         status_check_contexts:
         - status_check_contexts
         - status_check_contexts
         push_whitelist_usernames:
         - push_whitelist_usernames
         - push_whitelist_usernames
-        merge_whitelist_usernames:
-        - merge_whitelist_usernames
-        - merge_whitelist_usernames
         protected_file_patterns: protected_file_patterns
-        branch_name: branch_name
         enable_approvals_whitelist: true
         approvals_whitelist_teams:
         - approvals_whitelist_teams
         - approvals_whitelist_teams
-        required_approvals: 0
         unprotected_file_patterns: unprotected_file_patterns
         block_on_official_review_requests: true
       properties:
@@ -20189,6 +21132,9 @@ components:
             type: string
           type: array
           x-go-name: ApprovalsWhitelistUsernames
+        block_admin_merge_override:
+          type: boolean
+          x-go-name: BlockAdminMergeOverride
         block_on_official_review_requests:
           type: boolean
           x-go-name: BlockOnOfficialReviewRequests
@@ -20208,6 +21154,12 @@ components:
         enable_approvals_whitelist:
           type: boolean
           x-go-name: EnableApprovalsWhitelist
+        enable_force_push:
+          type: boolean
+          x-go-name: EnableForcePush
+        enable_force_push_allowlist:
+          type: boolean
+          x-go-name: EnableForcePushAllowlist
         enable_merge_whitelist:
           type: boolean
           x-go-name: EnableMergeWhitelist
@@ -20220,6 +21172,19 @@ components:
         enable_status_check:
           type: boolean
           x-go-name: EnableStatusCheck
+        force_push_allowlist_deploy_keys:
+          type: boolean
+          x-go-name: ForcePushAllowlistDeployKeys
+        force_push_allowlist_teams:
+          items:
+            type: string
+          type: array
+          x-go-name: ForcePushAllowlistTeams
+        force_push_allowlist_usernames:
+          items:
+            type: string
+          type: array
+          x-go-name: ForcePushAllowlistUsernames
         ignore_stale_approvals:
           type: boolean
           x-go-name: IgnoreStaleApprovals
@@ -20233,6 +21198,10 @@ components:
             type: string
           type: array
           x-go-name: MergeWhitelistUsernames
+        priority:
+          format: int64
+          type: integer
+          x-go-name: Priority
         protected_file_patterns:
           type: string
           x-go-name: ProtectedFilePatterns
@@ -20615,6 +21584,7 @@ components:
       description: CreateOAuth2ApplicationOptions holds options to create an oauth2
         application
       example:
+        skip_secondary_authorization: true
         name: name
         confidential_client: true
         redirect_uris:
@@ -20632,6 +21602,9 @@ components:
             type: string
           type: array
           x-go-name: RedirectURIs
+        skip_secondary_authorization:
+          type: boolean
+          x-go-name: SkipSecondaryAuthorization
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     CreateOrUpdateSecretOption:
@@ -20698,12 +21671,18 @@ components:
         head: head
         milestone: 6
         due_date: 2000-01-23T04:56:07.000+00:00
+        team_reviewers:
+        - team_reviewers
+        - team_reviewers
         assignees:
         - assignees
         - assignees
         assignee: assignee
         body: body
         title: title
+        reviewers:
+        - reviewers
+        - reviewers
         base: base
         labels:
         - 0
@@ -20740,6 +21719,16 @@ components:
           format: int64
           type: integer
           x-go-name: Milestone
+        reviewers:
+          items:
+            type: string
+          type: array
+          x-go-name: Reviewers
+        team_reviewers:
+          items:
+            type: string
+          type: array
+          x-go-name: TeamReviewers
         title:
           type: string
           x-go-name: Title
@@ -20986,6 +21975,32 @@ components:
           x-go-name: Target
       required:
       - tag_name
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    CreateTagProtectionOption:
+      description: CreateTagProtectionOption options for creating a tag protection
+      example:
+        name_pattern: name_pattern
+        whitelist_usernames:
+        - whitelist_usernames
+        - whitelist_usernames
+        whitelist_teams:
+        - whitelist_teams
+        - whitelist_teams
+      properties:
+        name_pattern:
+          type: string
+          x-go-name: NamePattern
+        whitelist_teams:
+          items:
+            type: string
+          type: array
+          x-go-name: WhitelistTeams
+        whitelist_usernames:
+          items:
+            type: string
+          type: array
+          x-go-name: WhitelistUsernames
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     CreateTeamOption:
@@ -21357,6 +22372,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -21379,6 +22395,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -21446,6 +22463,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -21460,12 +22478,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -21532,40 +22556,51 @@ components:
     EditBranchProtectionOption:
       description: EditBranchProtectionOption options for editing a branch protection
       example:
-        block_on_rejected_reviews: true
+        force_push_allowlist_deploy_keys: true
+        force_push_allowlist_teams:
+        - force_push_allowlist_teams
+        - force_push_allowlist_teams
         merge_whitelist_teams:
         - merge_whitelist_teams
         - merge_whitelist_teams
         enable_push: true
-        require_signed_commits: true
-        enable_merge_whitelist: true
-        enable_push_whitelist: true
         push_whitelist_teams:
         - push_whitelist_teams
         - push_whitelist_teams
         block_on_outdated_branch: true
         push_whitelist_deploy_keys: true
+        enable_status_check: true
+        merge_whitelist_usernames:
+        - merge_whitelist_usernames
+        - merge_whitelist_usernames
+        enable_force_push: true
+        enable_force_push_allowlist: true
+        block_admin_merge_override: true
+        required_approvals: 6
+        force_push_allowlist_usernames:
+        - force_push_allowlist_usernames
+        - force_push_allowlist_usernames
+        block_on_rejected_reviews: true
+        require_signed_commits: true
+        enable_merge_whitelist: true
+        enable_push_whitelist: true
         approvals_whitelist_username:
         - approvals_whitelist_username
         - approvals_whitelist_username
         ignore_stale_approvals: true
         dismiss_stale_approvals: true
-        enable_status_check: true
+        priority: 0
         status_check_contexts:
         - status_check_contexts
         - status_check_contexts
         push_whitelist_usernames:
         - push_whitelist_usernames
         - push_whitelist_usernames
-        merge_whitelist_usernames:
-        - merge_whitelist_usernames
-        - merge_whitelist_usernames
         protected_file_patterns: protected_file_patterns
         enable_approvals_whitelist: true
         approvals_whitelist_teams:
         - approvals_whitelist_teams
         - approvals_whitelist_teams
-        required_approvals: 0
         unprotected_file_patterns: unprotected_file_patterns
         block_on_official_review_requests: true
       properties:
@@ -21579,6 +22614,9 @@ components:
             type: string
           type: array
           x-go-name: ApprovalsWhitelistUsernames
+        block_admin_merge_override:
+          type: boolean
+          x-go-name: BlockAdminMergeOverride
         block_on_official_review_requests:
           type: boolean
           x-go-name: BlockOnOfficialReviewRequests
@@ -21594,6 +22632,12 @@ components:
         enable_approvals_whitelist:
           type: boolean
           x-go-name: EnableApprovalsWhitelist
+        enable_force_push:
+          type: boolean
+          x-go-name: EnableForcePush
+        enable_force_push_allowlist:
+          type: boolean
+          x-go-name: EnableForcePushAllowlist
         enable_merge_whitelist:
           type: boolean
           x-go-name: EnableMergeWhitelist
@@ -21606,6 +22650,19 @@ components:
         enable_status_check:
           type: boolean
           x-go-name: EnableStatusCheck
+        force_push_allowlist_deploy_keys:
+          type: boolean
+          x-go-name: ForcePushAllowlistDeployKeys
+        force_push_allowlist_teams:
+          items:
+            type: string
+          type: array
+          x-go-name: ForcePushAllowlistTeams
+        force_push_allowlist_usernames:
+          items:
+            type: string
+          type: array
+          x-go-name: ForcePushAllowlistUsernames
         ignore_stale_approvals:
           type: boolean
           x-go-name: IgnoreStaleApprovals
@@ -21619,6 +22676,10 @@ components:
             type: string
           type: array
           x-go-name: MergeWhitelistUsernames
+        priority:
+          format: int64
+          type: integer
+          x-go-name: Priority
         protected_file_patterns:
           type: string
           x-go-name: ProtectedFilePatterns
@@ -22071,7 +23132,8 @@ components:
           type: string
           x-go-name: Description
         enable_prune:
-          description: enable prune - remove obsolete remote-tracking references
+          description: enable prune - remove obsolete remote-tracking references when
+            mirroring
           type: boolean
           x-go-name: EnablePrune
         external_tracker:
@@ -22149,6 +23211,32 @@ components:
           description: a URL with more information about the repository.
           type: string
           x-go-name: Website
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    EditTagProtectionOption:
+      description: EditTagProtectionOption options for editing a tag protection
+      example:
+        name_pattern: name_pattern
+        whitelist_usernames:
+        - whitelist_usernames
+        - whitelist_usernames
+        whitelist_teams:
+        - whitelist_teams
+        - whitelist_teams
+      properties:
+        name_pattern:
+          type: string
+          x-go-name: NamePattern
+        whitelist_teams:
+          items:
+            type: string
+          type: array
+          x-go-name: WhitelistTeams
+        whitelist_usernames:
+          items:
+            type: string
+          type: array
+          x-go-name: WhitelistUsernames
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     EditTeamOption:
@@ -23184,6 +24272,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -23205,6 +24294,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -23240,6 +24330,7 @@ components:
         state: state
         pull_request:
           draft: true
+          html_url: html_url
           merged_at: 2000-01-23T04:56:07.000+00:00
           merged: true
         closed_at: 2000-01-23T04:56:07.000+00:00
@@ -23291,6 +24382,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -23314,6 +24406,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -23521,14 +24614,15 @@ components:
       description: IssueLabelsOption a collection of labels
       example:
         labels:
-        - 0
-        - 0
+        - "{}"
+        - "{}"
       properties:
         labels:
-          description: list of label IDs
+          description: |-
+            Labels can be a list of integers representing label IDs
+            or a list of strings representing label names
           items:
-            format: int64
-            type: integer
+            type: object
           type: array
           x-go-name: Labels
       type: object
@@ -23559,6 +24653,9 @@ components:
         file_name: file_name
         about: about
         name: name
+        assignees:
+        - assignees
+        - assignees
         body:
         - visible:
           - null
@@ -23587,6 +24684,11 @@ components:
         about:
           type: string
           x-go-name: About
+        assignees:
+          items:
+            type: string
+          type: array
+          x-go-package: code.gitea.io/gitea/modules/structs
         body:
           items:
             $ref: '#/components/schemas/IssueFormField'
@@ -23614,7 +24716,7 @@ components:
           x-go-name: Title
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
-    IssueTemplateLabels:
+    IssueTemplateStringSlice:
       items:
         type: string
       type: array
@@ -23735,13 +24837,14 @@ components:
       properties:
         Context:
           description: |-
-            Context to render
+            URL path for rendering issue, media and file links
+            Expected format: /subpath/{user}/{repo}/src/{branch, commit, tag}/{identifier/path}/{file/dir}
 
             in: body
           type: string
         Mode:
           description: |-
-            Mode to render (comment, gfm, markdown)
+            Mode to render (markdown, comment, wiki, file)
 
             in: body
           type: string
@@ -23753,8 +24856,9 @@ components:
           type: string
         Wiki:
           description: |-
-            Is it a wiki page ?
+            Is it a wiki page? (use mode=wiki instead)
 
+            Deprecated: true
             in: body
           type: boolean
       type: object
@@ -23770,7 +24874,8 @@ components:
       properties:
         Context:
           description: |-
-            Context to render
+            URL path for rendering issue, media and file links
+            Expected format: /subpath/{user}/{repo}/src/{branch, commit, tag}/{identifier/path}/{file/dir}
 
             in: body
           type: string
@@ -23782,7 +24887,7 @@ components:
           type: string
         Mode:
           description: |-
-            Mode to render (comment, gfm, markdown, file)
+            Mode to render (markdown, comment, wiki, file)
 
             in: body
           type: string
@@ -23794,8 +24899,9 @@ components:
           type: string
         Wiki:
           description: |-
-            Is it a wiki page ?
+            Is it a wiki page? (use mode=wiki instead)
 
+            Deprecated: true
             in: body
           type: boolean
       type: object
@@ -23844,6 +24950,24 @@ components:
       type: object
       x-go-name: MergePullRequestForm
       x-go-package: code.gitea.io/gitea/services/forms
+    MergeUpstreamRequest:
+      example:
+        branch: branch
+      properties:
+        branch:
+          type: string
+          x-go-name: Branch
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    MergeUpstreamResponse:
+      example:
+        merge_type: merge_type
+      properties:
+        merge_type:
+          type: string
+          x-go-name: MergeStyle
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     MigrateRepoOptions:
       description: |-
         MigrateRepoOptions options for migrating repository's
@@ -23853,6 +24977,7 @@ components:
         mirror: true
         private: true
         clone_addr: clone_addr
+        aws_secret_access_key: aws_secret_access_key
         wiki: true
         auth_password: auth_password
         description: description
@@ -23861,6 +24986,7 @@ components:
         releases: true
         pull_requests: true
         uid: 0
+        aws_access_key_id: aws_access_key_id
         auth_username: auth_username
         service: git
         lfs: true
@@ -23879,6 +25005,12 @@ components:
         auth_username:
           type: string
           x-go-name: AuthUsername
+        aws_access_key_id:
+          type: string
+          x-go-name: AWSAccessKeyID
+        aws_secret_access_key:
+          type: string
+          x-go-name: AWSSecretAccessKey
         clone_addr:
           type: string
           x-go-name: CloneAddr
@@ -24179,6 +25311,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -24205,6 +25338,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -24418,6 +25552,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -24440,6 +25575,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -24507,6 +25643,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -24521,12 +25658,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -24562,6 +25705,7 @@ components:
       x-go-package: code.gitea.io/gitea/modules/structs
     OAuth2Application:
       example:
+        skip_secondary_authorization: true
         created: 2000-01-23T04:56:07.000+00:00
         name: name
         confidential_client: true
@@ -24597,6 +25741,9 @@ components:
             type: string
           type: array
           x-go-name: RedirectURIs
+        skip_secondary_authorization:
+          type: boolean
+          x-go-name: SkipSecondaryAuthorization
       title: OAuth2Application represents an OAuth2 application.
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
@@ -24683,7 +25830,7 @@ components:
       description: PRBranchInfo information about a branch
       example:
         ref: ref
-        repo_id: 0
+        repo_id: 6
         repo:
           parent: null
           has_packages: true
@@ -24781,6 +25928,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -24803,6 +25951,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -24870,6 +26019,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -24884,12 +26034,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -24934,6 +26090,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -24956,6 +26113,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25062,6 +26220,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -25084,6 +26243,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -25151,6 +26311,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -25165,12 +26326,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -25405,6 +26572,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25447,7 +26615,8 @@ components:
       description: PullRequest represents a pull request
       example:
         is_locked: true
-        pin_order: 5
+        pin_order: 9
+        deletions: 5
         assignees:
         - website: website
           visibility: visibility
@@ -25465,6 +26634,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25486,6 +26656,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25510,6 +26681,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25531,6 +26703,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25553,6 +26726,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25562,7 +26736,7 @@ components:
         title: title
         head:
           ref: ref
-          repo_id: 0
+          repo_id: 6
           repo:
             parent: null
             has_packages: true
@@ -25660,6 +26834,7 @@ components:
                 following_count: 6
                 restricted: true
                 followers_count: 0
+                html_url: html_url
                 location: location
                 id: 1
                 prohibit_login: true
@@ -25682,6 +26857,7 @@ components:
                 following_count: 6
                 restricted: true
                 followers_count: 0
+                html_url: html_url
                 location: location
                 id: 1
                 prohibit_login: true
@@ -25749,6 +26925,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -25763,31 +26940,114 @@ components:
               enable_issue_dependencies: true
               allow_only_contributors_to_track_time: true
               enable_time_tracker: true
+            topics:
+            - topics
+            - topics
             has_issues: true
             allow_rebase: true
             url: url
             object_format_name: sha1
             default_merge_style: default_merge_style
             fork: true
+            licenses:
+            - licenses
+            - licenses
             avatar_url: avatar_url
             original_url: original_url
             watchers_count: 3
             forks_count: 0
           label: label
           sha: sha
-        number: 5
+        number: 7
         mergeable: true
         patch_url: patch_url
         updated_at: 2000-01-23T04:56:07.000+00:00
         merge_base: merge_base
+        draft: true
+        requested_reviewers_teams:
+        - can_create_org_repo: true
+          units_map:
+            repo.code: read
+            repo.ext_issues: none
+            repo.ext_wiki: none
+            repo.issues: write
+            repo.projects: none
+            repo.pulls: owner
+            repo.releases: none
+            repo.wiki: admin
+          organization:
+            website: website
+            full_name: full_name
+            repo_admin_change_team_access: true
+            avatar_url: avatar_url
+            visibility: visibility
+            name: name
+            description: description
+            location: location
+            id: 0
+            email: email
+            username: username
+          name: name
+          description: description
+          permission: none
+          id: 2
+          includes_all_repositories: true
+          units:
+          - repo.code
+          - repo.issues
+          - repo.ext_issues
+          - repo.wiki
+          - repo.pulls
+          - repo.releases
+          - repo.projects
+          - repo.ext_wiki
+        - can_create_org_repo: true
+          units_map:
+            repo.code: read
+            repo.ext_issues: none
+            repo.ext_wiki: none
+            repo.issues: write
+            repo.projects: none
+            repo.pulls: owner
+            repo.releases: none
+            repo.wiki: admin
+          organization:
+            website: website
+            full_name: full_name
+            repo_admin_change_team_access: true
+            avatar_url: avatar_url
+            visibility: visibility
+            name: name
+            description: description
+            location: location
+            id: 0
+            email: email
+            username: username
+          name: name
+          description: description
+          permission: none
+          id: 2
+          includes_all_repositories: true
+          units:
+          - repo.code
+          - repo.issues
+          - repo.ext_issues
+          - repo.wiki
+          - repo.pulls
+          - repo.releases
+          - repo.projects
+          - repo.ext_wiki
         merge_commit_sha: merge_commit_sha
-        id: 1
+        id: 2
         state: state
         closed_at: 2000-01-23T04:56:07.000+00:00
-        comments: 6
+        comments: 5
+        additions: 0
         merged_at: 2000-01-23T04:56:07.000+00:00
         due_date: 2000-01-23T04:56:07.000+00:00
         merged: true
+        review_comments: 3
+        changed_files: 1
         url: url
         labels:
         - color: 00aabb
@@ -25834,6 +27094,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25856,6 +27117,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -25863,7 +27125,7 @@ components:
           email: email
         base:
           ref: ref
-          repo_id: 0
+          repo_id: 6
           repo:
             parent: null
             has_packages: true
@@ -25961,6 +27223,7 @@ components:
                 following_count: 6
                 restricted: true
                 followers_count: 0
+                html_url: html_url
                 location: location
                 id: 1
                 prohibit_login: true
@@ -25983,6 +27246,7 @@ components:
                 following_count: 6
                 restricted: true
                 followers_count: 0
+                html_url: html_url
                 location: location
                 id: 1
                 prohibit_login: true
@@ -26050,6 +27314,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -26064,12 +27329,18 @@ components:
               enable_issue_dependencies: true
               allow_only_contributors_to_track_time: true
               enable_time_tracker: true
+            topics:
+            - topics
+            - topics
             has_issues: true
             allow_rebase: true
             url: url
             object_format_name: sha1
             default_merge_style: default_merge_style
             fork: true
+            licenses:
+            - licenses
+            - licenses
             avatar_url: avatar_url
             original_url: original_url
             watchers_count: 3
@@ -26077,6 +27348,10 @@ components:
           label: label
           sha: sha
       properties:
+        additions:
+          format: int64
+          type: integer
+          x-go-name: Additions
         allow_maintainer_edit:
           type: boolean
           x-go-name: AllowMaintainerEdit
@@ -26092,6 +27367,10 @@ components:
         body:
           type: string
           x-go-name: Body
+        changed_files:
+          format: int64
+          type: integer
+          x-go-name: ChangedFiles
         closed_at:
           format: date-time
           type: string
@@ -26104,9 +27383,16 @@ components:
           format: date-time
           type: string
           x-go-name: Created
+        deletions:
+          format: int64
+          type: integer
+          x-go-name: Deletions
         diff_url:
           type: string
           x-go-name: DiffURL
+        draft:
+          type: boolean
+          x-go-name: Draft
         due_date:
           format: date-time
           type: string
@@ -26164,6 +27450,17 @@ components:
             $ref: '#/components/schemas/User'
           type: array
           x-go-name: RequestedReviewers
+        requested_reviewers_teams:
+          items:
+            $ref: '#/components/schemas/Team'
+          type: array
+          x-go-name: RequestedReviewersTeams
+        review_comments:
+          description: number of review comments made on the diff of a PR review (not
+            including comments on commits or issues in a PR)
+          format: int64
+          type: integer
+          x-go-name: ReviewComments
         state:
           description: StateType issue state type
           type: string
@@ -26186,12 +27483,16 @@ components:
       description: PullRequestMeta PR info if an issue is a PR
       example:
         draft: true
+        html_url: html_url
         merged_at: 2000-01-23T04:56:07.000+00:00
         merged: true
       properties:
         draft:
           type: boolean
           x-go-name: IsWorkInProgress
+        html_url:
+          type: string
+          x-go-name: HTMLURL
         merged:
           type: boolean
           x-go-name: HasMerged
@@ -26270,6 +27571,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -26343,6 +27645,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -26378,6 +27681,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -26519,6 +27823,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -26577,6 +27882,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -26702,6 +28008,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -26869,6 +28176,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -26891,6 +28199,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -27007,6 +28316,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -27029,6 +28339,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -27096,6 +28407,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -27110,12 +28422,18 @@ components:
           enable_issue_dependencies: true
           allow_only_contributors_to_track_time: true
           enable_time_tracker: true
+        topics:
+        - topics
+        - topics
         has_issues: true
         allow_rebase: true
         url: url
         object_format_name: sha1
         default_merge_style: default_merge_style
         fork: true
+        licenses:
+        - licenses
+        - licenses
         avatar_url: avatar_url
         original_url: original_url
         watchers_count: 3
@@ -27230,6 +28548,11 @@ components:
         languages_url:
           type: string
           x-go-name: LanguagesURL
+        licenses:
+          items:
+            type: string
+          type: array
+          x-go-name: Licenses
         link:
           type: string
           x-go-name: Link
@@ -27296,6 +28619,11 @@ components:
         template:
           type: boolean
           x-go-name: Template
+        topics:
+          items:
+            type: string
+          type: array
+          x-go-name: Topics
         updated_at:
           format: date-time
           type: string
@@ -27439,6 +28767,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -27461,6 +28790,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -27528,6 +28858,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -27542,12 +28873,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -27648,6 +28985,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -27670,6 +29008,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -27737,6 +29076,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -27751,12 +29091,18 @@ components:
             enable_issue_dependencies: true
             allow_only_contributors_to_track_time: true
             enable_time_tracker: true
+          topics:
+          - topics
+          - topics
           has_issues: true
           allow_rebase: true
           url: url
           object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
+          licenses:
+          - licenses
+          - licenses
           avatar_url: avatar_url
           original_url: original_url
           watchers_count: 3
@@ -27885,6 +29231,47 @@ components:
         zipball_url:
           type: string
           x-go-name: ZipballURL
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    TagProtection:
+      description: TagProtection represents a tag protection
+      example:
+        updated_at: 2000-01-23T04:56:07.000+00:00
+        name_pattern: name_pattern
+        whitelist_usernames:
+        - whitelist_usernames
+        - whitelist_usernames
+        created_at: 2000-01-23T04:56:07.000+00:00
+        id: 0
+        whitelist_teams:
+        - whitelist_teams
+        - whitelist_teams
+      properties:
+        created_at:
+          format: date-time
+          type: string
+          x-go-name: Created
+        id:
+          format: int64
+          type: integer
+          x-go-name: ID
+        name_pattern:
+          type: string
+          x-go-name: NamePattern
+        updated_at:
+          format: date-time
+          type: string
+          x-go-name: Updated
+        whitelist_teams:
+          items:
+            type: string
+          type: array
+          x-go-name: WhitelistTeams
+        whitelist_usernames:
+          items:
+            type: string
+          type: array
+          x-go-name: WhitelistUsernames
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     Team:
@@ -28027,6 +29414,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28048,6 +29436,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28083,6 +29472,7 @@ components:
           state: state
           pull_request:
             draft: true
+            html_url: html_url
             merged_at: 2000-01-23T04:56:07.000+00:00
             merged: true
           closed_at: 2000-01-23T04:56:07.000+00:00
@@ -28134,6 +29524,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28157,6 +29548,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28181,6 +29573,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -28212,6 +29605,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28233,6 +29627,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28268,6 +29663,7 @@ components:
           state: state
           pull_request:
             draft: true
+            html_url: html_url
             merged_at: 2000-01-23T04:56:07.000+00:00
             merged: true
           closed_at: 2000-01-23T04:56:07.000+00:00
@@ -28319,6 +29715,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28342,6 +29739,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28370,6 +29768,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -28391,6 +29790,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -28426,6 +29826,7 @@ components:
             state: state
             pull_request:
               draft: true
+              html_url: html_url
               merged_at: 2000-01-23T04:56:07.000+00:00
               merged: true
             closed_at: 2000-01-23T04:56:07.000+00:00
@@ -28477,6 +29878,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -28500,6 +29902,7 @@ components:
               following_count: 6
               restricted: true
               followers_count: 0
+              html_url: html_url
               location: location
               id: 1
               prohibit_login: true
@@ -28614,6 +30017,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28636,6 +30040,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -28658,6 +30063,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -28817,6 +30223,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28838,6 +30245,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28873,6 +30281,7 @@ components:
           state: state
           pull_request:
             draft: true
+            html_url: html_url
             merged_at: 2000-01-23T04:56:07.000+00:00
             merged: true
           closed_at: 2000-01-23T04:56:07.000+00:00
@@ -28924,6 +30333,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -28947,6 +30357,7 @@ components:
             following_count: 6
             restricted: true
             followers_count: 0
+            html_url: html_url
             location: location
             id: 1
             prohibit_login: true
@@ -29010,6 +30421,35 @@ components:
           x-go-name: TeamIDs
       required:
       - new_owner
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    UpdateBranchProtectionPriories:
+      description: UpdateBranchProtectionPriories a list to update the branch protection
+        rule priorities
+      example:
+        ids:
+        - 0
+        - 0
+      properties:
+        ids:
+          items:
+            format: int64
+            type: integer
+          type: array
+          x-go-name: IDs
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    UpdateBranchRepoOption:
+      description: UpdateBranchRepoOption options when updating a branch in a repository
+      example:
+        name: name
+      properties:
+        name:
+          description: New branch name
+          type: string
+          x-go-name: Name
+      required:
+      - name
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     UpdateFileOptions:
@@ -29138,6 +30578,7 @@ components:
         following_count: 6
         restricted: true
         followers_count: 0
+        html_url: html_url
         location: location
         id: 1
         prohibit_login: true
@@ -29177,6 +30618,10 @@ components:
           description: the user's full name
           type: string
           x-go-name: FullName
+        html_url:
+          description: URL to the user's gitea page
+          type: string
+          x-go-name: HTMLURL
         id:
           description: the user's id
           format: int64
@@ -29647,6 +31092,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true
@@ -29668,6 +31114,7 @@ components:
           following_count: 6
           restricted: true
           followers_count: 0
+          html_url: html_url
           location: location
           id: 1
           prohibit_login: true

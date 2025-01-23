@@ -1,5 +1,5 @@
 name:           gitea-api
-version:        1.22.6.0
+version:        1.23.1.0
 synopsis:       Auto-generated gitea-api API Client
 description:    .
                 Client library for calling the Gitea API API based on http-client.
@@ -8,7 +8,7 @@ description:    .
                 .
                 base path: /api/v1
                 .
-                Gitea API API version: 1.22.6
+                Gitea API API version: 1.23.1
                 .
                 OpenAPI version: 3.0.1
                 .
