@@ -5,10 +5,9 @@ info:
     name: MIT
     url: http://opensource.org/licenses/MIT
   title: Gitea API
-  version: 1.21.11
+  version: 1.22.6
 servers:
-- url: http://https://gitea.com/api/v1
-- url: https://https://gitea.com/api/v1
+- url: /api/v1
 security:
 - BasicAuth: []
 - Token: []
@@ -334,6 +333,20 @@ paths:
       summary: List all organizations
       tags:
       - admin
+  /admin/runners/registration-token:
+    get:
+      operationId: adminGetRunnerRegistrationToken
+      responses:
+        "200":
+          content: {}
+          description: RegistrationToken is response related to registration token
+          headers:
+            token:
+              schema:
+                type: string
+      summary: Get an global actions runner registration token
+      tags:
+      - admin
   /admin/unadopted:
     get:
       operationId: adminUnadoptedList
@@ -640,6 +653,111 @@ paths:
               schema:
                 type: string
       summary: Edit an existing user
+      tags:
+      - admin
+      x-codegen-request-body-name: body
+  /admin/users/{username}/badges:
+    delete:
+      operationId: adminDeleteUserBadges
+      parameters:
+      - description: username of user
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBadgeOption'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/UserBadgeOption'
+        required: false
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Remove a badge from a user
+      tags:
+      - admin
+      x-codegen-request-body-name: body
+    get:
+      operationId: adminListUserBadges
+      parameters:
+      - description: username of user
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Badge'
+                type: array
+          description: BadgeList
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: List a user's badges
+      tags:
+      - admin
+    post:
+      operationId: adminAddUserBadges
+      parameters:
+      - description: username of user
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserBadgeOption'
+        required: false
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Add a badge to a user
       tags:
       - admin
       x-codegen-request-body-name: body
@@ -1507,6 +1625,27 @@ paths:
       tags:
       - organization
       x-codegen-request-body-name: body
+  /orgs/{org}/actions/runners/registration-token:
+    get:
+      operationId: orgGetRunnerRegistrationToken
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content: {}
+          description: RegistrationToken is response related to registration token
+          headers:
+            token:
+              schema:
+                type: string
+      summary: Get an organization's actions runner registration token
+      tags:
+      - organization
   /orgs/{org}/actions/secrets:
     get:
       operationId: orgListActionsSecrets
@@ -1623,6 +1762,224 @@ paths:
       tags:
       - organization
       x-codegen-request-body-name: body
+  /orgs/{org}/actions/variables:
+    get:
+      operationId: getOrgVariablesList
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ActionVariable'
+                type: array
+          description: VariableList
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get an org-level variables list
+      tags:
+      - organization
+  /orgs/{org}/actions/variables/{variablename}:
+    delete:
+      operationId: deleteOrgVariable
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionVariable'
+          description: ActionVariable
+        "201":
+          content: {}
+          description: response when deleting a variable
+        "204":
+          content: {}
+          description: response when deleting a variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Delete an org-level variable
+      tags:
+      - organization
+    get:
+      operationId: getOrgVariable
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionVariable'
+          description: ActionVariable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get an org-level variable
+      tags:
+      - organization
+    post:
+      operationId: createOrgVariable
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVariableOption'
+        required: false
+      responses:
+        "201":
+          content: {}
+          description: response when creating an org-level variable
+        "204":
+          content: {}
+          description: response when creating an org-level variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Create an org-level variable
+      tags:
+      - organization
+      x-codegen-request-body-name: body
+    put:
+      operationId: updateOrgVariable
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVariableOption'
+        required: false
+      responses:
+        "201":
+          content: {}
+          description: response when updating an org-level variable
+        "204":
+          content: {}
+          description: response when updating an org-level variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Update an org-level variable
+      tags:
+      - organization
+      x-codegen-request-body-name: body
   /orgs/{org}/activities/feeds:
     get:
       operationId: orgListActivityFeeds
@@ -1713,6 +2070,141 @@ paths:
       tags:
       - organization
       x-codegen-request-body-name: body
+  /orgs/{org}/blocks:
+    get:
+      operationId: organizationListBlocks
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/User'
+                type: array
+          description: UserList
+      summary: List users blocked by the organization
+      tags:
+      - organization
+  /orgs/{org}/blocks/{username}:
+    delete:
+      operationId: organizationUnblockUser
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: user to unblock
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Unblock a user
+      tags:
+      - organization
+    get:
+      operationId: organizationCheckUserBlock
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: user to check
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Check if a user is blocked by the organization
+      tags:
+      - organization
+    put:
+      operationId: organizationBlockUser
+      parameters:
+      - description: name of the organization
+        in: path
+        name: org
+        required: true
+        schema:
+          type: string
+      - description: user to block
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: optional note for the block
+        in: query
+        name: note
+        schema:
+          type: string
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Block a user
+      tags:
+      - organization
   /orgs/{org}/hooks:
     get:
       operationId: orgListHooks
@@ -3055,6 +3547,47 @@ paths:
       tags:
       - repository
       x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/actions/secrets:
+    get:
+      operationId: repoListActionsSecrets
+      parameters:
+      - description: owner of the repository
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repository
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Secret'
+                type: array
+          description: SecretList
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: List an repo's actions secrets
+      tags:
+      - repository
   /repos/{owner}/{repo}/actions/secrets/{secretname}:
     delete:
       operationId: deleteRepoSecret
@@ -3145,6 +3678,260 @@ paths:
           content: {}
           description: APINotFound is a not found empty response
       summary: Create or Update a secret value in a repository
+      tags:
+      - repository
+      x-codegen-request-body-name: body
+  /repos/{owner}/{repo}/actions/variables:
+    get:
+      operationId: getRepoVariablesList
+      parameters:
+      - description: name of the owner
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repository
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ActionVariable'
+                type: array
+          description: VariableList
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get repo-level variables list
+      tags:
+      - repository
+  /repos/{owner}/{repo}/actions/variables/{variablename}:
+    delete:
+      operationId: deleteRepoVariable
+      parameters:
+      - description: name of the owner
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repository
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionVariable'
+          description: ActionVariable
+        "201":
+          content: {}
+          description: response when deleting a variable
+        "204":
+          content: {}
+          description: response when deleting a variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Delete a repo-level variable
+      tags:
+      - repository
+    get:
+      operationId: getRepoVariable
+      parameters:
+      - description: name of the owner
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repository
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionVariable'
+          description: ActionVariable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get a repo-level variable
+      tags:
+      - repository
+    post:
+      operationId: createRepoVariable
+      parameters:
+      - description: name of the owner
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repository
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVariableOption'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/CreateVariableOption'
+        required: false
+      responses:
+        "201":
+          content: {}
+          description: response when creating a repo-level variable
+        "204":
+          content: {}
+          description: response when creating a repo-level variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Create a repo-level variable
+      tags:
+      - repository
+      x-codegen-request-body-name: body
+    put:
+      operationId: updateRepoVariable
+      parameters:
+      - description: name of the owner
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repository
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVariableOption'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/UpdateVariableOption'
+        required: false
+      responses:
+        "201":
+          content: {}
+          description: response when updating a repo-level variable
+        "204":
+          content: {}
+          description: response when updating a repo-level variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Update a repo-level variable
       tags:
       - repository
       x-codegen-request-body-name: body
@@ -3400,6 +4187,17 @@ paths:
             url:
               schema:
                 type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a branch protections for a repository
       tags:
       - repository
@@ -3518,6 +4316,17 @@ paths:
             url:
               schema:
                 type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Edit a branch protections for a repository. Only fields that are set
         will be changed
       tags:
@@ -3598,6 +4407,17 @@ paths:
         "409":
           content: {}
           description: The branch with the same name already exists.
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a branch
       tags:
       - repository
@@ -3641,6 +4461,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a specific branch from a repository
       tags:
       - repository
@@ -3839,6 +4670,16 @@ paths:
         "204":
           content: {}
           description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APINotFound is a not found empty response
@@ -4141,6 +4982,76 @@ paths:
       summary: "Get a commit's statuses, by branch/tag/commit reference"
       tags:
       - repository
+  /repos/{owner}/{repo}/commits/{sha}/pull:
+    get:
+      operationId: repoGetCommitPullRequest
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: SHA of the commit to get
+        in: path
+        name: sha
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullRequest'
+          description: PullRequest
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get the pull request of the commit
+      tags:
+      - repository
+  /repos/{owner}/{repo}/compare/{basehead}:
+    get:
+      operationId: repoCompareDiff
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: compare two branches or commits
+        in: path
+        name: basehead
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compare'
+          description: ""
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get commit comparison information
+      tags:
+      - repository
   /repos/{owner}/{repo}/contents:
     get:
       operationId: repoGetContentsList
@@ -4229,6 +5140,17 @@ paths:
             url:
               schema:
                 type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Modify multiple files in a repository
       tags:
       - repository
@@ -4291,6 +5213,17 @@ paths:
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -4400,6 +5333,17 @@ paths:
             url:
               schema:
                 type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a file in a repository
       tags:
       - repository
@@ -4461,6 +5405,17 @@ paths:
             url:
               schema:
                 type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Update a file in a repository
       tags:
       - repository
@@ -4497,6 +5452,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Apply diff patch to repository
       tags:
       - repository
@@ -5551,7 +6517,7 @@ paths:
         schema:
           format: date-time
           type: string
-      - description: Only show items which were created by the the given user
+      - description: Only show items which were created by the given user
         in: query
         name: created_by
         schema:
@@ -5646,6 +6612,17 @@ paths:
           content: {}
           description: APIValidationError is error format response related to input
             validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -5855,6 +6832,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Edit a comment
       tags:
       - issue
@@ -5954,9 +6942,30 @@ paths:
             url:
               schema:
                 type: string
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -6004,6 +7013,17 @@ paths:
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -6108,6 +7128,17 @@ paths:
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -6551,6 +7582,17 @@ paths:
             url:
               schema:
                 type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create an issue attachment
       tags:
       - issue
@@ -6591,6 +7633,17 @@ paths:
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -6695,6 +7748,17 @@ paths:
         "404":
           content: {}
           description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -6941,6 +8005,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Add a comment to an issue
       tags:
       - issue
@@ -7153,6 +8228,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Remove an issue dependency
       tags:
       - issue
@@ -7243,6 +8329,17 @@ paths:
         "404":
           content: {}
           description: the issue does not exist
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Make the issue in the url depend on the issue in the form.
       tags:
       - issue
@@ -9348,6 +10445,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/PullRequest'
           description: PullRequest
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APINotFound is a not found empty response
@@ -9365,6 +10472,17 @@ paths:
           content: {}
           description: APIValidationError is error format response related to input
             validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
           headers:
             message:
               schema:
@@ -9405,6 +10523,47 @@ paths:
           content: {}
           description: APINotFound is a not found empty response
       summary: List a repo's pinned pull requests
+      tags:
+      - repository
+  /repos/{owner}/{repo}/pulls/{base}/{head}:
+    get:
+      operationId: repoGetPullRequestByBaseHead
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      - description: base of the pull request to get
+        in: path
+        name: base
+        required: true
+        schema:
+          type: string
+      - description: head of the pull request to get
+        in: path
+        name: head
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullRequest'
+          description: PullRequest
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get a pull request by base and head
       tags:
       - repository
   /repos/{owner}/{repo}/pulls/{index}:
@@ -9791,6 +10950,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Cancel the scheduled auto merge for the given pull request
       tags:
       - repository
@@ -9877,6 +11047,17 @@ paths:
             url:
               schema:
                 type: string
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Merge a pull request
       tags:
       - repository
@@ -9917,6 +11098,16 @@ paths:
         "204":
           content: {}
           description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APINotFound is a not found empty response
@@ -10830,11 +12021,6 @@ paths:
         name: pre-release
         schema:
           type: boolean
-      - description: "page size of results, deprecated - use limit"
-        in: query
-        name: per_page
-        schema:
-          type: integer
       - description: page number of results to return (1-based)
         in: query
         name: page
@@ -11186,8 +12372,10 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/issueCreateIssueCommentAttachment_request'
-        required: true
+              $ref: '#/components/schemas/repoCreateReleaseAttachment_request'
+          application/octet-stream:
+            schema:
+              $ref: '#/components/schemas/repoCreateReleaseAttachment_request'
       responses:
         "201":
           content:
@@ -11371,6 +12559,33 @@ paths:
           content: {}
           description: APINotFound is a not found empty response
       summary: Return all users that can be requested to review in this repo
+      tags:
+      - repository
+  /repos/{owner}/{repo}/runners/registration-token:
+    get:
+      operationId: repoGetRunnerRegistrationToken
+      parameters:
+      - description: owner of the repo
+        in: path
+        name: owner
+        required: true
+        schema:
+          type: string
+      - description: name of the repo
+        in: path
+        name: repo
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content: {}
+          description: RegistrationToken is response related to registration token
+          headers:
+            token:
+              schema:
+                type: string
+      summary: Get a repository's actions runner registration token
       tags:
       - repository
   /repos/{owner}/{repo}/signing-key.gpg:
@@ -11696,6 +12911,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/WatchInfo'
           description: WatchInfo
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APINotFound is a not found empty response
@@ -11783,6 +13008,17 @@ paths:
         "409":
           content: {}
           description: APIConflict is a conflict empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a new git tag in a repository
       tags:
       - repository
@@ -11822,6 +13058,17 @@ paths:
         "409":
           content: {}
           description: APIConflict is a conflict empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a repository's tag by name
       tags:
       - repository
@@ -12544,6 +13791,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Create a wiki page
       tags:
       - repository
@@ -12587,6 +13845,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Delete a wiki page
       tags:
       - repository
@@ -12684,6 +13953,17 @@ paths:
         "404":
           content: {}
           description: APINotFound is a not found empty response
+        "423":
+          content: {}
+          description: APIRepoArchivedError is an error that is raised when an archived
+            repo should be modified
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
       summary: Edit a wiki page
       tags:
       - repository
@@ -13145,6 +14425,16 @@ paths:
         "204":
           content: {}
           description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APINotFound is a not found empty response
@@ -13367,6 +14657,20 @@ paths:
       summary: Get the authenticated user
       tags:
       - user
+  /user/actions/runners/registration-token:
+    get:
+      operationId: userGetRunnerRegistrationToken
+      responses:
+        "200":
+          content: {}
+          description: RegistrationToken is response related to registration token
+          headers:
+            token:
+              schema:
+                type: string
+      summary: Get an user's actions runner registration token
+      tags:
+      - user
   /user/actions/secrets/{secretname}:
     delete:
       operationId: deleteUserSecret
@@ -13433,6 +14737,188 @@ paths:
           content: {}
           description: APINotFound is a not found empty response
       summary: Create or Update a secret value in a user scope
+      tags:
+      - user
+      x-codegen-request-body-name: body
+  /user/actions/variables:
+    get:
+      operationId: getUserVariablesList
+      parameters:
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ActionVariable'
+                type: array
+          description: VariableList
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get the user-level list of variables which is created by current doer
+      tags:
+      - user
+  /user/actions/variables/{variablename}:
+    delete:
+      operationId: deleteUserVariable
+      parameters:
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          content: {}
+          description: response when deleting a variable
+        "204":
+          content: {}
+          description: response when deleting a variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Delete a user-level variable which is created by current doer
+      tags:
+      - user
+    get:
+      operationId: getUserVariable
+      parameters:
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionVariable'
+          description: ActionVariable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Get a user-level variable which is created by current doer
+      tags:
+      - user
+    post:
+      operationId: createUserVariable
+      parameters:
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVariableOption'
+        required: false
+      responses:
+        "201":
+          content: {}
+          description: response when creating a variable
+        "204":
+          content: {}
+          description: response when creating a variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Create a user-level variable
+      tags:
+      - user
+      x-codegen-request-body-name: body
+    put:
+      operationId: updateUserVariable
+      parameters:
+      - description: name of the variable
+        in: path
+        name: variablename
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVariableOption'
+        required: false
+      responses:
+        "201":
+          content: {}
+          description: response when updating a variable
+        "204":
+          content: {}
+          description: response when updating a variable
+        "400":
+          content: {}
+          description: APIError is error format response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Update a user-level variable which is created by current doer
       tags:
       - user
       x-codegen-request-body-name: body
@@ -13601,6 +15087,117 @@ paths:
       tags:
       - user
       x-codegen-request-body-name: body
+  /user/blocks:
+    get:
+      operationId: userListBlocks
+      parameters:
+      - description: page number of results to return (1-based)
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: page size of results
+        in: query
+        name: limit
+        schema:
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/User'
+                type: array
+          description: UserList
+      summary: List users blocked by the authenticated user
+      tags:
+      - user
+  /user/blocks/{username}:
+    delete:
+      operationId: userUnblockUser
+      parameters:
+      - description: user to unblock
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Unblock a user
+      tags:
+      - user
+    get:
+      operationId: userCheckUserBlock
+      parameters:
+      - description: user to check
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+      summary: Check if a user is blocked by the authenticated user
+      tags:
+      - user
+    put:
+      operationId: userBlockUser
+      parameters:
+      - description: user to block
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+      - description: optional note for the block
+        in: query
+        name: note
+        schema:
+          type: string
+      responses:
+        "204":
+          content: {}
+          description: APIEmpty is an empty response
+        "404":
+          content: {}
+          description: APINotFound is a not found empty response
+        "422":
+          content: {}
+          description: APIValidationError is error format response related to input
+            validation
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
+      summary: Block a user
+      tags:
+      - user
   /user/emails:
     delete:
       operationId: userDeleteEmail
@@ -13777,6 +15374,16 @@ paths:
         "204":
           content: {}
           description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APINotFound is a not found empty response
@@ -14398,6 +16005,16 @@ paths:
         "204":
           content: {}
           description: APIEmpty is an empty response
+        "403":
+          content: {}
+          description: APIForbiddenError is a forbidden error response
+          headers:
+            message:
+              schema:
+                type: string
+            url:
+              schema:
+                type: string
         "404":
           content: {}
           description: APINotFound is a not found empty response
@@ -15173,6 +16790,15 @@ components:
               $ref: '#/components/schemas/AccessToken'
             type: array
       description: AccessTokenList represents a list of API access token.
+    ActionVariable:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ActionVariable'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/ActionVariable'
+      description: ActionVariable
     ActivityFeedsList:
       content:
         application/json:
@@ -15226,6 +16852,19 @@ components:
               $ref: '#/components/schemas/Attachment'
             type: array
       description: AttachmentList
+    BadgeList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/Badge'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/Badge'
+            type: array
+      description: BadgeList
     Branch:
       content:
         application/json:
@@ -15408,6 +17047,15 @@ components:
               $ref: '#/components/schemas/CommitStatus'
             type: array
       description: CommitStatusList
+    Compare:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Compare'
+        text/html:
+          schema:
+            $ref: '#/components/schemas/Compare'
+      description: ""
     ContentsListResponse:
       content:
         application/json:
@@ -16116,6 +17764,13 @@ components:
               $ref: '#/components/schemas/Reference'
             type: array
       description: ReferenceList
+    RegistrationToken:
+      content: {}
+      description: RegistrationToken is response related to registration token
+      headers:
+        token:
+          schema:
+            type: string
     Release:
       content:
         application/json:
@@ -16420,6 +18075,19 @@ components:
               $ref: '#/components/schemas/UserSettings'
             type: array
       description: UserSettings
+    VariableList:
+      content:
+        application/json:
+          schema:
+            items:
+              $ref: '#/components/schemas/ActionVariable'
+            type: array
+        text/html:
+          schema:
+            items:
+              $ref: '#/components/schemas/ActionVariable'
+            type: array
+      description: VariableList
     WatchInfo:
       content:
         application/json:
@@ -16505,14 +18173,25 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CreateOrUpdateSecretOption'
+            $ref: '#/components/schemas/UpdateVariableOption'
         text/html:
           schema:
-            $ref: '#/components/schemas/CreateOrUpdateSecretOption'
+            $ref: '#/components/schemas/UpdateVariableOption'
       description: parameterBodies
     redirect:
       content: {}
       description: APIRedirect is a redirect response
+    repoArchivedError:
+      content: {}
+      description: APIRepoArchivedError is an error that is raised when an archived
+        repo should be modified
+      headers:
+        message:
+          schema:
+            type: string
+        url:
+          schema:
+            type: string
     string:
       content:
         application/json:
@@ -16578,6 +18257,34 @@ components:
       title: AccessToken represents an API access token.
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    ActionVariable:
+      description: ActionVariable return value of the query API
+      example:
+        data: data
+        owner_id: 0
+        repo_id: 6
+        name: name
+      properties:
+        data:
+          description: the value of the variable
+          type: string
+          x-go-name: Data
+        name:
+          description: the name of the variable
+          type: string
+          x-go-name: Name
+        owner_id:
+          description: the owner to which the variable belongs
+          format: int64
+          type: integer
+          x-go-name: OwnerID
+        repo_id:
+          description: the repository to which the variable belongs
+          format: int64
+          type: integer
+          x-go-name: RepoID
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     Activity:
       example:
         is_private: true
@@ -16602,6 +18309,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         created: 2000-01-23T04:56:07.000+00:00
         repo:
@@ -16704,6 +18412,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -16725,6 +18434,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -16740,6 +18450,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -16763,6 +18474,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -16789,6 +18501,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -16802,6 +18515,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -16858,6 +18572,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
         id: 9
         op_type: op_type
@@ -17052,6 +18767,29 @@ components:
           x-go-name: UUID
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    Badge:
+      description: Badge represents a user badge
+      example:
+        image_url: image_url
+        description: description
+        id: 0
+        slug: slug
+      properties:
+        description:
+          type: string
+          x-go-name: Description
+        id:
+          format: int64
+          type: integer
+          x-go-name: ID
+        image_url:
+          type: string
+          x-go-name: ImageURL
+        slug:
+          type: string
+          x-go-name: Slug
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     Branch:
       description: Branch represents a repository branch
       example:
@@ -17156,6 +18894,7 @@ components:
         approvals_whitelist_username:
         - approvals_whitelist_username
         - approvals_whitelist_username
+        ignore_stale_approvals: true
         dismiss_stale_approvals: true
         status_check_contexts:
         - status_check_contexts
@@ -17216,6 +18955,9 @@ components:
         enable_status_check:
           type: boolean
           x-go-name: EnableStatusCheck
+        ignore_stale_approvals:
+          type: boolean
+          x-go-name: IgnoreStaleApprovals
         merge_whitelist_teams:
           items:
             type: string
@@ -17444,6 +19186,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           updated_at: 2000-01-23T04:56:07.000+00:00
           target_url: target_url
@@ -17473,6 +19216,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           updated_at: 2000-01-23T04:56:07.000+00:00
           target_url: target_url
@@ -17583,6 +19327,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -17604,6 +19349,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -17619,6 +19365,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -17642,6 +19389,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -17668,6 +19416,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -17681,6 +19430,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -17765,6 +19515,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
       properties:
         assets:
@@ -17829,6 +19580,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         stats:
           total: 1
@@ -17854,6 +19606,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         created: 2000-01-23T04:56:07.000+00:00
         html_url: html_url
@@ -18024,6 +19777,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         updated_at: 2000-01-23T04:56:07.000+00:00
         target_url: target_url
@@ -18091,6 +19845,199 @@ components:
           type: string
           x-go-name: Name
       title: CommitUser contains information of a user in the context of a commit.
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    Compare:
+      example:
+        commits:
+        - committer:
+            website: website
+            visibility: visibility
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            active: true
+            description: description
+            language: language
+            starred_repos_count: 5
+            login: login
+            is_admin: true
+            full_name: full_name
+            login_name: empty
+            avatar_url: avatar_url
+            following_count: 6
+            restricted: true
+            followers_count: 0
+            location: location
+            id: 1
+            prohibit_login: true
+            source_id: 5
+            email: email
+          stats:
+            total: 1
+            additions: 0
+            deletions: 6
+          author:
+            website: website
+            visibility: visibility
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            active: true
+            description: description
+            language: language
+            starred_repos_count: 5
+            login: login
+            is_admin: true
+            full_name: full_name
+            login_name: empty
+            avatar_url: avatar_url
+            following_count: 6
+            restricted: true
+            followers_count: 0
+            location: location
+            id: 1
+            prohibit_login: true
+            source_id: 5
+            email: email
+          created: 2000-01-23T04:56:07.000+00:00
+          html_url: html_url
+          commit:
+            committer:
+              date: date
+              name: name
+              email: email
+            author:
+              date: date
+              name: name
+              email: email
+            tree:
+              created: 2000-01-23T04:56:07.000+00:00
+              sha: sha
+              url: url
+            message: message
+            url: url
+            verification:
+              reason: reason
+              payload: payload
+              signature: signature
+              verified: true
+              signer:
+                name: name
+                email: email
+                username: username
+          files:
+          - filename: filename
+            status: status
+          - filename: filename
+            status: status
+          sha: sha
+          url: url
+          parents:
+          - created: 2000-01-23T04:56:07.000+00:00
+            sha: sha
+            url: url
+          - created: 2000-01-23T04:56:07.000+00:00
+            sha: sha
+            url: url
+        - committer:
+            website: website
+            visibility: visibility
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            active: true
+            description: description
+            language: language
+            starred_repos_count: 5
+            login: login
+            is_admin: true
+            full_name: full_name
+            login_name: empty
+            avatar_url: avatar_url
+            following_count: 6
+            restricted: true
+            followers_count: 0
+            location: location
+            id: 1
+            prohibit_login: true
+            source_id: 5
+            email: email
+          stats:
+            total: 1
+            additions: 0
+            deletions: 6
+          author:
+            website: website
+            visibility: visibility
+            created: 2000-01-23T04:56:07.000+00:00
+            last_login: 2000-01-23T04:56:07.000+00:00
+            active: true
+            description: description
+            language: language
+            starred_repos_count: 5
+            login: login
+            is_admin: true
+            full_name: full_name
+            login_name: empty
+            avatar_url: avatar_url
+            following_count: 6
+            restricted: true
+            followers_count: 0
+            location: location
+            id: 1
+            prohibit_login: true
+            source_id: 5
+            email: email
+          created: 2000-01-23T04:56:07.000+00:00
+          html_url: html_url
+          commit:
+            committer:
+              date: date
+              name: name
+              email: email
+            author:
+              date: date
+              name: name
+              email: email
+            tree:
+              created: 2000-01-23T04:56:07.000+00:00
+              sha: sha
+              url: url
+            message: message
+            url: url
+            verification:
+              reason: reason
+              payload: payload
+              signature: signature
+              verified: true
+              signer:
+                name: name
+                email: email
+                username: username
+          files:
+          - filename: filename
+            status: status
+          - filename: filename
+            status: status
+          sha: sha
+          url: url
+          parents:
+          - created: 2000-01-23T04:56:07.000+00:00
+            sha: sha
+            url: url
+          - created: 2000-01-23T04:56:07.000+00:00
+            sha: sha
+            url: url
+        total_commits: 0
+      properties:
+        commits:
+          items:
+            $ref: '#/components/schemas/Commit'
+          type: array
+          x-go-name: Commits
+        total_commits:
+          format: int64
+          type: integer
+          x-go-name: TotalCommits
+      title: Compare represents a comparison between two commits.
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     ContentsResponse:
@@ -18210,6 +20157,7 @@ components:
         approvals_whitelist_username:
         - approvals_whitelist_username
         - approvals_whitelist_username
+        ignore_stale_approvals: true
         dismiss_stale_approvals: true
         enable_status_check: true
         status_check_contexts:
@@ -18272,6 +20220,9 @@ components:
         enable_status_check:
           type: boolean
           x-go-name: EnableStatusCheck
+        ignore_stale_approvals:
+          type: boolean
+          x-go-name: IgnoreStaleApprovals
         merge_whitelist_teams:
           items:
             type: string
@@ -18928,6 +20879,7 @@ components:
         description: description
         default_branch: default_branch
         readme: readme
+        object_format_name: sha1
       properties:
         auto_init:
           description: Whether the repository should be auto-initialized?
@@ -18958,6 +20910,13 @@ components:
           description: Name of the repository to create
           type: string
           x-go-name: Name
+        object_format_name:
+          description: ObjectFormatName of the underlying git repository
+          enum:
+          - sha1
+          - sha256
+          type: string
+          x-go-name: ObjectFormatName
         private:
           description: Whether the repository is private
           type: boolean
@@ -19159,6 +21118,19 @@ components:
       required:
       - email
       - username
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    CreateVariableOption:
+      description: CreateVariableOption the option when creating variable
+      example:
+        value: value
+      properties:
+        value:
+          description: Value of the variable to create
+          type: string
+          x-go-name: Value
+      required:
+      - value
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     CreateWikiPageOptions:
@@ -19388,6 +21360,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -19409,6 +21382,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -19424,6 +21398,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -19447,6 +21422,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -19473,6 +21449,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -19486,6 +21463,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -19570,6 +21548,7 @@ components:
         approvals_whitelist_username:
         - approvals_whitelist_username
         - approvals_whitelist_username
+        ignore_stale_approvals: true
         dismiss_stale_approvals: true
         enable_status_check: true
         status_check_contexts:
@@ -19627,6 +21606,9 @@ components:
         enable_status_check:
           type: boolean
           x-go-name: EnableStatusCheck
+        ignore_stale_approvals:
+          type: boolean
+          x-go-name: IgnoreStaleApprovals
         merge_whitelist_teams:
           items:
             type: string
@@ -19999,6 +21981,7 @@ components:
         has_wiki: true
         allow_merge_commits: true
         allow_rebase_explicit: true
+        projects_mode: projects_mode
         external_tracker:
           external_tracker_regexp_pattern: external_tracker_regexp_pattern
           external_tracker_style: external_tracker_style
@@ -20018,9 +22001,15 @@ components:
         has_issues: true
         allow_rebase: true
         default_merge_style: default_merge_style
+        allow_fast_forward_only_merge: true
         name: name
         default_branch: default_branch
       properties:
+        allow_fast_forward_only_merge:
+          description: "either `true` to allow fast-forward-only merging pull requests,\
+            \ or `false` to prevent fast-forward-only merging."
+          type: boolean
+          x-go-name: AllowFastForwardOnly
         allow_manual_merge:
           description: "either `true` to allow mark pr as merged manually, or `false`\
             \ to prevent it."
@@ -20074,7 +22063,7 @@ components:
           x-go-name: DefaultDeleteBranchAfterMerge
         default_merge_style:
           description: "set to a merge style to be used by this repository: \"merge\"\
-            , \"rebase\", \"rebase-merge\", or \"squash\"."
+            , \"rebase\", \"rebase-merge\", \"squash\", or \"fast-forward-only\"."
           type: string
           x-go-name: DefaultMergeStyle
         description:
@@ -20146,6 +22135,11 @@ components:
             owners and a non-owner tries to change the value of private.
           type: boolean
           x-go-name: Private
+        projects_mode:
+          description: "`repo` to only allow repo-level projects, `owner` to only\
+            \ allow owner projects, `all` to allow both."
+          type: string
+          x-go-name: ProjectsMode
         template:
           description: either `true` to make this repository a template or `false`
             to make it a normal repository
@@ -21193,6 +23187,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         - website: website
           visibility: visibility
@@ -21213,6 +23208,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         created_at: 2000-01-23T04:56:07.000+00:00
         body: body
@@ -21243,6 +23239,7 @@ components:
         id: 6
         state: state
         pull_request:
+          draft: true
           merged_at: 2000-01-23T04:56:07.000+00:00
           merged: true
         closed_at: 2000-01-23T04:56:07.000+00:00
@@ -21297,6 +23294,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         original_author: original_author
         user:
@@ -21319,6 +23317,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
       properties:
         assets:
@@ -21474,6 +23473,9 @@ components:
     IssueFormField:
       description: IssueFormField represents a form field
       example:
+        visible:
+        - null
+        - null
         attributes:
           key: "{}"
         id: id
@@ -21499,11 +23501,20 @@ components:
             type: object
           type: object
           x-go-name: Validations
+        visible:
+          items:
+            $ref: '#/components/schemas/IssueFormFieldVisible'
+          type: array
+          x-go-name: Visible
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     IssueFormFieldType:
       title: "IssueFormFieldType defines issue form field type, can be \"markdown\"\
         , \"textarea\", \"input\", \"dropdown\" or \"checkboxes\""
+      type: string
+      x-go-package: code.gitea.io/gitea/modules/structs
+    IssueFormFieldVisible:
+      description: IssueFormFieldVisible defines issue form field visible
       type: string
       x-go-package: code.gitea.io/gitea/modules/structs
     IssueLabelsOption:
@@ -21549,13 +23560,19 @@ components:
         about: about
         name: name
         body:
-        - attributes:
+        - visible:
+          - null
+          - null
+          attributes:
             key: "{}"
           id: id
           validations:
             key: "{}"
           type: type
-        - attributes:
+        - visible:
+          - null
+          - null
+          attributes:
             key: "{}"
           id: id
           validations:
@@ -21801,6 +23818,7 @@ components:
           - rebase
           - rebase-merge
           - squash
+          - fast-forward-only
           - manually-merged
           type: string
         MergeCommitID:
@@ -22164,6 +24182,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           stats:
             total: 1
@@ -22189,6 +24208,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           created: 2000-01-23T04:56:07.000+00:00
           html_url: html_url
@@ -22401,6 +24421,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -22422,6 +24443,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -22437,6 +24459,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -22460,6 +24483,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -22486,6 +24510,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -22499,6 +24524,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -22758,6 +24784,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -22779,6 +24806,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -22794,6 +24822,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -22817,6 +24846,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -22843,6 +24873,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -22856,6 +24887,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -22905,6 +24937,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         creator:
           website: website
@@ -22926,6 +24959,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         html_url: html_url
         name: name
@@ -23031,6 +25065,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -23052,6 +25087,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -23067,6 +25103,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -23090,6 +25127,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -23116,6 +25154,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -23129,6 +25168,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -23368,6 +25408,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         key: key
         url: url
@@ -23427,6 +25468,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         - website: website
           visibility: visibility
@@ -23447,6 +25489,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         created_at: 2000-01-23T04:56:07.000+00:00
         diff_url: diff_url
@@ -23470,6 +25513,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         - website: website
           visibility: visibility
@@ -23490,6 +25534,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         merged_by:
           website: website
@@ -23511,6 +25556,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         body: body
         title: title
@@ -23617,6 +25663,7 @@ components:
                 location: location
                 id: 1
                 prohibit_login: true
+                source_id: 5
                 email: email
               recipient:
                 website: website
@@ -23638,6 +25685,7 @@ components:
                 location: location
                 id: 1
                 prohibit_login: true
+                source_id: 5
                 email: email
             has_pull_requests: true
             empty: true
@@ -23653,6 +25701,7 @@ components:
             full_name: full_name
             size: 7
             languages_url: languages_url
+            allow_fast_forward_only_merge: true
             clone_url: clone_url
             html_url: html_url
             name: name
@@ -23676,6 +25725,7 @@ components:
             allow_merge_commits: true
             stars_count: 9
             allow_rebase_explicit: true
+            projects_mode: projects_mode
             external_tracker:
               external_tracker_regexp_pattern: external_tracker_regexp_pattern
               external_tracker_style: external_tracker_style
@@ -23702,6 +25752,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             allow_squash_merge: true
             external_wiki:
@@ -23715,6 +25766,7 @@ components:
             has_issues: true
             allow_rebase: true
             url: url
+            object_format_name: sha1
             default_merge_style: default_merge_style
             fork: true
             avatar_url: avatar_url
@@ -23785,6 +25837,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         user:
           website: website
@@ -23806,6 +25859,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         base:
           ref: ref
@@ -23910,6 +25964,7 @@ components:
                 location: location
                 id: 1
                 prohibit_login: true
+                source_id: 5
                 email: email
               recipient:
                 website: website
@@ -23931,6 +25986,7 @@ components:
                 location: location
                 id: 1
                 prohibit_login: true
+                source_id: 5
                 email: email
             has_pull_requests: true
             empty: true
@@ -23946,6 +26002,7 @@ components:
             full_name: full_name
             size: 7
             languages_url: languages_url
+            allow_fast_forward_only_merge: true
             clone_url: clone_url
             html_url: html_url
             name: name
@@ -23969,6 +26026,7 @@ components:
             allow_merge_commits: true
             stars_count: 9
             allow_rebase_explicit: true
+            projects_mode: projects_mode
             external_tracker:
               external_tracker_regexp_pattern: external_tracker_regexp_pattern
               external_tracker_style: external_tracker_style
@@ -23995,6 +26053,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             allow_squash_merge: true
             external_wiki:
@@ -24008,6 +26067,7 @@ components:
             has_issues: true
             allow_rebase: true
             url: url
+            object_format_name: sha1
             default_merge_style: default_merge_style
             fork: true
             avatar_url: avatar_url
@@ -24125,9 +26185,13 @@ components:
     PullRequestMeta:
       description: PullRequestMeta PR info if an issue is a PR
       example:
+        draft: true
         merged_at: 2000-01-23T04:56:07.000+00:00
         merged: true
       properties:
+        draft:
+          type: boolean
+          x-go-name: IsWorkInProgress
         merged:
           type: boolean
           x-go-name: HasMerged
@@ -24209,6 +26273,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
       properties:
         body:
@@ -24281,6 +26346,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         original_commit_id: original_commit_id
         diff_hunk: diff_hunk
@@ -24315,6 +26381,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
       properties:
         body:
@@ -24396,14 +26463,15 @@ components:
       example:
         sync_on_commit: true
         remote_name: remote_name
-        created: created
-        last_update: last_update
+        created: 2000-01-23T04:56:07.000+00:00
+        last_update: 2000-01-23T04:56:07.000+00:00
         interval: interval
         repo_name: repo_name
         last_error: last_error
         remote_address: remote_address
       properties:
         created:
+          format: date-time
           type: string
           x-go-name: CreatedUnix
         interval:
@@ -24413,6 +26481,7 @@ components:
           type: string
           x-go-name: LastError
         last_update:
+          format: date-time
           type: string
           x-go-name: LastUpdateUnix
         remote_address:
@@ -24453,6 +26522,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         content: content
       properties:
@@ -24510,6 +26580,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         tag_name: tag_name
         created_at: 2000-01-23T04:56:07.000+00:00
@@ -24634,6 +26705,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
       properties:
         permission:
@@ -24800,6 +26872,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         recipient:
           website: website
@@ -24821,6 +26894,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
       properties:
         doer:
@@ -24936,6 +27010,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           recipient:
             website: website
@@ -24957,6 +27032,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
         has_pull_requests: true
         empty: true
@@ -24972,6 +27048,7 @@ components:
         full_name: full_name
         size: 7
         languages_url: languages_url
+        allow_fast_forward_only_merge: true
         clone_url: clone_url
         html_url: html_url
         name: name
@@ -24995,6 +27072,7 @@ components:
         allow_merge_commits: true
         stars_count: 9
         allow_rebase_explicit: true
+        projects_mode: projects_mode
         external_tracker:
           external_tracker_regexp_pattern: external_tracker_regexp_pattern
           external_tracker_style: external_tracker_style
@@ -25021,6 +27099,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         allow_squash_merge: true
         external_wiki:
@@ -25034,6 +27113,7 @@ components:
         has_issues: true
         allow_rebase: true
         url: url
+        object_format_name: sha1
         default_merge_style: default_merge_style
         fork: true
         avatar_url: avatar_url
@@ -25041,6 +27121,9 @@ components:
         watchers_count: 3
         forks_count: 0
       properties:
+        allow_fast_forward_only_merge:
+          type: boolean
+          x-go-name: AllowFastForwardOnly
         allow_merge_commits:
           type: boolean
           x-go-name: AllowMerge
@@ -25163,6 +27246,13 @@ components:
         name:
           type: string
           x-go-name: Name
+        object_format_name:
+          description: ObjectFormatName of the underlying git repository
+          enum:
+          - sha1
+          - sha256
+          type: string
+          x-go-name: ObjectFormatName
         open_issues_count:
           format: int64
           type: integer
@@ -25183,6 +27273,9 @@ components:
         private:
           type: boolean
           x-go-name: Private
+        projects_mode:
+          type: string
+          x-go-name: ProjectsMode
         release_counter:
           format: int64
           type: integer
@@ -25349,6 +27442,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -25370,6 +27464,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -25385,6 +27480,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -25408,6 +27504,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -25434,6 +27531,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -25447,6 +27545,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -25552,6 +27651,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             recipient:
               website: website
@@ -25573,6 +27673,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           has_pull_requests: true
           empty: true
@@ -25588,6 +27689,7 @@ components:
           full_name: full_name
           size: 7
           languages_url: languages_url
+          allow_fast_forward_only_merge: true
           clone_url: clone_url
           html_url: html_url
           name: name
@@ -25611,6 +27713,7 @@ components:
           allow_merge_commits: true
           stars_count: 9
           allow_rebase_explicit: true
+          projects_mode: projects_mode
           external_tracker:
             external_tracker_regexp_pattern: external_tracker_regexp_pattern
             external_tracker_style: external_tracker_style
@@ -25637,6 +27740,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           allow_squash_merge: true
           external_wiki:
@@ -25650,6 +27754,7 @@ components:
           has_issues: true
           allow_rebase: true
           url: url
+          object_format_name: sha1
           default_merge_style: default_merge_style
           fork: true
           avatar_url: avatar_url
@@ -25925,6 +28030,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           - website: website
             visibility: visibility
@@ -25945,6 +28051,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           created_at: 2000-01-23T04:56:07.000+00:00
           body: body
@@ -25975,6 +28082,7 @@ components:
           id: 6
           state: state
           pull_request:
+            draft: true
             merged_at: 2000-01-23T04:56:07.000+00:00
             merged: true
           closed_at: 2000-01-23T04:56:07.000+00:00
@@ -26029,6 +28137,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           original_author: original_author
           user:
@@ -26051,6 +28160,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
         created_at: 2000-01-23T04:56:07.000+00:00
         old_title: old_title
@@ -26074,6 +28184,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         body: body
         type: type
@@ -26104,6 +28215,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           - website: website
             visibility: visibility
@@ -26124,6 +28236,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           created_at: 2000-01-23T04:56:07.000+00:00
           body: body
@@ -26154,6 +28267,7 @@ components:
           id: 6
           state: state
           pull_request:
+            draft: true
             merged_at: 2000-01-23T04:56:07.000+00:00
             merged: true
           closed_at: 2000-01-23T04:56:07.000+00:00
@@ -26208,6 +28322,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           original_author: original_author
           user:
@@ -26230,6 +28345,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
         id: 0
         removed_assignee: true
@@ -26257,6 +28373,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             - website: website
               visibility: visibility
@@ -26277,6 +28394,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             created_at: 2000-01-23T04:56:07.000+00:00
             body: body
@@ -26307,6 +28425,7 @@ components:
             id: 6
             state: state
             pull_request:
+              draft: true
               merged_at: 2000-01-23T04:56:07.000+00:00
               merged: true
             closed_at: 2000-01-23T04:56:07.000+00:00
@@ -26361,6 +28480,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
             original_author: original_author
             user:
@@ -26383,6 +28503,7 @@ components:
               location: location
               id: 1
               prohibit_login: true
+              source_id: 5
               email: email
           issue_id: 2
           user_id: 9
@@ -26496,6 +28617,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
         assignee:
           website: website
@@ -26517,6 +28639,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         user:
           website: website
@@ -26538,6 +28661,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
       properties:
         assignee:
@@ -26696,6 +28820,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           - website: website
             visibility: visibility
@@ -26716,6 +28841,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           created_at: 2000-01-23T04:56:07.000+00:00
           body: body
@@ -26746,6 +28872,7 @@ components:
           id: 6
           state: state
           pull_request:
+            draft: true
             merged_at: 2000-01-23T04:56:07.000+00:00
             merged: true
           closed_at: 2000-01-23T04:56:07.000+00:00
@@ -26800,6 +28927,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
           original_author: original_author
           user:
@@ -26822,6 +28950,7 @@ components:
             location: location
             id: 1
             prohibit_login: true
+            source_id: 5
             email: email
         issue_id: 2
         user_id: 9
@@ -26971,6 +29100,25 @@ components:
           x-go-name: Image
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
+    UpdateVariableOption:
+      description: UpdateVariableOption the option when updating variable
+      example:
+        name: name
+        value: value
+      properties:
+        name:
+          description: "New name for the variable. If the field is empty, the variable\
+            \ name won't be updated."
+          type: string
+          x-go-name: Name
+        value:
+          description: Value of the variable to update
+          type: string
+          x-go-name: Value
+      required:
+      - value
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
     User:
       description: User represents a user
       example:
@@ -26993,6 +29141,7 @@ components:
         location: location
         id: 1
         prohibit_login: true
+        source_id: 5
         email: email
       properties:
         active:
@@ -27066,6 +29215,11 @@ components:
           description: Is user restricted
           type: boolean
           x-go-name: Restricted
+        source_id:
+          description: The ID of the user's Authentication Source
+          format: int64
+          type: integer
+          x-go-name: SourceID
         starred_repos_count:
           format: int64
           type: integer
@@ -27078,6 +29232,23 @@ components:
           description: the user's website
           type: string
           x-go-name: Website
+      type: object
+      x-go-package: code.gitea.io/gitea/modules/structs
+    UserBadgeOption:
+      description: UserBadgeOption options for link between users and badges
+      example:
+        badge_slugs:
+        - badge1
+        - badge2
+      properties:
+        badge_slugs:
+          example:
+          - badge1
+          - badge2
+          items:
+            type: string
+          type: array
+          x-go-name: BadgeSlugs
       type: object
       x-go-package: code.gitea.io/gitea/modules/structs
     UserHeatmapData:
@@ -27450,6 +29621,13 @@ components:
       required:
       - attachment
       type: object
+    repoCreateReleaseAttachment_request:
+      properties:
+        attachment:
+          description: attachment to upload
+          format: binary
+          type: string
+      type: object
     userSearch_200_response:
       example:
         data:
@@ -27472,6 +29650,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         - website: website
           visibility: visibility
@@ -27492,6 +29671,7 @@ components:
           location: location
           id: 1
           prohibit_login: true
+          source_id: 5
           email: email
         ok: true
       properties:

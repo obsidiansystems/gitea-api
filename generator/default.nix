@@ -10,10 +10,9 @@
       "author.name@email.com" = "maintainer@obsidian.systems";
       "YEAR - AUTHOR" = "2020 Obsidian Systems LLC";
       "UnspecifiedLicense" = "BSD3";
-      "extra-source-files:" = "extra-source-files:\n    ChangeLog.md";
       "cabal-version:  >= 1.10" = ''
         cabal-version:  >= 1.10
-        tested-with: GHC ==8.6.5
+        tested-with: GHC ==8.10.7
         license-file: LICENSE
       '';
       # Package version changes:
